@@ -1,0 +1,73 @@
+.data-grid-wrapper {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  overflow: hidden;
+}
+
+.data-grid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--muted);
+}
+
+.data-grid-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-grid-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.data-grid-header-cell,
+.data-grid-cell {
+  text-align: right;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-grid-header-cell {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.data-grid-row:hover .data-grid-cell {
+  background-color: var(--secondary);
+}
+
+.data-grid-cell {
+  font-size: 0.9rem;
+}
+
+.data-grid-empty {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--muted-foreground);
+}
+
+.data-grid-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background-color: color-mix(in srgb, var(--muted) 65%, var(--card) 35%);
+}
+
+@media (max-width: 640px) {
+  .data-grid-toolbar,
+  .data-grid-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
