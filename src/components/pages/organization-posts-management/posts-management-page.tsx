@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,16 @@ type OrganizationPostsManagementPageProps = {
 };
 
 export function OrganizationPostsManagementPage({
+  status,
+}: OrganizationPostsManagementPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <OrganizationPostsManagementPageContent status={status} />
+    </Suspense>
+  );
+}
+
+function OrganizationPostsManagementPageContent({
   status,
 }: OrganizationPostsManagementPageProps) {
   const searchParams = useSearchParams();
