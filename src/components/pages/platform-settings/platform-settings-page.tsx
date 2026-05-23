@@ -19,6 +19,30 @@ export function PlatformSettingsPage() {
   const [requirePostReview, setRequirePostReview] = React.useState(
     platformSettingsDefaultsData.requirePostReview,
   );
+  const [accountName, setAccountName] = React.useState(
+    platformSettingsDefaultsData.accountName,
+  );
+  const [accountEmail, setAccountEmail] = React.useState(
+    platformSettingsDefaultsData.accountEmail,
+  );
+  const [accountPhone, setAccountPhone] = React.useState(
+    platformSettingsDefaultsData.accountPhone,
+  );
+  const [recoveryEmail, setRecoveryEmail] = React.useState(
+    platformSettingsDefaultsData.recoveryEmail,
+  );
+  const [twoFactorEnabled, setTwoFactorEnabled] = React.useState(
+    platformSettingsDefaultsData.twoFactorEnabled,
+  );
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [bankName, setBankName] = React.useState(
+    platformSettingsDefaultsData.bankName,
+  );
+  const [bankAccountNumber, setBankAccountNumber] = React.useState(
+    platformSettingsDefaultsData.bankAccountNumber,
+  );
+  const [iban, setIban] = React.useState(platformSettingsDefaultsData.iban);
 
   return (
     <section className="flex flex-col flex-1 gap-6">
@@ -67,6 +91,120 @@ export function PlatformSettingsPage() {
             checked={requirePostReview}
             onCheckedChange={setRequirePostReview}
           />
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">معلومات الحساب</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="admin-account-name">الاسم</Label>
+              <Input
+                id="admin-account-name"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                className="text-right"
+                dir="rtl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-account-email">البريد الإلكتروني</Label>
+              <Input
+                id="admin-account-email"
+                type="email"
+                value={accountEmail}
+                onChange={(e) => setAccountEmail(e.target.value)}
+                className="text-right"
+                dir="rtl"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="admin-account-phone">رقم الجوال</Label>
+              <Input
+                id="admin-account-phone"
+                value={accountPhone}
+                onChange={(e) => setAccountPhone(e.target.value)}
+                className="max-w-md text-right"
+                dir="ltr"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">أمان الحساب</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="admin-recovery-email">بريد الاسترداد</Label>
+              <Input
+                id="admin-recovery-email"
+                type="email"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                className="max-w-md text-right"
+                dir="rtl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-new-password">كلمة مرور جديدة</Label>
+              <Input
+                id="admin-new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="max-w-md"
+                dir="ltr"
+                placeholder="********"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-confirm-password">تأكيد كلمة المرور</Label>
+              <Input
+                id="admin-confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="max-w-md"
+                dir="ltr"
+                placeholder="********"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">الحساب البنكي</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="admin-bank-name">اسم البنك</Label>
+              <Input
+                id="admin-bank-name"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="text-right"
+                dir="rtl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-bank-account-number">رقم الحساب البنكي</Label>
+              <Input
+                id="admin-bank-account-number"
+                value={bankAccountNumber}
+                onChange={(e) => setBankAccountNumber(e.target.value)}
+                className="text-right font-mono"
+                dir="ltr"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="admin-iban">رقم الآيبان</Label>
+              <Input
+                id="admin-iban"
+                value={iban}
+                onChange={(e) => setIban(e.target.value)}
+                className="max-w-md text-right font-mono"
+                dir="ltr"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="pt-2">

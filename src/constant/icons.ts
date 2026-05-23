@@ -42,6 +42,7 @@ import {
   ShieldCheck,
   ShieldOff,
   PencilLine,
+  Tags,
   BadgeMinus,
   type LucideIcon,
 } from "lucide-react";
@@ -73,6 +74,7 @@ export const AppIcons = {
   mailOpen: MailOpen,
   rotateCw: RotateCw,
   rewards: Award,
+  categories: Tags,
   content: BookOpenText,
   analytics: ChartColumnBig,
   auditLog: History,

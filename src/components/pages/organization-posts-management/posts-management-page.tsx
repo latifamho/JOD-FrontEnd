@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState, PaginationControls } from "@/components/shared";
@@ -41,6 +42,7 @@ type OrganizationPostsManagementPageProps = {
 export function OrganizationPostsManagementPage({
   status,
 }: OrganizationPostsManagementPageProps) {
+  const searchParams = useSearchParams();
   const [posts, setPosts] = React.useState<OrganizationPostItem[]>(() =>
     organizationPostsStaticData.map((post) => ({
       ...post,
@@ -65,6 +67,7 @@ export function OrganizationPostsManagementPage({
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletePostId, setDeletePostId] = React.useState<string | null>(null);
+  const handledNavigationAction = React.useRef<string | null>(null);
 
   const statusScopedPosts = React.useMemo(
     () =>
@@ -158,6 +161,27 @@ export function OrganizationPostsManagementPage({
     },
     [posts],
   );
+
+  React.useEffect(() => {
+    const action = searchParams.get("action");
+    const postId = searchParams.get("postId");
+    const actionKey = `${action ?? "none"}:${postId ?? ""}`;
+
+    if (handledNavigationAction.current === actionKey) {
+      return;
+    }
+
+    if (action === "create") {
+      handledNavigationAction.current = actionKey;
+      openCreateSheet();
+      return;
+    }
+
+    if (action === "edit" && postId) {
+      handledNavigationAction.current = actionKey;
+      openEditSheet(postId);
+    }
+  }, [openCreateSheet, openEditSheet, searchParams]);
 
   const openDetails = React.useCallback((postId: string) => {
     setDetailsPostId(postId);

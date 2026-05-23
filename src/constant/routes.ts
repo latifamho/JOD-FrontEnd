@@ -22,6 +22,7 @@ export const routePaths = {
     reportsInProgress: "/dashboard/admin/reports/in-progress",
     reportsClosed: "/dashboard/admin/reports/closed",
     users: "/dashboard/admin/users",
+    categories: "/dashboard/admin/categories",
     organizations: "/dashboard/admin/organizations",
     organizationDetails: (id = ":id") => `/dashboard/admin/organizations/${id}`,
     organizationDetailsTemplate: "/dashboard/admin/organizations/:id",
@@ -36,7 +37,6 @@ export const routePaths = {
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
     auditLog: "/dashboard/admin/audit-log",
-    profile: "/dashboard/admin/profile",
     settings: "/dashboard/admin/settings",
   },
   organizationOwnerScope: {
@@ -59,6 +59,7 @@ export const routePaths = {
     notificationsInbox: "/dashboard/org-owner/notifications/inbox",
     notificationsSent: "/dashboard/org-owner/notifications/sent",
     reports: "/dashboard/org-owner/reports",
+    auditLog: "/dashboard/org-owner/audit-log",
     profile: "/dashboard/org-owner/profile",
     settings: "/dashboard/org-owner/settings",
   },
@@ -70,12 +71,16 @@ export const routePaths = {
     campaignDetails: (id = ":id") => `/dashboard/org-staff/campaigns/${id}`,
     campaignDetailsTemplate: "/dashboard/org-staff/campaigns/:id",
     posts: "/dashboard/org-staff/posts",
+    postsDraft: "/dashboard/org-staff/posts/draft",
+    postsPublished: "/dashboard/org-staff/posts/published",
+    postsArchived: "/dashboard/org-staff/posts/archived",
     donors: "/dashboard/org-staff/donors",
     donorsApplicants: "/dashboard/org-staff/donors/applicants",
     notifications: "/dashboard/org-staff/notifications",
     notificationsInbox: "/dashboard/org-staff/notifications/inbox",
     notificationsSent: "/dashboard/org-staff/notifications/sent",
     reports: "/dashboard/org-staff/reports",
+    auditLog: "/dashboard/org-staff/audit-log",
     profile: "/dashboard/org-staff/profile",
     settings: "/dashboard/org-staff/settings",
   },
@@ -192,29 +197,6 @@ const adminLinks: AppNavLink[] = [
     ],
   },
   {
-    label: "مراجعة الحملات",
-    href: routePaths.adminScope.campaignsReview,
-    icon: "campaigns",
-    section: "الإدارة",
-    tabs: [
-      {
-        label: "قيد المراجعة",
-        href: routePaths.adminScope.campaignsReview,
-        icon: "verification",
-      },
-      {
-        label: "مقبولة",
-        href: routePaths.adminScope.campaignsApproved,
-        icon: "campaigns",
-      },
-      {
-        label: "مرفوضة",
-        href: routePaths.adminScope.campaignsRejected,
-        icon: "reports",
-      },
-    ],
-  },
-  {
     label: "إدارة البلاغات",
     href: routePaths.adminScope.reportsNew,
     icon: "reports",
@@ -241,6 +223,12 @@ const adminLinks: AppNavLink[] = [
     label: "إدارة المستخدمين",
     href: routePaths.adminScope.users,
     icon: "users",
+    section: "الإدارة",
+  },
+  {
+    label: "إدارة التصنيفات",
+    href: routePaths.adminScope.categories,
+    icon: "categories",
     section: "الإدارة",
   },
   {
@@ -287,15 +275,10 @@ const adminLinks: AppNavLink[] = [
   },
   {
     label: "الحساب والإعدادات",
-    href: routePaths.adminScope.profile,
+    href: routePaths.adminScope.settings,
     icon: "settings",
     section: "الحساب",
     tabs: [
-      {
-        label: "الملف الشخصي",
-        href: routePaths.adminScope.profile,
-        icon: "profile",
-      },
       {
         label: "الإعدادات",
         href: routePaths.adminScope.settings,
@@ -443,6 +426,11 @@ const organizationOwnerLinks: AppNavLink[] = [
         href: routePaths.organizationOwnerScope.settings,
         icon: "settings",
       },
+      {
+        label: "سجل النشاط",
+        href: routePaths.organizationOwnerScope.auditLog,
+        icon: "auditLog",
+      },
     ],
   },
 ];
@@ -485,22 +473,22 @@ const organizationStaffLinks: AppNavLink[] = [
     tabs: [
       {
         label: "الكل",
-        href: routePaths.organizationOwnerScope.posts,
+        href: routePaths.organizationStaffScope.posts,
         icon: "posts",
       },
       {
         label: "مسودات",
-        href: routePaths.organizationOwnerScope.postsDraft,
+        href: routePaths.organizationStaffScope.postsDraft,
         icon: "goal",
       },
       {
         label: "منشور",
-        href: routePaths.organizationOwnerScope.postsPublished,
+        href: routePaths.organizationStaffScope.postsPublished,
         icon: "posts",
       },
       {
         label: "مؤرشف",
-        href: routePaths.organizationOwnerScope.postsArchived,
+        href: routePaths.organizationStaffScope.postsArchived,
         icon: "auditLog",
       },
     ],
@@ -557,6 +545,11 @@ const organizationStaffLinks: AppNavLink[] = [
         href: routePaths.organizationStaffScope.settings,
         icon: "settings",
       },
+      {
+        label: "سجل النشاط",
+        href: routePaths.organizationStaffScope.auditLog,
+        icon: "auditLog",
+      },
     ],
   },
 ];
@@ -574,7 +567,7 @@ const roleBaseRoute: Record<DashboardRole, string> = {
 };
 
 const roleProfileRoute: Record<DashboardRole, string> = {
-  admin: routePaths.adminScope.profile,
+  admin: routePaths.adminScope.settings,
   organization_owner: routePaths.organizationOwnerScope.profile,
   organization_staff: routePaths.organizationStaffScope.profile,
 };
@@ -648,6 +641,7 @@ const segmentLabels: Record<string, string> = {
   closed: "مغلقة",
   reports: "البلاغات",
   users: "المستخدمون",
+  categories: "التصنيفات",
   organizations: "المنظمات",
   verification: "التوثيق",
   notifications: "الإشعارات",
