@@ -8,7 +8,6 @@ export default function DashboardLayout({
   children: ReactNode
 }) {
   return (
-    //comment
     <div className="flex h-screen overflow-hidden bg-background">
       <SideBar />
       <div className="flex min-w-0 flex-1 flex-col">
