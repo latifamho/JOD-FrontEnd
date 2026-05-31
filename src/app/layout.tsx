@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { Noto_Kufi_Arabic } from "next/font/google"
 
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { AuthProvider } from "@/providers/AuthProvider"
+import { QueryProvider } from "@/providers/query-provider"
 
 import "./globals.css"
 
@@ -25,7 +27,11 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${notoKufiArabic.variable} antialiased`}>
-        <TooltipProvider>{children}</TooltipProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )
