@@ -1,13 +1,21 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 
 import { setAuthToken, setLastOpenedAppCode, setRefreshToken, setUser } from '@/lib/cookies'
 import { useAuth } from '@/providers/AuthProvider'
 import { authServices } from './auth.service'
-import type { LoginRequest } from './auth.type'
+import type { LoginRequest, User } from './auth.type'
+
+function getDashboardRoute(platformRole: User['platformRole']): string {
+  if (platformRole === 'admin') return '/dashboard/admin'
+  if (platformRole === 'owner') return '/dashboard/org-owner'
+  return '/dashboard/org-staff'
+}
 
 export function useLogin() {
+  const router = useRouter()
   const { login, updateUser } = useAuth()
 
   return useMutation({
@@ -25,6 +33,8 @@ export function useLogin() {
 
       login({ access_token: token, expires_at: Math.floor(new Date(expiresAt).getTime() / 1000) })
       updateUser(user)
+
+      router.push(getDashboardRoute(user.platformRole))
     },
   })
 }

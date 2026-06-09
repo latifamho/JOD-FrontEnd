@@ -10,8 +10,11 @@ import {
 } from "@/components/pages/admin-overview/static-data";
 import { formatUtcDateTime } from "@/lib/date";
 import { cn } from "@/lib/utils";
+import { useAdminOverview } from "@/features/admin/dashboard/admin.dash.query";
 
 export function AdminOverviewPage() {
+  const { data, isLoading, error } = useAdminOverview()
+  console.log(data)
   return (
     <section className="flex flex-col flex-1 gap-6">
       <div>
