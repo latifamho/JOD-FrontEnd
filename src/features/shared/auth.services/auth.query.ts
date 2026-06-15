@@ -3,14 +3,23 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 
-import { setAuthToken, setLastOpenedAppCode, setRefreshToken, setUser } from '@/lib/cookies'
+import { clearAuthData, setAuthToken, setDashboardRole, setUser } from '@/lib/cookies'
+import type { DashboardRoleCookie } from '@/lib/cookies'
 import { useAuth } from '@/providers/AuthProvider'
 import { authServices } from './auth.service'
-import type { LoginRequest, User } from './auth.type'
+import type { DashboardRole, LoginRequest, MeProfile } from './auth.type'
 
-function getDashboardRoute(platformRole: User['platformRole']): string {
-  if (platformRole === 'admin') return '/dashboard/admin'
-  if (platformRole === 'owner') return '/dashboard/org-owner'
+function resolveDashboardRole(profile: MeProfile): DashboardRoleCookie {
+  if (profile.userType === 'admin') return 'admin'
+  // Both org_owner and org_staff have userType 'general' with an organizationId.
+  // Defaulting to org_owner; staff access is enforced inside the dashboard via permissions.
+  if (profile.userType === 'general' && profile.organizationId) return 'org_owner'
+  return 'org_staff'
+}
+
+function getDashboardHome(role: DashboardRole): string {
+  if (role === 'admin') return '/dashboard/admin'
+  if (role === 'org_owner') return '/dashboard/org-owner'
   return '/dashboard/org-staff'
 }
 
@@ -20,21 +29,36 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authServices.login(data),
-    onSuccess: (response) => {
-      const { token, refreshToken, expiresAt, user, lastOpenedApplicationCode } = response.item
+    onSuccess: async (response) => {
+      const { token } = response.data
 
-      setAuthToken(token, expiresAt)
-      setRefreshToken(refreshToken)
-      setUser(user)
+      setAuthToken(token)
 
-      if (lastOpenedApplicationCode) {
-        setLastOpenedAppCode(lastOpenedApplicationCode)
+      try {
+        const meResponse = await authServices.getMe()
+        const profile = meResponse.data
+
+        const role = resolveDashboardRole(profile)
+        setUser(profile)
+        setDashboardRole(role)
+        login()
+        updateUser(profile)
+
+        router.push(getDashboardHome(role))
+      } catch {
+        clearAuthData()
       }
+    },
+  })
+}
 
-      login({ access_token: token, expires_at: Math.floor(new Date(expiresAt).getTime() / 1000) })
-      updateUser(user)
+export function useLogout() {
+  const { logout } = useAuth()
 
-      router.push(getDashboardRoute(user.platformRole))
+  return useMutation({
+    mutationFn: () => authServices.logout(),
+    onSettled: () => {
+      logout()
     },
   })
 }

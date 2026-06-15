@@ -1,26 +1,13 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'sonner'
 
-import {
-  appendAuthorizationHeaders,
-  clearAuthData,
-  getRefreshToken,
-  setAuthToken,
-  setRefreshToken,
-} from '@/lib/cookies'
-import type { ApiEnvelope, ApiError } from '@/types/api.types'
+import { appendAuthorizationHeaders, clearAuthData } from '@/lib/cookies'
+import type { ApiError } from '@/types/api.types'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://jod.mustafafares.com/api/v1'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost/api/v1'
 
-const SKIP_AUTH_URLS = ['/Auth/Login', '/Auth/RefreshToken']
+const SKIP_AUTH_URLS = ['/auth/login']
 
-type FailedRequest = {
-  resolve: (token: string) => void
-  reject: (error: unknown) => void
-}
-
-let isRefreshing = false
-let failedQueue: FailedRequest[] = []
 let hasHandledUnauthorized = false
 let onUnauthorized: (() => void) | null = null
 
@@ -33,14 +20,6 @@ export function clearUnauthorizedHandler(): void {
   onUnauthorized = null
 }
 
-function processQueue(error: unknown, token: string | null = null): void {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) reject(error)
-    else if (token) resolve(token)
-  })
-  failedQueue = []
-}
-
 function extractErrorMessage(error: ApiError): string {
   if (error.errors) {
     const firstKey = Object.keys(error.errors)[0]
@@ -48,27 +27,19 @@ function extractErrorMessage(error: ApiError): string {
       return error.errors[firstKey][0]
     }
   }
-  if (error.title) {
-    return error.detail ? `${error.title} - ${error.detail}` : error.title
-  }
-  return 'An unexpected error occurred'
+  return error.message ?? 'حدث خطأ غير متوقع'
 }
-
-// Separate instance for token refresh — avoids interceptor recursion
-const refreshAxios = axios.create({ baseURL: BASE_URL })
 
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
   },
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   appendAuthorizationHeaders(config)
-  config.headers['Accept-Language'] = 'ar'
   return config
 })
 
@@ -81,59 +52,22 @@ api.interceptors.response.use(
     }
     return response
   },
-  async (error) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+  (error) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig
     const status: number = error.response?.status
     const url: string = originalRequest?.url ?? ''
     const isAuthEndpoint = SKIP_AUTH_URLS.some((endpoint) => url.includes(endpoint))
 
-    if (status === 401 && !isAuthEndpoint && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          return api(originalRequest)
-        })
-      }
-
-      originalRequest._retry = true
-      isRefreshing = true
-
-      const refreshToken = getRefreshToken()
-
-      if (!refreshToken) {
-        isRefreshing = false
-        handleSessionExpiry()
-        return Promise.reject(error)
-      }
-
-      try {
-        const response = await refreshAxios.post<
-          ApiEnvelope<{ token: string; refreshToken: string; expiresAt: string }>
-        >('/Auth/RefreshToken', { refreshToken })
-
-        const { token, refreshToken: newRefreshToken, expiresAt } = response.data.item
-        setAuthToken(token, expiresAt)
-        setRefreshToken(newRefreshToken)
-        processQueue(null, token)
-
-        originalRequest.headers.Authorization = `Bearer ${token}`
-        return api(originalRequest)
-      } catch (refreshError) {
-        processQueue(refreshError, null)
-        handleSessionExpiry()
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
-      }
+    if (status === 401 && !isAuthEndpoint) {
+      handleSessionExpiry()
+      return Promise.reject(error)
     }
 
     const apiError = error.response?.data as ApiError | undefined
     if (apiError && status !== 401) {
       toast.error(extractErrorMessage(apiError))
     } else if (!apiError && status !== 401) {
-      toast.error('An unexpected error occurred')
+      toast.error('حدث خطأ غير متوقع')
     }
 
     return Promise.reject(error)

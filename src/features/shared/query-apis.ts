@@ -1,6 +1,11 @@
 export const END_POINTS = {
   AUTH: {
-    LOGIN: '/Auth/Login',
-    REFRESH_TOKEN: '/Auth/RefreshToken',
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+  },
+  ME: {
+    PROFILE: '/me',
+    PERMISSIONS: '/me/permissions',
+    DASHBOARD_CONTEXT: '/me/dashboard-context',
   },
 } as const

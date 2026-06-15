@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   const onSubmit = (values: LoginFormValues) => {
     submitLogin(
-      { username: values.email, password: values.password, rememberMe: false },
+      { email: values.email, password: values.password },
       {
         onError: () => {
           setError('root', { message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' })

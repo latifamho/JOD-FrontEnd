@@ -1,45 +1,43 @@
 export interface LoginRequest {
-  username: string
+  email: string
   password: string
-  rememberMe: boolean
 }
 
-export interface User {
-  id: number
+export interface LoginUser {
+  id: string
   name: string
   email: string
-  image: string | null
-  platformRole: string
+}
+
+export interface LoginData {
+  token: string
+  tokenType: 'Bearer'
+  user: LoginUser
 }
 
 export interface LoginResponse {
-  token: string
-  refreshToken: string
-  expiresAt: string
-  user: User
-  lastOpenedApplicationId: number | null
-  lastOpenedApplicationCode: string | null
-  lastOpenedApplicationUrl: string | null
-}
-
-export interface ApiLoginResponse {
-  statusCode: number
+  data: LoginData
   message: string
-  item: LoginResponse
 }
 
-export interface RefreshTokenRequest {
-  refreshToken: string
+export type UserType = 'admin' | 'general' | 'volunteer' | 'donor' | 'job_seeker'
+
+export type DashboardRole = 'admin' | 'org_owner' | 'org_staff'
+
+export interface MeProfile {
+  id: string
+  name: string
+  email: string
+  phone: string
+  userType: UserType
+  organizationId: string | null
+  organizationName: string | null
+  status: string
+  createdAt: string
+  lastActiveAt: string
 }
 
-export interface RefreshTokenResponse {
-  token: string
-  refreshToken: string
-  expiresAt: string
-}
-
-export interface ApiRefreshTokenResponse {
-  statusCode: number
+export interface MeResponse {
+  data: MeProfile
   message: string
-  item: RefreshTokenResponse
 }

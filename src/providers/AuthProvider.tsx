@@ -3,16 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { clearAuthData, getAuthTokenData, getUser } from '@/lib/cookies'
+import { clearAuthData, getAuthToken, getUser } from '@/lib/cookies'
 import { clearUnauthorizedHandler, setUnauthorizedHandler } from '@/services/api'
-import type { User } from '@/features/shared/auth.services/auth.type'
+import type { MeProfile } from '@/features/shared/auth.services/auth.type'
 
 interface AuthContextValue {
-  user: User | null
+  user: MeProfile | null
   isAuthenticated: boolean
-  login: (tokenData: { access_token: string; expires_at: number }) => void
+  login: () => void
   logout: () => void
-  updateUser: (user: User) => void
+  updateUser: (user: MeProfile) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -20,11 +20,8 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
-  const [user, setUserState] = useState<User | null>(() => getUser<User>())
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const tokenData = getAuthTokenData()
-    return !!tokenData && Date.now() < tokenData.expires_at
-  })
+  const [user, setUserState] = useState<MeProfile | null>(() => getUser<MeProfile>())
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAuthToken()))
 
   const logout = useCallback(() => {
     clearAuthData()
@@ -33,11 +30,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }, [router])
 
-  const login = useCallback((_tokenData: { access_token: string; expires_at: number }) => {
+  const login = useCallback(() => {
     setIsAuthenticated(true)
   }, [])
 
-  const updateUser = useCallback((newUser: User) => {
+  const updateUser = useCallback((newUser: MeProfile) => {
     setUserState(newUser)
   }, [])
 

@@ -1,12 +1,3 @@
-// ─── Auth / Legacy (Login, RefreshToken) ──────────────────────────────────────
-// Auth endpoints still use the old { statusCode, message, item } envelope
-
-export interface ApiEnvelope<T> {
-  statusCode: number
-  message: string
-  item: T
-}
-
 // ─── Dashboard API — Single resource ──────────────────────────────────────────
 // GET /me, GET /me/permissions, GET /me/dashboard-context
 // GET /admin/overview, GET /admin/analytics/kpis, etc.
@@ -43,12 +34,9 @@ export interface ApiMutationResponse<T = void> {
 // ─── Error ────────────────────────────────────────────────────────────────────
 
 export interface ApiError {
-  type: string
-  title: string
-  status: number
-  traceId: string
-  code?: string
-  detail?: string
+  error?: string
+  message?: string
+  code?: number
   errors?: Record<string, string[]>
 }
 
