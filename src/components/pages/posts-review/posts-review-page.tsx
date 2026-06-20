@@ -5,10 +5,9 @@ import * as React from "react";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import type { ModerationStatus } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
+import { useDebounce } from "@/hooks/use-debounce";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
-  reviewPostsStaticData,
   reviewStatusLabels,
   type ReviewPostItem,
 } from "@/components/pages/posts-review/static-data";
@@ -18,124 +17,71 @@ import {
   ReviewToolbar,
   type ReviewSortOption,
 } from "@/components/pages/posts-review/review-toolbar";
+import {
+  useAdminReviewPosts,
+  useApprovePost,
+  useRejectPost,
+} from "@/features/admin/posts/admin.posts.query";
 
 type PostsReviewPageProps = {
   status: ModerationStatus;
 };
 
 export function PostsReviewPage({ status }: PostsReviewPageProps) {
-  const [posts, setPosts] = React.useState<ReviewPostItem[]>(
-    reviewPostsStaticData,
-  );
-  const [organizationFilter, setOrganizationFilter] = React.useState("all");
+  const [organizationSearch, setOrganizationSearch] = React.useState("");
   const [sortBy, setSortBy] =
     React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [selectedPostForDetails, setSelectedPostForDetails] =
     React.useState<ReviewPostItem | null>(null);
 
-  const organizationOptions = React.useMemo(() => {
-    const scopedOrganizations = posts
-      .filter((post) => post.status === status)
-      .map((post) => post.organizationName);
-    const uniqueOrganizations = Array.from(new Set(scopedOrganizations));
+  const debouncedOrgSearch = useDebounce(organizationSearch, 400);
 
-    return uniqueOrganizations.sort((firstOrg, secondOrg) =>
-      firstOrg.localeCompare(secondOrg, "ar", { sensitivity: "base" }),
-    );
-  }, [posts, status]);
+  // Separate total state breaks the circular dependency between
+  // usePagination (needs total) and the query (needs currentPage).
+  const [apiTotal, setApiTotal] = React.useState(0);
+
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
+
+  const { data, isLoading } = useAdminReviewPosts({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sortBy,
+    filter: {
+      status,
+      organizationName: debouncedOrgSearch || undefined,
+    },
+  });
 
   React.useEffect(() => {
-    if (
-      organizationFilter !== "all" &&
-      !organizationOptions.includes(organizationFilter)
-    ) {
-      setOrganizationFilter("all");
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
     }
-  }, [organizationFilter, organizationOptions]);
-
-  const filteredPosts = React.useMemo(() => {
-    const filtered = posts.filter((post) => {
-      if (post.status !== status) {
-        return false;
-      }
-
-      if (
-        organizationFilter !== "all" &&
-        post.organizationName !== organizationFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstPost, secondPost) => {
-      if (sortBy === "title_asc") {
-        return firstPost.title.localeCompare(secondPost.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      if (sortBy === "title_desc") {
-        return secondPost.title.localeCompare(firstPost.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      const firstDate = toUtcTimestamp(firstPost.submittedAt);
-      const secondDate = toUtcTimestamp(secondPost.submittedAt);
-
-      return sortBy === "created_at_oldest"
-        ? firstDate - secondDate
-        : secondDate - firstDate;
-    });
-  }, [organizationFilter, posts, sortBy, status]);
-
-  const pagination = usePagination({
-    totalItems: filteredPosts.length,
-    pageSize,
-  });
-  const { setCurrentPage } = pagination;
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [organizationFilter, pageSize, setCurrentPage, sortBy, status]);
+  }, [status, debouncedOrgSearch, sortBy, pageSize, setCurrentPage]);
 
-  const currentPagePosts = React.useMemo(
-    () => filteredPosts.slice(pagination.startIndex, pagination.endIndex),
-    [filteredPosts, pagination.endIndex, pagination.startIndex],
+  const approveMutation = useApprovePost();
+  const rejectMutation = useRejectPost();
+
+  const posts = data?.data ?? [];
+
+  const handleApprove = React.useCallback(
+    (postId: string) => {
+      approveMutation.mutate({ postId, body: {} });
+    },
+    [approveMutation],
   );
 
-  const handleApprove = React.useCallback((postId: string) => {
-    setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              status: "approved",
-              reviewedBy: "فريق مراجعة المحتوى",
-              rejectionReason: undefined,
-            }
-          : post,
-      ),
-    );
-  }, []);
-
-  const handleReject = React.useCallback((postId: string, reason: string) => {
-    setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              status: "rejected",
-              reviewedBy: "فريق مراجعة المحتوى",
-              rejectionReason: reason,
-            }
-          : post,
-      ),
-    );
-  }, []);
+  const handleReject = React.useCallback(
+    (postId: string, reason: string) => {
+      rejectMutation.mutate({ postId, body: { reason } });
+    },
+    [rejectMutation],
+  );
 
   return (
     <section className="flex flex-col flex-1 gap-4">
@@ -143,13 +89,12 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
         status={status}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        organizationFilter={organizationFilter}
-        organizations={organizationOptions}
-        onOrganizationFilterChange={setOrganizationFilter}
-        totalResults={filteredPosts.length}
+        organizationSearch={organizationSearch}
+        onOrganizationSearchChange={setOrganizationSearch}
+        totalResults={apiTotal}
       />
 
-      {currentPagePosts.length === 0 ? (
+      {!isLoading && posts.length === 0 ? (
         <EmptyState
           icon="posts"
           title={`لا توجد منشورات ضمن حالة ${reviewStatusLabels[status]}`}
@@ -157,7 +102,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
         />
       ) : (
         <ReviewPostsTable
-          posts={currentPagePosts}
+          posts={posts}
           onApprove={handleApprove}
           onReject={handleReject}
           onOpenDetails={setSelectedPostForDetails}
