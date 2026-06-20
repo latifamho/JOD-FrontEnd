@@ -28,26 +28,13 @@ import {
   getRoleSettingsRoute,
   type DashboardRole,
 } from "@/constant/routes";
+import { useLogout } from "@/features/shared/auth.services/auth.query";
+import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 
 type ThemeMode = "light" | "dark" | "system";
 
 const THEME_STORAGE_KEY = "jod:theme-mode";
-
-const userByRole = {
-  admin: {
-    name: "فريق الإدارة",
-    email: "admin@jod.sa",
-  },
-  organization_owner: {
-    name: "مالك المنظمة",
-    email: "owner@jod.sa",
-  },
-  organization_staff: {
-    name: "موظف المنظمة",
-    email: "staff@jod.sa",
-  },
-} as const;
 
 function getSystemThemeIsDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -81,9 +68,15 @@ export function Header() {
   const role = getRoleFromPath(pathname);
   const pageTitle = getPageTitle(pathname);
 
+  const { user } = useAuth();
+  const logoutMutation = useLogout();
+
   const [themeMode, setThemeMode] = React.useState<ThemeMode>("system");
 
-  const activeUser = userByRole[role];
+  const displayName = user?.name ?? dashboardRoleLabels[role];
+  const displayEmail = user?.email ?? "";
+  const avatarLetter = displayName.charAt(0);
+
   const ThemeIcon =
     THEME_CHOICES.find((t) => t.mode === themeMode)?.Icon ?? AppIcons.themeSystem;
 
@@ -151,7 +144,7 @@ export function Header() {
               {/* Avatar with status dot */}
               <div className="relative">
                 <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/70 to-primary text-sm font-semibold text-primary-foreground shadow-sm">
-                  {activeUser.name.charAt(0)}
+                  {avatarLetter}
                 </div>
                 <span className="absolute bottom-0 end-0 size-2 rounded-full bg-emerald-500 ring-1 ring-background" />
               </div>
@@ -159,7 +152,7 @@ export function Header() {
               {/* Name + role label */}
               <div className="hidden text-right sm:block">
                 <p className="text-xs font-semibold leading-4 text-foreground">
-                  {activeUser.name}
+                  {displayName}
                 </p>
                 <p className="text-[11px] leading-4 text-muted-foreground">
                   {dashboardRoleLabels[role]}
@@ -182,14 +175,14 @@ export function Header() {
             <div className="bg-gradient-to-bl from-primary/15 via-primary/5 to-transparent px-4 pb-3 pt-4">
               <div className="flex items-center gap-3">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/70 to-primary text-lg font-bold text-primary-foreground shadow-md ring-2 ring-background">
-                  {activeUser.name.charAt(0)}
+                  {avatarLetter}
                 </div>
                 <div className="min-w-0 flex-1 text-right">
                   <p className="truncate text-sm font-semibold text-foreground">
-                    {activeUser.name}
+                    {displayName}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {activeUser.email}
+                    {displayEmail}
                   </p>
                   <span className="mt-1 inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
                     {dashboardRoleLabels[role]}
@@ -297,7 +290,8 @@ export function Header() {
               <DropdownMenuItem
                 variant="destructive"
                 className="group/logout cursor-pointer py-2"
-                onSelect={(event) => event.preventDefault()}
+                disabled={logoutMutation.isPending}
+                onSelect={() => logoutMutation.mutate()}
               >
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-destructive/10 transition-colors group-focus/logout:bg-destructive/20">
                   <AppIcons.logout className="size-3.5 text-destructive" />
