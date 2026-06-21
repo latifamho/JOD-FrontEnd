@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import {
   postTypeLabels,
   type ReviewPostItem,
 } from "@/components/pages/posts-review/static-data";
+import { useAdminPostDetail } from "@/features/admin/posts/admin.posts.query";
 
 type PostDetailsDialogProps = {
   open: boolean;
@@ -25,6 +26,12 @@ export function PostDetailsDialog({
   onOpenChange,
   post,
 }: PostDetailsDialogProps) {
+  const { data: detailData, isLoading } = useAdminPostDetail(
+    open ? post.id : null,
+  );
+
+  const detail = detailData?.data;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -57,15 +64,93 @@ export function PostDetailsDialog({
               <p className="text-sm font-medium">{post.location}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">تاريخ الإرسال للمراجعة</p>
-              <p className="text-sm font-medium">{formatUtcDateTime(post.submittedAt)}</p>
+              <p className="text-xs text-muted-foreground">
+                تاريخ الإرسال للمراجعة
+              </p>
+              <p className="text-sm font-medium">
+                {formatUtcDateTime(post.submittedAt)}
+              </p>
             </div>
+            {post.publishedAt && (
+              <div>
+                <p className="text-xs text-muted-foreground">تاريخ النشر</p>
+                <p className="text-sm font-medium">
+                  {formatUtcDateTime(post.publishedAt)}
+                </p>
+              </div>
+            )}
+            {post.reviewedBy && (
+              <div>
+                <p className="text-xs text-muted-foreground">راجعه</p>
+                <p className="text-sm font-medium">{post.reviewedBy}</p>
+              </div>
+            )}
           </div>
 
-          <div className="rounded-lg border border-border p-4">
-            <p className="mb-2 text-xs text-muted-foreground">محتوى المنشور</p>
-            <p className="text-sm leading-7 text-foreground">{post.summary}</p>
-          </div>
+          {isLoading ? (
+            <div className="space-y-3">
+              <div className="h-24 rounded-lg bg-muted animate-pulse" />
+              <div className="h-10 rounded-lg bg-muted animate-pulse" />
+            </div>
+          ) : (
+            <>
+              <div className="rounded-lg border border-border p-4">
+                <p className="mb-2 text-xs text-muted-foreground">
+                  محتوى المنشور
+                </p>
+                <p className="text-sm leading-7 text-foreground">
+                  {detail?.body ?? post.summary}
+                </p>
+              </div>
+
+              {detail && (detail.images?.length ?? 0) > 0 && (
+                <div className="rounded-lg border border-border p-4">
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    الصور المرفقة
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {detail?.images?.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`صورة ${i + 1}`}
+                        className="aspect-video w-full rounded-md object-cover border border-border"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {detail && (
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <p className="text-lg font-bold text-foreground">
+                      {detail.viewsCount }
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      المشاهدات
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <p className="text-lg font-bold text-foreground">
+                      {detail.reactionsCount }
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      التفاعلات
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <p className="text-lg font-bold text-foreground">
+                      {detail.reportsCount }
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      البلاغات
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           {post.rejectionReason && (
             <div className="rounded-lg border border-rose-200/70 bg-rose-50/80 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">

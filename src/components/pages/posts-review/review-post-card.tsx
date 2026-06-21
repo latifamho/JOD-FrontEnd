@@ -38,7 +38,9 @@ export function ReviewPostCard({
             <Badge variant="outline">{post.id}</Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            أرسلت للمراجعة: {formatUtcDate(post.submittedAt)}
+            {post.status === "approved" && post.publishedAt
+              ? `نُشر: ${formatUtcDate(post.publishedAt)}`
+              : `أرسلت للمراجعة: ${formatUtcDate(post.submittedAt)}`}
           </p>
         </div>
 

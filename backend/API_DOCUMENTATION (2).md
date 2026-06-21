@@ -304,7 +304,7 @@ Accept: application/json
 Content-Type: application/json (for POST/PATCH)
 ```
 
-Tokens are obtained from `POST /api/v1/auth/login`.
+Tokens are obtained from `POST /api/v1/auth/ `.
 
 ---
 

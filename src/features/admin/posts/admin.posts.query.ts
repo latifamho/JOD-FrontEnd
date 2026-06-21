@@ -17,13 +17,22 @@ export function useAdminReviewPosts(params: AdminReviewPostsParams) {
   })
 }
 
+export function useAdminPostDetail(postId: string | null) {
+  return useQuery({
+    queryKey: adminPostsKeys.detail(postId ?? ''),
+    queryFn: () => adminPostsServices.getPostById(postId!),
+    enabled: !!postId,
+  })
+}
+
 export function useApprovePost() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ postId, body }: { postId: string; body: ApprovePostRequest }) =>
       adminPostsServices.approvePost(postId, body),
-    onSuccess: () => {
+    onSuccess: (_data, { postId }) => {
       queryClient.invalidateQueries({ queryKey: adminPostsKeys.reviewLists() })
+      queryClient.invalidateQueries({ queryKey: adminPostsKeys.detail(postId) })
     },
   })
 }
@@ -33,8 +42,9 @@ export function useRejectPost() {
   return useMutation({
     mutationFn: ({ postId, body }: { postId: string; body: RejectPostRequest }) =>
       adminPostsServices.rejectPost(postId, body),
-    onSuccess: () => {
+    onSuccess: (_data, { postId }) => {
       queryClient.invalidateQueries({ queryKey: adminPostsKeys.reviewLists() })
+      queryClient.invalidateQueries({ queryKey: adminPostsKeys.detail(postId) })
     },
   })
 }

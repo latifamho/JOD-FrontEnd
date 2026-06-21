@@ -38,6 +38,8 @@ export function ReviewPostsTable({
   onReject,
   onOpenDetails,
 }: ReviewPostsTableProps) {
+  const hasNonPending = posts.some((p) => p.status !== "pending");
+
   return (
     <div className="rounded-md border border-border bg-card shadow-sm">
       <Table>
@@ -58,8 +60,13 @@ export function ReviewPostsTable({
             <TableHead className="hidden w-[110px] text-right font-semibold text-muted-foreground lg:table-cell">
               النوع
             </TableHead>
+            {hasNonPending && (
+              <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground lg:table-cell">
+                راجعه
+              </TableHead>
+            )}
             <TableHead className="w-[110px] text-left font-semibold text-muted-foreground">
-              تاريخ الإرسال
+              {hasNonPending ? "تاريخ النشر" : "تاريخ الإرسال"}
             </TableHead>
             <TableHead className="w-[140px] text-center font-semibold text-muted-foreground">
               إجراءات
@@ -71,6 +78,7 @@ export function ReviewPostsTable({
             <ReviewPostRow
               key={post.id}
               post={post}
+              showReviewedBy={hasNonPending}
               onApprove={onApprove}
               onReject={onReject}
               onOpenDetails={onOpenDetails}
@@ -84,6 +92,7 @@ export function ReviewPostsTable({
 
 type ReviewPostRowProps = {
   post: ReviewPostItem;
+  showReviewedBy: boolean;
   onApprove: (postId: string) => void;
   onReject: (postId: string, reason: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
@@ -91,11 +100,17 @@ type ReviewPostRowProps = {
 
 function ReviewPostRow({
   post,
+  showReviewedBy,
   onApprove,
   onReject,
   onOpenDetails,
 }: ReviewPostRowProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+
+  const dateToShow =
+    post.status === "approved" && post.publishedAt
+      ? post.publishedAt
+      : post.submittedAt;
 
   return (
     <>
@@ -127,8 +142,13 @@ function ReviewPostRow({
             {postTypeLabels[post.type]}
           </span>
         </TableCell>
+        {showReviewedBy && (
+          <TableCell className="hidden align-middle text-right text-sm text-muted-foreground lg:table-cell">
+            {post.reviewedBy ?? "—"}
+          </TableCell>
+        )}
         <TableCell className="align-middle text-left text-xs text-muted-foreground">
-          {formatUtcDate(post.submittedAt)}
+          {formatUtcDate(dateToShow)}
         </TableCell>
         <TableCell className="align-middle">
           <div className="flex flex-wrap items-center justify-center gap-1">

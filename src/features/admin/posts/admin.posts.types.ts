@@ -1,4 +1,4 @@
-import type { ApiListResponse, ApiMutationResponse } from '@/types/api.types'
+import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type { ModerationStatus } from '@/components/shared'
 import type { ReviewPostItem } from '@/components/pages/posts-review/static-data'
 
@@ -21,6 +21,20 @@ export interface AdminReviewPostsParams {
 }
 
 export type AdminReviewPostsResponse = ApiListResponse<ReviewPostItem>
+
+// ─── Single post detail ───────────────────────────────────────────────────────
+
+export interface ReviewPostDetail extends ReviewPostItem {
+  body: string | null
+  images: string[] | null
+  viewsCount: number
+  reactionsCount: number
+  reportsCount: number
+}
+
+export type AdminReviewPostDetailResponse = ApiSingleResponse<ReviewPostDetail>
+
+// ─── Mutations ────────────────────────────────────────────────────────────────
 
 export interface ApprovePostRequest {
   note?: string
