@@ -2,7 +2,7 @@ import type { ApiSingleResponse } from '@/types/api.types'
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
-export type AdminOverviewStatIcon = 'users' | 'building' | 'flag' | 'heart'
+export type AdminOverviewStatIcon = 'users' | 'building' | 'document' | 'flag' | 'alert'
 
 export interface AdminOverviewStat {
   id: string
