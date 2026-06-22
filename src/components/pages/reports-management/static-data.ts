@@ -23,6 +23,8 @@ export type ReportEvidence = {
   value: string;
 };
 
+export type NameObject = { id?: string; name: string; email?: string };
+
 export type ReportItem = {
   id: string;
   title: string;
@@ -31,12 +33,12 @@ export type ReportItem = {
   severity: ReportSeverity;
   entityType: ReportEntityType;
   entityId: string;
-  organizationName: string;
-  reporterName: string;
+  organizationName: string | NameObject | null;
+  reporterName: string | NameObject | null;
   createdAt: string;
-  assignee?: string;
-  timeline: ReportTimelineEntry[];
-  evidence: ReportEvidence[];
+  assignee?: string | NameObject | null;
+  timeline: ReportTimelineEntry[] | null;
+  evidence: ReportEvidence[] | null;
 };
 
 export const reportStatusLabels: Record<ReportStatus, string> = {

@@ -19,6 +19,7 @@ import {
 import {
   getSeverityBadgeClass,
   getStatusBadgeClass,
+  toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
 
@@ -83,13 +84,13 @@ export function ReportDetailsSheet({
                   <p>
                     المنظمة:{" "}
                     <span className="font-semibold text-foreground">
-                      {report.organizationName}
+                      {toDisplayName(report.organizationName)}
                     </span>
                   </p>
                   <p>
                     المبلغ:{" "}
                     <span className="font-semibold text-foreground">
-                      {report.reporterName}
+                      {toDisplayName(report.reporterName)}
                     </span>
                   </p>
                   <p>
@@ -101,7 +102,7 @@ export function ReportDetailsSheet({
                   <p>
                     المكلّف الحالي:{" "}
                     <span className="font-semibold text-foreground">
-                      {report.assignee ?? "غير مكلّف"}
+                      {toDisplayName(report?.assignee, "غير مكلّف")}
                     </span>
                   </p>
                 </div>
@@ -112,7 +113,7 @@ export function ReportDetailsSheet({
                   الأدلة المرفقة
                 </h3>
                 <ul className="space-y-2 text-xs text-muted-foreground">
-                  {report.evidence.map((evidenceItem) => (
+                  {(Array.isArray(report.evidence) ? report.evidence : []).map((evidenceItem) => (
                     <li
                       key={evidenceItem.id}
                       className="rounded-md border border-border bg-muted/30 px-3 py-2"
@@ -137,7 +138,7 @@ export function ReportDetailsSheet({
                   سجل الإجراءات
                 </h3>
                 <ul className="space-y-2">
-                  {report.timeline.map((entry) => (
+                  {(Array.isArray(report.timeline) ? report.timeline : []).map((entry) => (
                     <li
                       key={entry.id}
                       className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"

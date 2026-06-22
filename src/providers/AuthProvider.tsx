@@ -20,8 +20,16 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
-  const [user, setUserState] = useState<MeProfile | null>(() => getUser<MeProfile>())
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAuthToken()))
+  const [user, setUserState] = useState<MeProfile | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Sync from cookies after mount — js-cookie is browser-only so reading it
+  // during SSR always returns null, causing a hydration mismatch if we read
+  // in the useState initializer.
+  useEffect(() => {
+    setUserState(getUser<MeProfile>())
+    setIsAuthenticated(Boolean(getAuthToken()))
+  }, [])
 
   const logout = useCallback(() => {
     clearAuthData()

@@ -16,6 +16,7 @@ import {
 import {
   getSeverityBadgeClass,
   getStatusBadgeClass,
+  toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 
 type ReportCardProps = {
@@ -72,13 +73,13 @@ export function ReportCard({
           <p>
             المنظمة:{" "}
             <span className="font-semibold text-foreground">
-              {report.organizationName}
+              {toDisplayName(report.organizationName)}
             </span>
           </p>
           <p>
             المبلّغ:{" "}
             <span className="font-semibold text-foreground">
-              {report.reporterName}
+              {toDisplayName(report.reporterName)}
             </span>
           </p>
           <p>
@@ -90,7 +91,7 @@ export function ReportCard({
           <p>
             المكلّف:{" "}
             <span className="font-semibold text-foreground">
-              {report.assignee ?? "غير مكلّف"}
+              {toDisplayName(report.assignee, "غير مكلّف")}
             </span>
           </p>
         </div>

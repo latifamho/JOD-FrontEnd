@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 
@@ -6,23 +6,25 @@ import { EmptyState, PaginationControls } from "@/components/shared";
 import { ReportCard } from "@/components/pages/reports-management/report-card";
 import { ReportsToolbar } from "@/components/pages/reports-management/reports-toolbar";
 import {
-  reportsStaticData,
   reportStatusLabels,
   type ReportEntityType,
-  type ReportItem,
   type ReportSeverity,
   type ReportStatus,
 } from "@/components/pages/reports-management/static-data";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import {
+  useAdminReports,
+  useClaimReport,
+  useCloseReport,
+  useWaitReport,
+} from "@/features/admin/reports.services/admin.reports.query";
 
 type ReportsManagementPageProps = {
   status: ReportStatus;
 };
 
 export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
-  const [reports, setReports] = React.useState<ReportItem[]>(reportsStaticData);
   const [severityFilter, setSeverityFilter] = React.useState<
     "all" | ReportSeverity
   >("all");
@@ -30,117 +32,56 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
     "all" | ReportEntityType
   >("all");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
-  const filteredReports = React.useMemo(() => {
-    const filtered = reports.filter((report) => {
-      if (report.status !== status) {
-        return false;
-      }
-
-      if (severityFilter !== "all" && report.severity !== severityFilter) {
-        return false;
-      }
-
-      if (
-        entityTypeFilter !== "all" &&
-        report.entityType !== entityTypeFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort(
-      (firstReport, secondReport) =>
-        toUtcTimestamp(secondReport.createdAt) -
-        toUtcTimestamp(firstReport.createdAt),
-    );
-  }, [entityTypeFilter, reports, severityFilter, status]);
-
-  const pagination = usePagination({
-    totalItems: filteredReports.length,
-    pageSize,
-  });
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
+
+  const { data, isLoading, isError } = useAdminReports({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    filter: {
+      status,
+      severity: severityFilter !== "all" ? severityFilter : undefined,
+      entityType: entityTypeFilter !== "all" ? entityTypeFilter : undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [entityTypeFilter, pageSize, setCurrentPage, severityFilter, status]);
+  }, [status, severityFilter, entityTypeFilter, pageSize, setCurrentPage]);
 
-  const currentPageReports = React.useMemo(
-    () => filteredReports.slice(pagination.startIndex, pagination.endIndex),
-    [filteredReports, pagination.endIndex, pagination.startIndex],
-  );
+  const claimMutation = useClaimReport();
+  const waitMutation = useWaitReport();
+  const closeMutation = useCloseReport();
 
-  const updateReportInState = React.useCallback(
-    (reportId: string, updater: (currentReport: ReportItem) => ReportItem) => {
-      setReports((currentReports) =>
-        currentReports.map((report) =>
-          report.id === reportId ? updater(report) : report,
-        ),
-      );
-    },
-    [],
-  );
+  const reports = data?.data ?? [];
 
   const handleClaim = React.useCallback(
     (reportId: string) => {
-      updateReportInState(reportId, (report) => ({
-        ...report,
-        status: "in_progress",
-        assignee: "فريق البلاغات - 1",
-        timeline: [
-          ...report.timeline,
-          {
-            id: `TL-${report.timeline.length + 1}`,
-            action: "استلام البلاغ",
-            actor: "فريق البلاغات - 1",
-            at: "2026-02-27T10:00:00",
-          },
-        ],
-      }));
+      claimMutation.mutate(reportId);
     },
-    [updateReportInState],
+    [claimMutation],
   );
 
   const handleMoveToWaiting = React.useCallback(
     (reportId: string) => {
-      updateReportInState(reportId, (report) => ({
-        ...report,
-        status: "waiting_response",
-        timeline: [
-          ...report.timeline,
-          {
-            id: `TL-${report.timeline.length + 1}`,
-            action: "طلب معلومات إضافية",
-            actor: report.assignee ?? "فريق البلاغات",
-            at: "2026-02-27T10:30:00",
-          },
-        ],
-      }));
+      waitMutation.mutate(reportId);
     },
-    [updateReportInState],
+    [waitMutation],
   );
 
   const handleCloseReport = React.useCallback(
     (reportId: string) => {
-      updateReportInState(reportId, (report) => ({
-        ...report,
-        status: "closed",
-        timeline: [
-          ...report.timeline,
-          {
-            id: `TL-${report.timeline.length + 1}`,
-            action: "إغلاق البلاغ",
-            actor: report.assignee ?? "فريق البلاغات",
-            at: "2026-02-27T11:00:00",
-            note: "تم الإغلاق بعد استكمال المراجعة.",
-          },
-        ],
-      }));
+      closeMutation.mutate(reportId);
     },
-    [updateReportInState],
+    [closeMutation],
   );
 
   return (
@@ -150,7 +91,7 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
           إدارة البلاغات - {reportStatusLabels[status]}
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          النتائج الحالية: {filteredReports.length} بلاغ
+          النتائج الحالية: {apiTotal} بلاغ
         </p>
       </div>
 
@@ -161,7 +102,34 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
         onEntityTypeFilterChange={setEntityTypeFilter}
       />
 
-      {currentPageReports.length === 0 ? (
+      {isError && (
+        <p className="text-sm text-destructive">
+          تعذّر تحميل البلاغات. حاول مرة أخرى.
+        </p>
+      )}
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex min-h-65 flex-col rounded-xl border border-border bg-background p-4 shadow-xs"
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <div className="h-5 w-16 rounded bg-muted animate-pulse" />
+                <div className="h-5 w-12 rounded bg-muted animate-pulse" />
+              </div>
+              <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+              <div className="mt-2 h-3 w-full rounded bg-muted animate-pulse" />
+              <div className="mt-1 h-3 w-5/6 rounded bg-muted animate-pulse" />
+              <div className="mt-auto pt-4 flex gap-2">
+                <div className="h-8 w-24 rounded bg-muted animate-pulse" />
+                <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : reports.length === 0 ? (
         <EmptyState
           icon="reports"
           title="لا توجد بلاغات مطابقة"
@@ -169,7 +137,7 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
         />
       ) : (
         <div className="flex-1 content-start items-start grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {currentPageReports.map((report) => (
+          {reports.map((report) => (
             <ReportCard
               key={report.id}
               report={report}
