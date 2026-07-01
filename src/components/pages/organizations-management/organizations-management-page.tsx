@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { PaginationControls } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { Button } from "@/components/ui/button";
 import { OrganizationsTable } from "@/components/pages/organizations-management/organizations-table";
 import { OrganizationDeleteDialog } from "@/components/pages/organizations-management/organization-delete-dialog";
 import {
@@ -14,128 +14,69 @@ import {
   OrganizationsFilters,
 } from "@/components/pages/organizations-management/organizations-filters";
 import {
-  organizationsStaticData,
-  type AdminOrganizationItem,
-  type OrganizationStatus,
   type OrganizationVerificationStatus,
 } from "@/components/pages/organizations-management/static-data";
 import { routePaths } from "@/constant/routes";
+import {
+  useAdminOrganizations,
+  useToggleOrganizationStatus,
+  useToggleOrganizationVerification,
+  useDeleteOrganization,
+} from "@/features/admin/organizations/admin.organizations.query";
+
+const sortToApiSort: Record<OrganizationsSortOption, string> = {
+  created_newest: "-createdAt",
+  created_oldest: "createdAt",
+  name_asc: "name",
+  name_desc: "-name",
+};
 
 export function OrganizationsManagementPage() {
   const router = useRouter();
-  const [organizations, setOrganizations] = React.useState<
-    AdminOrganizationItem[]
-  >(organizationsStaticData);
+
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
   const [verificationFilter, setVerificationFilter] = React.useState<
     "all" | OrganizationVerificationStatus
   >("all");
-  const [locationFilter, setLocationFilter] = React.useState("all");
-  const [sortBy, setSortBy] =
-    React.useState<OrganizationsSortOption>("created_newest");
+  const [sortBy, setSortBy] = React.useState<OrganizationsSortOption>("created_newest");
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteTargetOrganizationId, setDeleteTargetOrganizationId] =
     React.useState<string | null>(null);
 
-  const locationOptions = React.useMemo(() => {
-    const uniqueLocations = Array.from(
-      new Set(organizations.map((organization) => organization.location)),
-    );
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
 
-    return uniqueLocations.sort((firstLocation, secondLocation) =>
-      firstLocation.localeCompare(secondLocation, "ar", {
-        sensitivity: "base",
-      }),
-    );
-  }, [organizations]);
+  const { data, isError, refetch } = useAdminOrganizations({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: sortToApiSort[sortBy],
+    filter: {
+      verificationStatus: verificationFilter !== "all" ? verificationFilter : undefined,
+    },
+  });
 
   React.useEffect(() => {
-    if (locationFilter !== "all" && !locationOptions.includes(locationFilter)) {
-      setLocationFilter("all");
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
     }
-  }, [locationFilter, locationOptions]);
-
-  const filteredOrganizations = React.useMemo(() => {
-    const filtered = organizations.filter((organization) => {
-      if (
-        verificationFilter !== "all" &&
-        organization.verificationStatus !== verificationFilter
-      ) {
-        return false;
-      }
-
-      if (
-        locationFilter !== "all" &&
-        organization.location !== locationFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstOrganization, secondOrganization) => {
-      if (sortBy === "name_asc") {
-        return firstOrganization.name.localeCompare(
-          secondOrganization.name,
-          "ar",
-          {
-            sensitivity: "base",
-          },
-        );
-      }
-
-      if (sortBy === "name_desc") {
-        return secondOrganization.name.localeCompare(
-          firstOrganization.name,
-          "ar",
-          {
-            sensitivity: "base",
-          },
-        );
-      }
-
-      if (sortBy === "created_oldest") {
-        return (
-          toUtcTimestamp(firstOrganization.createdAt) -
-          toUtcTimestamp(secondOrganization.createdAt)
-        );
-      }
-
-      return (
-        toUtcTimestamp(secondOrganization.createdAt) -
-        toUtcTimestamp(firstOrganization.createdAt)
-      );
-    });
-  }, [locationFilter, organizations, sortBy, verificationFilter]);
-
-  const pagination = usePagination({
-    totalItems: filteredOrganizations.length,
-    pageSize,
-  });
-  const { setCurrentPage } = pagination;
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [locationFilter, pageSize, setCurrentPage, sortBy, verificationFilter]);
+  }, [pageSize, verificationFilter, sortBy, setCurrentPage]);
 
-  const currentPageOrganizations = React.useMemo(
-    () =>
-      filteredOrganizations.slice(pagination.startIndex, pagination.endIndex),
-    [filteredOrganizations, pagination.endIndex, pagination.startIndex],
-  );
+  const organizations = data?.data ?? [];
 
-  const deleteTargetOrganization = React.useMemo(
-    () =>
-      deleteTargetOrganizationId
-        ? (organizations.find(
-            (organization) => organization.id === deleteTargetOrganizationId,
-          ) ?? null)
-        : null,
-    [deleteTargetOrganizationId, organizations],
-  );
+  const deleteTargetOrganization = deleteTargetOrganizationId
+    ? (organizations.find((o) => o.id === deleteTargetOrganizationId) ?? null)
+    : null;
+
+  const toggleStatusMutation = useToggleOrganizationStatus();
+  const toggleVerificationMutation = useToggleOrganizationVerification();
+  const deleteMutation = useDeleteOrganization();
 
   const openOrganizationDetails = React.useCallback(
     (organizationId: string) => {
@@ -146,39 +87,23 @@ export function OrganizationsManagementPage() {
 
   const handleToggleOrganizationStatus = React.useCallback(
     (organizationId: string) => {
-      setOrganizations((currentOrganizations) =>
-        currentOrganizations.map((organization) =>
-          organization.id === organizationId
-            ? {
-                ...organization,
-                status: (organization.status === "active"
-                  ? "inactive"
-                  : "active") as OrganizationStatus,
-              }
-            : organization,
-        ),
-      );
+      const org = organizations.find((o) => o.id === organizationId);
+      if (!org) return;
+      const nextStatus = org.status === "active" ? "inactive" : "active";
+      toggleStatusMutation.mutate({ organizationId, body: { status: nextStatus } });
     },
-    [],
+    [organizations, toggleStatusMutation],
   );
 
   const handleToggleOrganizationVerification = React.useCallback(
     (organizationId: string) => {
-      setOrganizations((currentOrganizations) =>
-        currentOrganizations.map((organization) =>
-          organization.id === organizationId
-            ? {
-                ...organization,
-                verificationStatus:
-                  organization.verificationStatus === "verified"
-                    ? "unverified"
-                    : "verified",
-              }
-            : organization,
-        ),
-      );
+      const org = organizations.find((o) => o.id === organizationId);
+      if (!org) return;
+      const nextStatus =
+        org.verificationStatus === "verified" ? "unverified" : "verified";
+      toggleVerificationMutation.mutate({ organizationId, body: { verificationStatus: nextStatus } });
     },
-    [],
+    [organizations, toggleVerificationMutation],
   );
 
   const openDeleteDialog = React.useCallback((organizationId: string) => {
@@ -187,18 +112,14 @@ export function OrganizationsManagementPage() {
   }, []);
 
   const handleDeleteOrganization = React.useCallback(() => {
-    if (!deleteTargetOrganizationId) {
-      return;
-    }
-
-    setOrganizations((currentOrganizations) =>
-      currentOrganizations.filter(
-        (organization) => organization.id !== deleteTargetOrganizationId,
-      ),
-    );
-    setDeleteDialogOpen(false);
-    setDeleteTargetOrganizationId(null);
-  }, [deleteTargetOrganizationId]);
+    if (!deleteTargetOrganizationId) return;
+    deleteMutation.mutate(deleteTargetOrganizationId, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setDeleteTargetOrganizationId(null);
+      },
+    });
+  }, [deleteTargetOrganizationId, deleteMutation]);
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -216,15 +137,26 @@ export function OrganizationsManagementPage() {
       <OrganizationsFilters
         verificationFilter={verificationFilter}
         onVerificationFilterChange={setVerificationFilter}
-        locationFilter={locationFilter}
-        locationOptions={locationOptions}
-        onLocationFilterChange={setLocationFilter}
+        locationFilter="all"
+        locationOptions={[]}
+        onLocationFilterChange={() => undefined}
         sortBy={sortBy}
         onSortByChange={setSortBy}
       />
 
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل المنظمات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <OrganizationsTable
-        rows={currentPageOrganizations}
+        rows={organizations}
         onViewOrganization={openOrganizationDetails}
         onToggleOrganizationStatus={handleToggleOrganizationStatus}
         onToggleOrganizationVerification={handleToggleOrganizationVerification}
@@ -250,9 +182,7 @@ export function OrganizationsManagementPage() {
         organizationName={deleteTargetOrganization?.name ?? "-"}
         onOpenChange={(nextOpen) => {
           setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setDeleteTargetOrganizationId(null);
-          }
+          if (!nextOpen) setDeleteTargetOrganizationId(null);
         }}
         onConfirm={handleDeleteOrganization}
       />
