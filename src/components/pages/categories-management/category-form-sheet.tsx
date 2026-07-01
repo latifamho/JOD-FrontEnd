@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +47,7 @@ type CategoryFormSheetProps = {
   open: boolean;
   mode: "create" | "edit";
   initialValues: CategoryFormValues;
+  isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: CategoryFormValues) => void;
 };
@@ -53,6 +56,7 @@ export function CategoryFormSheet({
   open,
   mode,
   initialValues,
+  isSubmitting,
   onOpenChange,
   onSubmit,
 }: CategoryFormSheetProps) {
@@ -77,7 +81,6 @@ export function CategoryFormSheet({
               description: formValues.description.trim(),
               status: formValues.status,
             });
-            onOpenChange(false);
           }}
         >
           <SheetHeader className="border-b border-border pe-12 text-right">
@@ -92,6 +95,7 @@ export function CategoryFormSheet({
               <Input
                 id="category-name"
                 required
+                disabled={isSubmitting}
                 value={formValues.name}
                 onChange={(event) =>
                   setFormValues((currentValues) => ({
@@ -107,6 +111,7 @@ export function CategoryFormSheet({
               <Label>نوع التصنيف</Label>
               <Select
                 dir="rtl"
+                disabled={isSubmitting}
                 value={formValues.target}
                 onValueChange={(value) =>
                   setFormValues((currentValues) => ({
@@ -133,6 +138,7 @@ export function CategoryFormSheet({
               <Textarea
                 id="category-description"
                 required
+                disabled={isSubmitting}
                 value={formValues.description}
                 onChange={(event) =>
                   setFormValues((currentValues) => ({
@@ -149,6 +155,7 @@ export function CategoryFormSheet({
               <Label>الحالة</Label>
               <Select
                 dir="rtl"
+                disabled={isSubmitting}
                 value={formValues.status}
                 onValueChange={(value) =>
                   setFormValues((currentValues) => ({
@@ -172,10 +179,18 @@ export function CategoryFormSheet({
           </div>
 
           <SheetFooter className="border-t border-border px-4 py-3 sm:justify-start">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => onOpenChange(false)}
+            >
               إلغاء
             </Button>
-            <Button type="submit">{mode === "create" ? "إضافة" : "حفظ"}</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+              {mode === "create" ? "إضافة" : "حفظ"}
+            </Button>
           </SheetFooter>
         </form>
       </SheetContent>
