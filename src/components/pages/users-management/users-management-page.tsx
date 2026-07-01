@@ -1,11 +1,12 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
+import type { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { UsersTable } from "@/components/pages/users-management/users-table";
 import {
@@ -15,156 +16,186 @@ import {
 } from "@/components/pages/users-management/user-form-sheet";
 import { UserDeleteDialog } from "@/components/pages/users-management/user-delete-dialog";
 import { UserChangePasswordDialog } from "@/components/pages/users-management/user-change-password-dialog";
-import { createNextUserId } from "@/components/pages/users-management/helpers";
-import {
-  usersStaticData,
-  type AdminUserItem,
-  type UserStatus,
-} from "@/components/pages/users-management/static-data";
+import { type UserStatus } from "@/components/pages/users-management/static-data";
 import { AppIcons } from "@/constant/icons";
+import {
+  useAdminUsers,
+  useCreateUser,
+  useUpdateUser,
+  useToggleUserStatus,
+  useChangeUserPassword,
+  useDeleteUser,
+} from "@/features/admin/users/admin.users.query";
+import { adminUsersServices } from "@/features/admin/users/admin.users.services";
+import { adminUsersKeys } from "@/features/admin/users/admin.users.query-keys";
 
 export function UsersManagementPage() {
-  const [users, setUsers] = React.useState<AdminUserItem[]>(usersStaticData);
-  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const queryClient = useQueryClient();
 
+  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
+
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
+
+  const { data, isLoading, isError, refetch } = useAdminUsers({
+    page: pagination.currentPage,
+    perPage: pageSize,
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize, setCurrentPage]);
+
+  const users = data?.data ?? [];
+
+  // Form sheet state
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<UserFormValues>(EMPTY_USER_FORM_VALUES);
   const [editingUserId, setEditingUserId] = React.useState<string | null>(null);
+  const [formEmailError, setFormEmailError] = React.useState<string | null>(null);
 
+  // Per-row loading (edit prefetch + toggle status)
+  const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(
+    new Set(),
+  );
+
+  // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteTargetUserId, setDeleteTargetUserId] = React.useState<
     string | null
   >(null);
 
+  // Change password dialog state
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
     React.useState(false);
   const [changePasswordTargetUserId, setChangePasswordTargetUserId] =
     React.useState<string | null>(null);
 
-  const sortedUsers = React.useMemo(
-    () =>
-      [...users].sort(
-        (firstUser, secondUser) =>
-          toUtcTimestamp(secondUser.createdAt) -
-          toUtcTimestamp(firstUser.createdAt),
-      ),
-    [users],
-  );
+  // Mutations
+  const createMutation = useCreateUser();
+  const updateMutation = useUpdateUser();
+  const toggleStatusMutation = useToggleUserStatus();
+  const changePasswordMutation = useChangeUserPassword();
+  const deleteMutation = useDeleteUser();
 
-  const pagination = usePagination({
-    totalItems: sortedUsers.length,
-    pageSize,
-  });
+  const deleteTargetUser = deleteTargetUserId
+    ? (users.find((u) => u.id === deleteTargetUserId) ?? null)
+    : null;
 
-  const currentPageUsers = React.useMemo(
-    () => sortedUsers.slice(pagination.startIndex, pagination.endIndex),
-    [sortedUsers, pagination.startIndex, pagination.endIndex],
-  );
+  const changePasswordTargetUser = changePasswordTargetUserId
+    ? (users.find((u) => u.id === changePasswordTargetUserId) ?? null)
+    : null;
 
-  const deleteTargetUser = React.useMemo(
-    () =>
-      deleteTargetUserId
-        ? (users.find((user) => user.id === deleteTargetUserId) ?? null)
-        : null,
-    [users, deleteTargetUserId],
-  );
+  const addLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => new Set([...prev, id]));
+  }, []);
 
-  const changePasswordTargetUser = React.useMemo(
-    () =>
-      changePasswordTargetUserId
-        ? (users.find((user) => user.id === changePasswordTargetUserId) ?? null)
-        : null,
-    [users, changePasswordTargetUserId],
-  );
+  const removeLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const openCreateSheet = React.useCallback(() => {
     setFormMode("create");
     setEditingUserId(null);
     setFormInitialValues(EMPTY_USER_FORM_VALUES);
+    setFormEmailError(null);
     setFormOpen(true);
   }, []);
 
   const openEditSheet = React.useCallback(
-    (userId: string) => {
-      const user = users.find((candidate) => candidate.id === userId);
-      if (!user) {
-        return;
+    async (userId: string) => {
+      addLoadingRow(userId);
+      try {
+        const response = await queryClient.fetchQuery({
+          queryKey: adminUsersKeys.detail(userId),
+          queryFn: () => adminUsersServices.getUserById(userId),
+          staleTime: 0,
+        });
+        const user = response.data;
+        setFormMode("edit");
+        setEditingUserId(userId);
+        setFormInitialValues({
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+        });
+        setFormEmailError(null);
+        setFormOpen(true);
+      } catch {
+        // toast already shown by the api interceptor
+      } finally {
+        removeLoadingRow(userId);
       }
-
-      setFormMode("edit");
-      setEditingUserId(user.id);
-      setFormInitialValues({
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        status: user.status,
-      });
-      setFormOpen(true);
     },
-    [users],
+    [queryClient, addLoadingRow, removeLoadingRow],
   );
 
   const handleSaveForm = React.useCallback(
     (values: UserFormValues) => {
+      const onError = (error: Error) => {
+        const axiosError = error as AxiosError;
+        if (axiosError.response?.status === 409) {
+          setFormEmailError("البريد الإلكتروني مستخدم مسبقاً.");
+        }
+      };
+
       if (formMode === "create") {
-        const now = new Date().toISOString();
-
-        const nextUser: AdminUserItem = {
-          id: createNextUserId(users),
-          name: values.name,
-          email: values.email,
-          phone: values.phone,
-          role: values.role,
-          status: values.status,
-          postsCount: 0,
-          reportsCount: 0,
-          createdAt: now,
-          lastActiveAt: now,
-        };
-
-        setUsers((currentUsers) => [nextUser, ...currentUsers]);
+        createMutation.mutate(values, {
+          onSuccess: () => {
+            setFormOpen(false);
+            setFormEmailError(null);
+          },
+          onError,
+        });
         return;
       }
 
-      if (!editingUserId) {
-        return;
-      }
+      if (!editingUserId) return;
 
-      setUsers((currentUsers) =>
-        currentUsers.map((user) =>
-          user.id === editingUserId
-            ? {
-                ...user,
-                name: values.name,
-                email: values.email,
-                phone: values.phone,
-                role: values.role,
-                status: values.status,
-              }
-            : user,
-        ),
+      updateMutation.mutate(
+        { userId: editingUserId, body: values },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            setEditingUserId(null);
+            setFormEmailError(null);
+          },
+          onError,
+        },
       );
     },
-    [editingUserId, formMode, users],
+    [formMode, editingUserId, createMutation, updateMutation],
   );
 
-  const handleToggleUserStatus = React.useCallback((userId: string) => {
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.id === userId
-          ? {
-              ...user,
-              status: (user.status === "active"
-                ? "inactive"
-                : "active") as UserStatus,
-            }
-          : user,
-      ),
-    );
-  }, []);
+  const handleToggleUserStatus = React.useCallback(
+    (userId: string) => {
+      const user = users.find((u) => u.id === userId);
+      if (!user) return;
+      const nextStatus: UserStatus =
+        user.status === "active" ? "inactive" : "active";
+      addLoadingRow(userId);
+      toggleStatusMutation.mutate(
+        { userId, status: nextStatus },
+        { onSettled: () => removeLoadingRow(userId) },
+      );
+    },
+    [users, toggleStatusMutation, addLoadingRow, removeLoadingRow],
+  );
 
   const openDeleteDialog = React.useCallback((userId: string) => {
     setDeleteTargetUserId(userId);
@@ -172,26 +203,38 @@ export function UsersManagementPage() {
   }, []);
 
   const handleDeleteUser = React.useCallback(() => {
-    if (!deleteTargetUserId) {
-      return;
-    }
-
-    setUsers((currentUsers) =>
-      currentUsers.filter((user) => user.id !== deleteTargetUserId),
-    );
-    setDeleteDialogOpen(false);
-    setDeleteTargetUserId(null);
-  }, [deleteTargetUserId]);
+    if (!deleteTargetUserId) return;
+    deleteMutation.mutate(deleteTargetUserId, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setDeleteTargetUserId(null);
+      },
+    });
+  }, [deleteTargetUserId, deleteMutation]);
 
   const openChangePasswordDialog = React.useCallback((userId: string) => {
     setChangePasswordTargetUserId(userId);
     setChangePasswordDialogOpen(true);
   }, []);
 
-  const handleChangePassword = React.useCallback((newPassword: string) => {
-    // Static demo action: no backend call here.
-    void newPassword;
-  }, []);
+  const handleChangePassword = React.useCallback(
+    (newPassword: string) => {
+      if (!changePasswordTargetUserId) return;
+      changePasswordMutation.mutate(
+        { userId: changePasswordTargetUserId, newPassword },
+        {
+          onSuccess: () => {
+            setChangePasswordDialogOpen(false);
+            setChangePasswordTargetUserId(null);
+          },
+        },
+      );
+    },
+    [changePasswordTargetUserId, changePasswordMutation],
+  );
+
+  const isFormSubmitting =
+    createMutation.isPending || updateMutation.isPending;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -206,15 +249,33 @@ export function UsersManagementPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={openCreateSheet}>
+          <Button type="button" disabled={isLoading} onClick={openCreateSheet}>
             اضافة مستخدم جديد
             <AppIcons.users className="size-4" />
           </Button>
         </div>
       </div>
 
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل المستخدمين. حاول مرة أخرى.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => refetch()}
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <UsersTable
-        rows={currentPageUsers}
+        rows={users}
+        isLoading={isLoading}
+        loadingRowIds={loadingRowIds}
         onEditUser={openEditSheet}
         onToggleUserStatus={handleToggleUserStatus}
         onChangeUserPassword={openChangePasswordDialog}
@@ -239,10 +300,14 @@ export function UsersManagementPage() {
         open={formOpen}
         mode={formMode}
         initialValues={formInitialValues}
+        isSubmitting={isFormSubmitting}
+        emailError={formEmailError}
         onOpenChange={(nextOpen) => {
+          if (isFormSubmitting) return;
           setFormOpen(nextOpen);
           if (!nextOpen) {
             setEditingUserId(null);
+            setFormEmailError(null);
           }
         }}
         onSubmit={handleSaveForm}
@@ -251,10 +316,11 @@ export function UsersManagementPage() {
       <UserDeleteDialog
         open={deleteDialogOpen}
         userName={deleteTargetUser?.name ?? "-"}
+        isDeleting={deleteMutation.isPending}
         onOpenChange={(nextOpen) => {
-          setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setDeleteTargetUserId(null);
+          if (!deleteMutation.isPending) {
+            setDeleteDialogOpen(nextOpen);
+            if (!nextOpen) setDeleteTargetUserId(null);
           }
         }}
         onConfirm={handleDeleteUser}
@@ -263,10 +329,11 @@ export function UsersManagementPage() {
       <UserChangePasswordDialog
         open={changePasswordDialogOpen}
         userName={changePasswordTargetUser?.name ?? "-"}
+        isSubmitting={changePasswordMutation.isPending}
         onOpenChange={(nextOpen) => {
-          setChangePasswordDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setChangePasswordTargetUserId(null);
+          if (!changePasswordMutation.isPending) {
+            setChangePasswordDialogOpen(nextOpen);
+            if (!nextOpen) setChangePasswordTargetUserId(null);
           }
         }}
         onConfirm={handleChangePassword}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 type UserChangePasswordDialogProps = {
   open: boolean;
   userName: string;
+  isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (newPassword: string) => void;
 };
@@ -24,6 +26,7 @@ type UserChangePasswordDialogProps = {
 export function UserChangePasswordDialog({
   open,
   userName,
+  isSubmitting,
   onOpenChange,
   onConfirm,
 }: UserChangePasswordDialogProps) {
@@ -41,7 +44,12 @@ export function UserChangePasswordDialog({
     newPassword.trim().length >= 8 && newPassword === confirmPassword;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isSubmitting) onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent dir="rtl" className="sm:max-w-md">
         <DialogHeader className="pe-12 text-right sm:text-right">
           <DialogTitle>تغيير كلمة المرور</DialogTitle>
@@ -56,6 +64,7 @@ export function UserChangePasswordDialog({
             <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
             <PasswordInput
               id="new-password"
+              disabled={isSubmitting}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
               placeholder="أدخل كلمة المرور الجديدة"
@@ -66,6 +75,7 @@ export function UserChangePasswordDialog({
             <Label htmlFor="confirm-password">تأكيد كلمة المرور</Label>
             <PasswordInput
               id="confirm-password"
+              disabled={isSubmitting}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="أعد كتابة كلمة المرور"
@@ -77,17 +87,20 @@ export function UserChangePasswordDialog({
         </div>
 
         <DialogFooter className="sm:justify-start">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={() => onOpenChange(false)}
+          >
             إلغاء
           </Button>
           <Button
             type="button"
-            disabled={!canSubmit}
-            onClick={() => {
-              onConfirm(newPassword.trim());
-              onOpenChange(false);
-            }}
+            disabled={!canSubmit || isSubmitting}
+            onClick={() => onConfirm(newPassword.trim())}
           >
+            {isSubmitting && <Loader2 className="size-4 animate-spin" />}
             حفظ
           </Button>
         </DialogFooter>

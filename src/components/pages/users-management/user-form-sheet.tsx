@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,8 @@ type UserFormSheetProps = {
   open: boolean;
   mode: "create" | "edit";
   initialValues: UserFormValues;
+  isSubmitting: boolean;
+  emailError: string | null;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: UserFormValues) => void;
 };
@@ -72,27 +75,36 @@ export function UserFormSheet({
   open,
   mode,
   initialValues,
+  isSubmitting,
+  emailError,
   onOpenChange,
   onSubmit,
 }: UserFormSheetProps) {
   const [formValues, setFormValues] = React.useState<UserFormValues>(initialValues);
+  const [localEmailError, setLocalEmailError] = React.useState<string | null>(null);
   const [discardDialogOpen, setDiscardDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
       setFormValues(initialValues);
+      setLocalEmailError(null);
     }
   }, [initialValues, open]);
+
+  React.useEffect(() => {
+    setLocalEmailError(emailError);
+  }, [emailError]);
 
   const isDirty = mode === "edit" && !areValuesEqual(formValues, initialValues);
 
   const closeSheetSafely = React.useCallback(() => {
+    if (isSubmitting) return;
     if (isDirty) {
       setDiscardDialogOpen(true);
       return;
     }
     onOpenChange(false);
-  }, [isDirty, onOpenChange]);
+  }, [isDirty, isSubmitting, onOpenChange]);
 
   return (
     <>
@@ -118,7 +130,6 @@ export function UserFormSheet({
                 role: formValues.role,
                 status: formValues.status,
               });
-              onOpenChange(false);
             }}
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
@@ -133,6 +144,7 @@ export function UserFormSheet({
                 <Input
                   id="user-name"
                   required
+                  disabled={isSubmitting}
                   value={formValues.name}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -150,15 +162,20 @@ export function UserFormSheet({
                   id="user-email"
                   type="email"
                   required
+                  disabled={isSubmitting}
                   value={formValues.email}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setFormValues((currentValues) => ({
                       ...currentValues,
                       email: event.target.value,
-                    }))
-                  }
+                    }));
+                    if (localEmailError) setLocalEmailError(null);
+                  }}
                   placeholder="name@example.com"
                 />
+                {localEmailError && (
+                  <p className="text-xs text-destructive">{localEmailError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -166,6 +183,7 @@ export function UserFormSheet({
                 <Input
                   id="user-phone"
                   required
+                  disabled={isSubmitting}
                   value={formValues.phone}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -182,6 +200,7 @@ export function UserFormSheet({
                   <Label>الدور</Label>
                   <Select
                     dir="rtl"
+                    disabled={isSubmitting}
                     value={formValues.role}
                     onValueChange={(value) =>
                       setFormValues((currentValues) => ({
@@ -207,6 +226,7 @@ export function UserFormSheet({
                   <Label>حالة الحساب</Label>
                   <Select
                     dir="rtl"
+                    disabled={isSubmitting}
                     value={formValues.status}
                     onValueChange={(value) =>
                       setFormValues((currentValues) => ({
@@ -231,10 +251,18 @@ export function UserFormSheet({
             </div>
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-              <Button type="button" variant="outline" onClick={closeSheetSafely}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={closeSheetSafely}
+              >
                 إلغاء
               </Button>
-              <Button type="submit">{mode === "create" ? "إضافة" : "حفظ التعديلات"}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                {mode === "create" ? "إضافة" : "حفظ التعديلات"}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -250,7 +278,11 @@ export function UserFormSheet({
           </DialogHeader>
 
           <DialogFooter className="sm:justify-start">
-            <Button type="button" variant="outline" onClick={() => setDiscardDialogOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDiscardDialogOpen(false)}
+            >
               متابعة التعديل
             </Button>
             <Button
