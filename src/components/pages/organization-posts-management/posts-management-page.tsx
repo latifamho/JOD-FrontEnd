@@ -9,9 +9,7 @@ import { EmptyState, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import {
-  createNextPostId,
   isCampaignRelatedPostType,
   normalizePostStatus,
 } from "@/components/pages/organization-posts-management/helpers";
@@ -24,20 +22,35 @@ import {
 import { PostDetailsSheet } from "@/components/pages/organization-posts-management/post-details-sheet";
 import {
   PostsFilters,
-  PostsSortOption,
+  type PostsSortOption,
 } from "@/components/pages/organization-posts-management/posts-filters";
 import { PostsTable } from "@/components/pages/organization-posts-management/posts-table";
 import {
   organizationPostStatusLabels,
-  organizationPostsStaticData,
   type OrganizationPostItem,
   type OrganizationPostStatus,
 } from "@/components/pages/organization-posts-management/static-data";
+import {
+  useOrgPosts,
+  useCreateOrgPost,
+  useUpdateOrgPost,
+  usePublishOrgPost,
+  useArchiveOrgPost,
+  useRestoreOrgPost,
+  useDeleteOrgPost,
+} from "@/features/org/posts/org.posts.query";
 
 type WorkflowAction = "publish" | "archive" | "restore";
 
 type OrganizationPostsManagementPageProps = {
   status: "all" | OrganizationPostStatus;
+};
+
+const sortToApiSort: Record<PostsSortOption, string> = {
+  updated_newest: "-updatedAt",
+  updated_oldest: "updatedAt",
+  title_asc: "title",
+  title_desc: "-title",
 };
 
 export function OrganizationPostsManagementPage({
@@ -54,13 +67,9 @@ function OrganizationPostsManagementPageContent({
   status,
 }: OrganizationPostsManagementPageProps) {
   const searchParams = useSearchParams();
-  const [posts, setPosts] = React.useState<OrganizationPostItem[]>(() =>
-    organizationPostsStaticData.map((post) => ({
-      ...post,
-      status: normalizePostStatus(post.status),
-    })),
-  );
+
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
   const [typeFilter, setTypeFilter] = React.useState<
     "all" | OrganizationPostItem["type"]
@@ -75,73 +84,45 @@ function OrganizationPostsManagementPageContent({
 
   const [detailsSheetOpen, setDetailsSheetOpen] = React.useState(false);
   const [detailsPostId, setDetailsPostId] = React.useState<string | null>(null);
+  const [detailsPost, setDetailsPost] = React.useState<OrganizationPostItem | null>(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletePostId, setDeletePostId] = React.useState<string | null>(null);
+  const [deletePostTitle, setDeletePostTitle] = React.useState("");
+
   const handledNavigationAction = React.useRef<string | null>(null);
 
-  const statusScopedPosts = React.useMemo(
-    () =>
-      posts.filter((post) =>
-        status === "all" ? true : normalizePostStatus(post.status) === status,
-      ),
-    [posts, status],
-  );
-
-  const filteredPosts = React.useMemo(() => {
-    const filtered = statusScopedPosts.filter((post) => {
-      if (typeFilter !== "all" && post.type !== typeFilter) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstPost, secondPost) => {
-      if (sortBy === "updated_oldest") {
-        return toUtcTimestamp(firstPost.updatedAt) - toUtcTimestamp(secondPost.updatedAt);
-      }
-
-      if (sortBy === "title_asc") {
-        return firstPost.title.localeCompare(secondPost.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      if (sortBy === "title_desc") {
-        return secondPost.title.localeCompare(firstPost.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      return toUtcTimestamp(secondPost.updatedAt) - toUtcTimestamp(firstPost.updatedAt);
-    });
-  }, [sortBy, statusScopedPosts, typeFilter]);
-
-  const pagination = usePagination({
-    totalItems: filteredPosts.length,
-    pageSize,
-  });
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
+
+  const { data, isError, refetch } = useOrgPosts({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: sortToApiSort[sortBy],
+    filter: {
+      status: status !== "all" ? status : undefined,
+      type: typeFilter !== "all" ? typeFilter : undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, setCurrentPage, sortBy, status, typeFilter]);
+  }, [pageSize, sortBy, status, typeFilter, setCurrentPage]);
 
-  const currentPagePosts = React.useMemo(
-    () => filteredPosts.slice(pagination.startIndex, pagination.endIndex),
-    [filteredPosts, pagination.endIndex, pagination.startIndex],
-  );
+  const posts = data?.data ?? [];
 
-  const detailsPost = React.useMemo(
-    () => (detailsPostId ? posts.find((post) => post.id === detailsPostId) ?? null : null),
-    [detailsPostId, posts],
-  );
-
-  const deleteTargetPost = React.useMemo(
-    () => (deletePostId ? posts.find((post) => post.id === deletePostId) ?? null : null),
-    [deletePostId, posts],
-  );
+  const createMutation = useCreateOrgPost();
+  const updateMutation = useUpdateOrgPost();
+  const publishMutation = usePublishOrgPost();
+  const archiveMutation = useArchiveOrgPost();
+  const restoreMutation = useRestoreOrgPost();
+  const deleteMutation = useDeleteOrgPost();
 
   const openCreateSheet = React.useCallback(() => {
     setFormMode("create");
@@ -152,10 +133,8 @@ function OrganizationPostsManagementPageContent({
 
   const openEditSheet = React.useCallback(
     (postId: string) => {
-      const post = posts.find((candidate) => candidate.id === postId);
-      if (!post) {
-        return;
-      }
+      const post = posts.find((p) => p.id === postId);
+      if (!post) return;
 
       setFormMode("edit");
       setEditingPostId(post.id);
@@ -178,9 +157,7 @@ function OrganizationPostsManagementPageContent({
     const postId = searchParams.get("postId");
     const actionKey = `${action ?? "none"}:${postId ?? ""}`;
 
-    if (handledNavigationAction.current === actionKey) {
-      return;
-    }
+    if (handledNavigationAction.current === actionKey) return;
 
     if (action === "create") {
       handledNavigationAction.current = actionKey;
@@ -194,52 +171,25 @@ function OrganizationPostsManagementPageContent({
     }
   }, [openCreateSheet, openEditSheet, searchParams]);
 
-  const openDetails = React.useCallback((postId: string) => {
-    setDetailsPostId(postId);
-    setDetailsSheetOpen(true);
-  }, []);
+  const openDetails = React.useCallback(
+    (postId: string) => {
+      const post = posts.find((p) => p.id === postId);
+      setDetailsPostId(postId);
+      setDetailsPost(post ?? null);
+      setDetailsSheetOpen(true);
+    },
+    [posts],
+  );
 
   const handleSaveForm = React.useCallback(
     (values: PostFormValues) => {
-      const now = new Date().toISOString();
       const campaignTitle = isCampaignRelatedPostType(values.type)
         ? values.campaignTitle || undefined
         : undefined;
 
       if (formMode === "create") {
-        const nextPost: OrganizationPostItem = {
-          id: createNextPostId(posts),
-          title: values.title,
-          summary: values.summary,
-          type: values.type,
-          status: values.status,
-          authorName: values.authorName,
-          location: values.location,
-          campaignTitle,
-          createdAt: now,
-          updatedAt: now,
-          publishedAt: values.status === "published" ? now : undefined,
-          viewsCount: 0,
-          reactionsCount: 0,
-          applicationsCount: values.type === "job_opportunity" ? 0 : 0,
-        };
-
-        setPosts((currentPosts) => [nextPost, ...currentPosts]);
-        return;
-      }
-
-      if (!editingPostId) {
-        return;
-      }
-
-      setPosts((currentPosts) =>
-        currentPosts.map((post) => {
-          if (post.id !== editingPostId) {
-            return post;
-          }
-
-          return {
-            ...post,
+        createMutation.mutate(
+          {
             title: values.title,
             summary: values.summary,
             type: values.type,
@@ -247,77 +197,75 @@ function OrganizationPostsManagementPageContent({
             authorName: values.authorName,
             location: values.location,
             campaignTitle,
-            updatedAt: now,
-            publishedAt:
-              values.status === "published"
-                ? post.publishedAt ?? now
-                : values.status === "archived"
-                  ? post.publishedAt
-                  : undefined,
-          };
-        }),
+          },
+          { onSuccess: () => setFormOpen(false) },
+        );
+        return;
+      }
+
+      if (!editingPostId) return;
+
+      updateMutation.mutate(
+        {
+          postId: editingPostId,
+          body: {
+            title: values.title,
+            summary: values.summary,
+            type: values.type,
+            status: values.status,
+            authorName: values.authorName,
+            location: values.location,
+            campaignTitle,
+          },
+        },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            setEditingPostId(null);
+          },
+        },
       );
     },
-    [editingPostId, formMode, posts],
+    [formMode, editingPostId, createMutation, updateMutation],
   );
 
   const handleWorkflowAction = React.useCallback(
     (postId: string, action: WorkflowAction) => {
-      const now = new Date().toISOString();
-
-      setPosts((currentPosts) =>
-        currentPosts.map((post) => {
-          if (post.id !== postId) {
-            return post;
-          }
-
-          if (action === "publish") {
-            return {
-              ...post,
-              status: "published",
-              updatedAt: now,
-              publishedAt: post.publishedAt ?? now,
-            };
-          }
-
-          if (action === "archive") {
-            return {
-              ...post,
-              status: "archived",
-              updatedAt: now,
-            };
-          }
-
-          return {
-            ...post,
-            status: "draft",
-            updatedAt: now,
-          };
-        }),
-      );
+      if (action === "publish") {
+        publishMutation.mutate(postId);
+      } else if (action === "archive") {
+        archiveMutation.mutate(postId);
+      } else {
+        restoreMutation.mutate(postId);
+      }
     },
-    [],
+    [publishMutation, archiveMutation, restoreMutation],
   );
 
-  const openDeleteDialog = React.useCallback((postId: string) => {
-    setDeletePostId(postId);
-    setDeleteDialogOpen(true);
-  }, []);
+  const openDeleteDialog = React.useCallback(
+    (postId: string) => {
+      const post = posts.find((p) => p.id === postId);
+      setDeletePostId(postId);
+      setDeletePostTitle(post?.title ?? "-");
+      setDeleteDialogOpen(true);
+    },
+    [posts],
+  );
 
   const handleDeletePost = React.useCallback(() => {
-    if (!deletePostId) {
-      return;
-    }
-
-    setPosts((currentPosts) => currentPosts.filter((post) => post.id !== deletePostId));
-
-    if (detailsPostId === deletePostId) {
-      setDetailsSheetOpen(false);
-      setDetailsPostId(null);
-    }
-
-    setDeletePostId(null);
-  }, [deletePostId, detailsPostId]);
+    if (!deletePostId) return;
+    deleteMutation.mutate(deletePostId, {
+      onSuccess: () => {
+        if (detailsPostId === deletePostId) {
+          setDetailsSheetOpen(false);
+          setDetailsPostId(null);
+          setDetailsPost(null);
+        }
+        setDeletePostId(null);
+        setDeleteDialogOpen(false);
+      },
+    });
+  }, [deletePostId, detailsPostId, deleteMutation]);
 
   const pageTitle =
     status === "all"
@@ -333,7 +281,7 @@ function OrganizationPostsManagementPageContent({
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             إدارة بوستات المنظمة المتعلقة بالحملات والفرص والمحتوى العام. النتائج الحالية:{" "}
-            {filteredPosts.length}
+            {apiTotal}
           </p>
         </div>
 
@@ -352,7 +300,18 @@ function OrganizationPostsManagementPageContent({
         onSortByChange={setSortBy}
       />
 
-      {currentPagePosts.length === 0 ? (
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل البوستات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {posts.length === 0 ? (
         <EmptyState
           icon="posts"
           title="لا توجد بوستات مطابقة"
@@ -360,7 +319,7 @@ function OrganizationPostsManagementPageContent({
         />
       ) : (
         <PostsTable
-          rows={currentPagePosts}
+          rows={posts}
           onOpenDetails={openDetails}
           onEditPost={openEditSheet}
           onWorkflowAction={handleWorkflowAction}
@@ -388,9 +347,7 @@ function OrganizationPostsManagementPageContent({
         initialValues={formInitialValues}
         onOpenChange={(nextOpen) => {
           setFormOpen(nextOpen);
-          if (!nextOpen) {
-            setEditingPostId(null);
-          }
+          if (!nextOpen) setEditingPostId(null);
         }}
         onSubmit={handleSaveForm}
       />
@@ -402,18 +359,17 @@ function OrganizationPostsManagementPageContent({
           setDetailsSheetOpen(nextOpen);
           if (!nextOpen) {
             setDetailsPostId(null);
+            setDetailsPost(null);
           }
         }}
       />
 
       <DeletePostDialog
         open={deleteDialogOpen}
-        postTitle={deleteTargetPost?.title ?? "-"}
+        postTitle={deletePostTitle}
         onOpenChange={(nextOpen) => {
           setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setDeletePostId(null);
-          }
+          if (!nextOpen) setDeletePostId(null);
         }}
         onConfirm={handleDeletePost}
       />
