@@ -7,7 +7,6 @@ import { EmptyState, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import {
   type CreateNotificationValues,
   CreateNotificationSheet,
@@ -16,19 +15,20 @@ import { NotificationDetailsSheet } from "@/components/pages/notifications-manag
 import { NotificationsFilters } from "@/components/pages/notifications-management/notifications-filters";
 import { NotificationsTable } from "@/components/pages/notifications-management/notifications-table";
 import {
-  createNextNotificationId,
-  matchesDateFilter,
-} from "@/components/pages/notifications-management/helpers";
-import {
   notificationMailboxLabels,
-  notificationsStaticData,
-  type AdminNotificationItem,
   type NotificationCategory,
   type NotificationDateFilter,
   type NotificationMailbox,
   type NotificationRecipientScope,
   type NotificationStatus,
 } from "@/components/pages/notifications-management/static-data";
+import {
+  useAdminNotifications,
+  useCreateAdminNotification,
+  useUpdateAdminNotificationReadState,
+  useResendAdminNotification,
+  useDeleteAdminNotification,
+} from "@/features/admin/notifications/admin.notifications.query";
 
 type NotificationsManagementPageProps = {
   mailbox?: NotificationMailbox;
@@ -37,10 +37,10 @@ type NotificationsManagementPageProps = {
 export function NotificationsManagementPage({
   mailbox,
 }: NotificationsManagementPageProps) {
-  const [notifications, setNotifications] = React.useState<
-    AdminNotificationItem[]
-  >(notificationsStaticData);
+  const activeMailbox = mailbox ?? "inbox";
+
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
   const [statusFilter, setStatusFilter] = React.useState<
     "all" | NotificationStatus
@@ -58,61 +58,28 @@ export function NotificationsManagementPage({
     string | null
   >(null);
   const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
-  const activeMailbox = mailbox ?? "inbox";
 
-  const mailboxNotifications = React.useMemo(
-    () =>
-      notifications.filter(
-        (notification) => notification.mailbox === activeMailbox,
-      ),
-    [activeMailbox, notifications],
-  );
-
-  const filteredNotifications = React.useMemo(() => {
-    const filtered = mailboxNotifications.filter((notification) => {
-      if (statusFilter !== "all" && notification.status !== statusFilter) {
-        return false;
-      }
-
-      if (
-        categoryFilter !== "all" &&
-        notification.category !== categoryFilter
-      ) {
-        return false;
-      }
-
-      if (
-        recipientFilter !== "all" &&
-        notification.recipientScope !== recipientFilter
-      ) {
-        return false;
-      }
-
-      if (!matchesDateFilter(notification.sentAt, dateFilter)) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort(
-      (firstNotification, secondNotification) =>
-        toUtcTimestamp(secondNotification.sentAt) -
-        toUtcTimestamp(firstNotification.sentAt),
-    );
-  }, [
-    categoryFilter,
-    dateFilter,
-    mailboxNotifications,
-    recipientFilter,
-    statusFilter,
-  ]);
-
-  const pagination = usePagination({
-    totalItems: filteredNotifications.length,
-    pageSize,
-  });
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
+
+  const { data, isError, refetch } = useAdminNotifications({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: "-sentAt",
+    filter: {
+      mailbox: activeMailbox,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      category: categoryFilter !== "all" ? categoryFilter : undefined,
+      recipientScope: recipientFilter !== "all" ? recipientFilter : undefined,
+      date: dateFilter !== "all" ? dateFilter : undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -122,107 +89,80 @@ export function NotificationsManagementPage({
     dateFilter,
     pageSize,
     recipientFilter,
-    setCurrentPage,
     statusFilter,
+    setCurrentPage,
   ]);
 
   React.useEffect(() => {
     setStatusFilter("all");
   }, [activeMailbox]);
 
-  const currentPageNotifications = React.useMemo(
-    () =>
-      filteredNotifications.slice(pagination.startIndex, pagination.endIndex),
-    [filteredNotifications, pagination.endIndex, pagination.startIndex],
-  );
+  const notifications = data?.data ?? [];
 
   const detailsNotification = React.useMemo(
     () =>
       detailsNotificationId
-        ? (notifications.find(
-            (notification) => notification.id === detailsNotificationId,
-          ) ?? null)
+        ? (notifications.find((n) => n.id === detailsNotificationId) ?? null)
         : null,
     [detailsNotificationId, notifications],
   );
+
+  const createMutation = useCreateAdminNotification();
+  const toggleReadMutation = useUpdateAdminNotificationReadState();
+  const resendMutation = useResendAdminNotification();
+  const deleteMutation = useDeleteAdminNotification();
 
   const openDetails = React.useCallback((notificationId: string) => {
     setDetailsNotificationId(notificationId);
     setDetailsSheetOpen(true);
   }, []);
 
-  const handleToggleReadStatus = React.useCallback((notificationId: string) => {
-    setNotifications((currentNotifications) =>
-      currentNotifications.map((notification) =>
-        notification.id === notificationId
-          ? {
-              ...notification,
-              status: notification.status === "unread" ? "read" : "unread",
-              readAt:
-                notification.status === "unread"
-                  ? new Date().toISOString()
-                  : undefined,
-            }
-          : notification,
-      ),
-    );
-  }, []);
+  const handleToggleReadStatus = React.useCallback(
+    (notificationId: string) => {
+      const notification = notifications.find((n) => n.id === notificationId);
+      if (!notification) return;
+      const nextStatus =
+        notification.status === "unread" ? "read" : "unread";
+      toggleReadMutation.mutate({ notificationId, body: { status: nextStatus } });
+    },
+    [notifications, toggleReadMutation],
+  );
 
-  const handleResend = React.useCallback((notificationId: string) => {
-    setNotifications((currentNotifications) =>
-      currentNotifications.map((notification) =>
-        notification.id === notificationId
-          ? {
-              ...notification,
-              status: "sent",
-              sentAt: new Date().toISOString(),
-            }
-          : notification,
-      ),
-    );
-  }, []);
+  const handleResend = React.useCallback(
+    (notificationId: string) => {
+      resendMutation.mutate(notificationId);
+    },
+    [resendMutation],
+  );
 
   const handleDelete = React.useCallback(
     (notificationId: string) => {
-      setNotifications((currentNotifications) =>
-        currentNotifications.filter(
-          (notification) => notification.id !== notificationId,
-        ),
-      );
-      if (detailsNotificationId === notificationId) {
-        setDetailsSheetOpen(false);
-        setDetailsNotificationId(null);
-      }
+      deleteMutation.mutate(notificationId, {
+        onSuccess: () => {
+          if (detailsNotificationId === notificationId) {
+            setDetailsSheetOpen(false);
+            setDetailsNotificationId(null);
+          }
+        },
+      });
     },
-    [detailsNotificationId],
+    [deleteMutation, detailsNotificationId],
   );
 
   const handleCreateNotification = React.useCallback(
     (values: CreateNotificationValues) => {
-      const now = new Date().toISOString();
-      const nextNotification: AdminNotificationItem = {
-        id: createNextNotificationId(notifications),
-        mailbox: "sent",
-        title: values.title,
-        body: values.body,
-        category: values.category,
-        recipientScope: values.recipientScope,
-        recipientLabel: values.recipientLabel,
-        priority: "normal",
-        status: "sent",
-        createdAt: now,
-        sentAt: now,
-        referenceLabel: "-",
-        referencePath: "/dashboard/admin/notifications",
-        createdBy: "فريق الإدارة",
-      };
-
-      setNotifications((currentNotifications) => [
-        nextNotification,
-        ...currentNotifications,
-      ]);
+      createMutation.mutate(
+        {
+          title: values.title,
+          body: values.body,
+          category: values.category,
+          recipientScope: values.recipientScope,
+          recipientLabel: values.recipientLabel,
+        },
+        { onSuccess: () => setCreateSheetOpen(false) },
+      );
     },
-    [notifications],
+    [createMutation],
   );
 
   return (
@@ -257,7 +197,18 @@ export function NotificationsManagementPage({
         onDateFilterChange={setDateFilter}
       />
 
-      {currentPageNotifications.length === 0 ? (
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل الإشعارات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {notifications.length === 0 ? (
         <EmptyState
           icon="notifications"
           title={`لا توجد إشعارات ضمن ${notificationMailboxLabels[activeMailbox]}`}
@@ -266,7 +217,7 @@ export function NotificationsManagementPage({
       ) : (
         <NotificationsTable
           mailbox={activeMailbox}
-          rows={currentPageNotifications}
+          rows={notifications}
           onOpenDetails={openDetails}
           onToggleReadStatus={handleToggleReadStatus}
           onResend={handleResend}
