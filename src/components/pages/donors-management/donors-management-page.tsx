@@ -7,7 +7,6 @@ import { DonorEntryDetailsSheet } from "@/components/pages/donors-management/don
 import { DonorEntryDeleteDialog } from "@/components/pages/donors-management/donor-entry-delete-dialog";
 import {
   DonorEntryFormSheet,
-  donorEntryFromFormValues,
   donorEntryToFormValues,
   EMPTY_DONOR_ENTRY_FORM_VALUES,
   type DonorEntryFormValues,
@@ -24,12 +23,17 @@ import {
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
+import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
 import {
-  applicantsStaticData,
-  donorsStaticData,
-  type DonorEntryItem,
-} from "@/components/pages/donors-management/static-data";
+  useOrgDonors,
+  useCreateOrgDonor,
+  useUpdateOrgDonor,
+  useDeleteOrgDonor,
+  useOrgApplicants,
+  useCreateOrgApplicant,
+  useUpdateOrgApplicant,
+  useDeleteOrgApplicant,
+} from "@/features/org/donors/org.donors.query";
 
 type DonorsManagementPageProps = {
   view?: "donors" | "applicants";
@@ -37,49 +41,29 @@ type DonorsManagementPageProps = {
 
 type DonorSortOption = "date_newest" | "date_oldest" | "name_asc" | "name_desc";
 
-function createNextEntryId(
-  entries: DonorEntryItem[],
-  view: "donors" | "applicants",
-): string {
-  const prefix = view === "applicants" ? "APP" : "DNR";
-  const matches = entries
-    .map((entry) => entry.id)
-    .filter((id) => id.startsWith(`${prefix}-`));
-
-  const max = matches.reduce((acc, id) => {
-    const suffix = id.split("-")[1];
-    const parsed = suffix ? Number.parseInt(suffix, 10) : Number.NaN;
-    return Number.isFinite(parsed) ? Math.max(acc, parsed) : acc;
-  }, 0);
-
-  return `${prefix}-${String(max + 1).padStart(3, "0")}`;
-}
+const sortToApiSort: Record<DonorSortOption, string> = {
+  date_newest: "-donatedAt",
+  date_oldest: "donatedAt",
+  name_asc: "name",
+  name_desc: "-name",
+};
 
 export function DonorsManagementPage({
   view = "donors",
 }: DonorsManagementPageProps) {
-  const [donors, setDonors] = React.useState(donorsStaticData);
-  const [applicants, setApplicants] = React.useState(applicantsStaticData);
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
-  const [campaignFilter, setCampaignFilter] = React.useState("all");
-  const [cityFilter, setCityFilter] = React.useState("all");
-  const [applicantStatusFilter, setApplicantStatusFilter] = React.useState("all");
+  const [apiTotal, setApiTotal] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<DonorSortOption>("date_newest");
 
   const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [detailsEntry, setDetailsEntry] = React.useState<DonorEntryItem | null>(
-    null,
-  );
-  const [detailsView, setDetailsView] =
-    React.useState<"donors" | "applicants">(view);
+  const [detailsEntry, setDetailsEntry] = React.useState<DonorEntryItem | null>(null);
+  const [detailsView, setDetailsView] = React.useState<"donors" | "applicants">(view);
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<DonorEntryFormValues>(EMPTY_DONOR_ENTRY_FORM_VALUES);
-  const [editingEntryId, setEditingEntryId] = React.useState<string | null>(
-    null,
-  );
+  const [editingEntryId, setEditingEntryId] = React.useState<string | null>(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteEntryId, setDeleteEntryId] = React.useState<string | null>(null);
@@ -90,101 +74,45 @@ export function DonorsManagementPage({
   }, [view]);
 
   React.useEffect(() => {
-    setCampaignFilter("all");
-    setCityFilter("all");
-    setApplicantStatusFilter("all");
     setSortBy("date_newest");
+    setApiTotal(0);
   }, [view]);
 
-  const rows = view === "donors" ? donors : applicants;
-  const campaignOptions = React.useMemo(
-    () =>
-      Array.from(new Set(rows.map((row) => row.campaignTitle))).sort((first, second) =>
-        first.localeCompare(second, "ar", { sensitivity: "base" }),
-      ),
-    [rows],
-  );
-  const cityOptions = React.useMemo(
-    () =>
-      Array.from(
-        new Set(
-          rows
-            .map((row) => row.city?.trim())
-            .filter((city): city is string => Boolean(city)),
-        ),
-      ).sort((first, second) =>
-        first.localeCompare(second, "ar", { sensitivity: "base" }),
-      ),
-    [rows],
-  );
-  const applicantStatusOptions = React.useMemo(
-    () =>
-      Array.from(new Set(rows.map((row) => row.amountOrType))).sort((first, second) =>
-        first.localeCompare(second, "ar", { sensitivity: "base" }),
-      ),
-    [rows],
-  );
-
-  const filteredRows = React.useMemo(() => {
-    const filtered = rows.filter((row) => {
-      if (campaignFilter !== "all" && row.campaignTitle !== campaignFilter) {
-        return false;
-      }
-
-      if (view === "donors" && cityFilter !== "all" && row.city !== cityFilter) {
-        return false;
-      }
-
-      if (
-        view === "applicants" &&
-        applicantStatusFilter !== "all" &&
-        row.amountOrType !== applicantStatusFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstRow, secondRow) => {
-      if (sortBy === "date_oldest") {
-        return toUtcTimestamp(firstRow.donatedAt) - toUtcTimestamp(secondRow.donatedAt);
-      }
-
-      if (sortBy === "name_asc") {
-        return firstRow.name.localeCompare(secondRow.name, "ar", { sensitivity: "base" });
-      }
-
-      if (sortBy === "name_desc") {
-        return secondRow.name.localeCompare(firstRow.name, "ar", { sensitivity: "base" });
-      }
-
-      return toUtcTimestamp(secondRow.donatedAt) - toUtcTimestamp(firstRow.donatedAt);
-    });
-  }, [applicantStatusFilter, campaignFilter, cityFilter, rows, sortBy, view]);
-
-  const pagination = usePagination({
-    totalItems: filteredRows.length,
-    pageSize,
-  });
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [
-    applicantStatusFilter,
-    campaignFilter,
-    cityFilter,
-    pageSize,
-    setCurrentPage,
-    sortBy,
-    view,
-  ]);
+  }, [pageSize, sortBy, view, setCurrentPage]);
 
-  const paginatedRows = React.useMemo(
-    () => filteredRows.slice(pagination.startIndex, pagination.endIndex),
-    [filteredRows, pagination.endIndex, pagination.startIndex],
-  );
+  const donorsQuery = useOrgDonors({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: sortToApiSort[sortBy],
+  });
+
+  const applicantsQuery = useOrgApplicants({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: sortToApiSort[sortBy],
+  });
+
+  const activeQuery = view === "donors" ? donorsQuery : applicantsQuery;
+
+  React.useEffect(() => {
+    if (activeQuery.data?.meta.total !== undefined) {
+      setApiTotal(activeQuery.data.meta.total);
+    }
+  }, [activeQuery.data?.meta.total]);
+
+  const rows = activeQuery.data?.data ?? [];
+
+  const createDonorMutation = useCreateOrgDonor();
+  const updateDonorMutation = useUpdateOrgDonor();
+  const deleteDonorMutation = useDeleteOrgDonor();
+  const createApplicantMutation = useCreateOrgApplicant();
+  const updateApplicantMutation = useUpdateOrgApplicant();
+  const deleteApplicantMutation = useDeleteOrgApplicant();
 
   const openCreate = React.useCallback(() => {
     setFormMode("create");
@@ -211,57 +139,72 @@ export function DonorsManagementPage({
 
   const handleDetailsOpenChange = React.useCallback((open: boolean) => {
     setDetailsOpen(open);
-    if (!open) {
-      setDetailsEntry(null);
-    }
+    if (!open) setDetailsEntry(null);
   }, []);
 
   const handleFormSubmit = React.useCallback(
     (values: DonorEntryFormValues) => {
+      const body = {
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        campaignTitle: values.campaignTitle.trim(),
+        amountOrType: values.amountOrType.trim(),
+        city: values.city.trim() || undefined,
+        paymentMethod: values.paymentMethod.trim() || undefined,
+        assignedTo: values.assignedTo.trim() || undefined,
+        internalNotes: values.internalNotes.trim() || undefined,
+      };
+
       if (view === "donors") {
-        setDonors((current) => {
-          const nextId =
-            formMode === "create"
-              ? createNextEntryId(current, "donors")
-              : (editingEntryId ?? createNextEntryId(current, "donors"));
-
-          const nextEntry = donorEntryFromFormValues({
-            id: nextId,
-            view: "donors",
-            values,
+        if (formMode === "create") {
+          createDonorMutation.mutate(body, {
+            onSuccess: () => setFormOpen(false),
           });
-
-          if (formMode === "edit") {
-            return current.map((entry) =>
-              entry.id === nextId ? nextEntry : entry,
-            );
-          }
-
-          return [nextEntry, ...current];
-        });
+        } else if (editingEntryId) {
+          updateDonorMutation.mutate(
+            { donorId: editingEntryId, body },
+            {
+              onSuccess: () => {
+                setFormOpen(false);
+                setEditingEntryId(null);
+              },
+            },
+          );
+        }
         return;
       }
 
-      setApplicants((current) => {
-        const nextId =
-          formMode === "create"
-            ? createNextEntryId(current, "applicants")
-            : (editingEntryId ?? createNextEntryId(current, "applicants"));
+      const applicantBody = {
+        ...body,
+        requestType: values.requestType.trim() || undefined,
+      };
 
-        const nextEntry = donorEntryFromFormValues({
-          id: nextId,
-          view: "applicants",
-          values,
+      if (formMode === "create") {
+        createApplicantMutation.mutate(applicantBody, {
+          onSuccess: () => setFormOpen(false),
         });
-
-        if (formMode === "edit") {
-          return current.map((entry) => (entry.id === nextId ? nextEntry : entry));
-        }
-
-        return [nextEntry, ...current];
-      });
+      } else if (editingEntryId) {
+        updateApplicantMutation.mutate(
+          { applicantId: editingEntryId, body: applicantBody },
+          {
+            onSuccess: () => {
+              setFormOpen(false);
+              setEditingEntryId(null);
+            },
+          },
+        );
+      }
     },
-    [editingEntryId, formMode, view],
+    [
+      view,
+      formMode,
+      editingEntryId,
+      createDonorMutation,
+      updateDonorMutation,
+      createApplicantMutation,
+      updateApplicantMutation,
+    ],
   );
 
   const handleConfirmDelete = React.useCallback(() => {
@@ -271,30 +214,43 @@ export function DonorsManagementPage({
     }
 
     if (view === "donors") {
-      setDonors((current) =>
-        current.filter((entry) => entry.id !== deleteEntryId),
-      );
+      deleteDonorMutation.mutate(deleteEntryId, {
+        onSuccess: () => {
+          if (detailsEntry?.id === deleteEntryId) {
+            setDetailsOpen(false);
+            setDetailsEntry(null);
+          }
+          setDeleteDialogOpen(false);
+          setDeleteEntryId(null);
+          setDeleteEntryName("");
+        },
+      });
     } else {
-      setApplicants((current) =>
-        current.filter((entry) => entry.id !== deleteEntryId),
-      );
+      deleteApplicantMutation.mutate(deleteEntryId, {
+        onSuccess: () => {
+          if (detailsEntry?.id === deleteEntryId) {
+            setDetailsOpen(false);
+            setDetailsEntry(null);
+          }
+          setDeleteDialogOpen(false);
+          setDeleteEntryId(null);
+          setDeleteEntryName("");
+        },
+      });
     }
-
-    if (detailsEntry?.id === deleteEntryId) {
-      setDetailsOpen(false);
-      setDetailsEntry(null);
-    }
-
-    setDeleteDialogOpen(false);
-    setDeleteEntryId(null);
-    setDeleteEntryName("");
-  }, [deleteEntryId, detailsEntry?.id, view]);
+  }, [
+    deleteEntryId,
+    detailsEntry?.id,
+    view,
+    deleteDonorMutation,
+    deleteApplicantMutation,
+  ]);
 
   const pageTitle = view === "applicants" ? "إدارة المتقدمين" : "إدارة المتبرعين";
   const pageDescription =
     view === "applicants"
-      ? `إدارة طلبات المتقدمين المرتبطة بالحملات والفرص. النتائج الحالية: ${filteredRows.length}`
-      : `إدارة سجلات المتبرعين المرتبطة بالحملات والفرص. النتائج الحالية: ${filteredRows.length}`;
+      ? `إدارة طلبات المتقدمين المرتبطة بالحملات والفرص. النتائج الحالية: ${apiTotal}`
+      : `إدارة سجلات المتبرعين المرتبطة بالحملات والفرص. النتائج الحالية: ${apiTotal}`;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -314,67 +270,13 @@ export function DonorsManagementPage({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <Select dir="rtl" value={campaignFilter} onValueChange={setCampaignFilter}>
-          <SelectTrigger className="w-full text-right text-xs">
-            <SelectValue placeholder="كل الحملات" />
-          </SelectTrigger>
-          <SelectContent align="start" position="popper" className="text-right">
-            <SelectItem value="all" className="text-right text-xs">
-              كل الحملات
-            </SelectItem>
-            {campaignOptions.map((campaign) => (
-              <SelectItem key={campaign} value={campaign} className="text-right text-xs">
-                {campaign}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {view === "donors" ? (
-          <Select dir="rtl" value={cityFilter} onValueChange={setCityFilter}>
-            <SelectTrigger className="w-full text-right text-xs">
-              <SelectValue placeholder="كل المدن" />
-            </SelectTrigger>
-            <SelectContent align="start" position="popper" className="text-right">
-              <SelectItem value="all" className="text-right text-xs">
-                كل المدن
-              </SelectItem>
-              {cityOptions.map((city) => (
-                <SelectItem key={city} value={city} className="text-right text-xs">
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Select
-            dir="rtl"
-            value={applicantStatusFilter}
-            onValueChange={setApplicantStatusFilter}
-          >
-            <SelectTrigger className="w-full text-right text-xs">
-              <SelectValue placeholder="كل الحالات" />
-            </SelectTrigger>
-            <SelectContent align="start" position="popper" className="text-right">
-              <SelectItem value="all" className="text-right text-xs">
-                كل الحالات
-              </SelectItem>
-              {applicantStatusOptions.map((status) => (
-                <SelectItem key={status} value={status} className="text-right text-xs">
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
+      <div className="flex justify-end">
         <Select
           dir="rtl"
           value={sortBy}
           onValueChange={(value) => setSortBy(value as DonorSortOption)}
         >
-          <SelectTrigger className="w-full text-right text-xs">
+          <SelectTrigger className="w-48 text-right text-xs">
             <SelectValue placeholder="الترتيب" />
           </SelectTrigger>
           <SelectContent align="start" position="popper" className="text-right">
@@ -394,7 +296,18 @@ export function DonorsManagementPage({
         </Select>
       </div>
 
-      {filteredRows.length === 0 ? (
+      {activeQuery.isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل البيانات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => activeQuery.refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {rows.length === 0 ? (
         <EmptyState
           icon="donors"
           title={view === "donors" ? "لا يوجد متبرعون حتى الآن" : "لا يوجد متقدمون"}
@@ -406,7 +319,7 @@ export function DonorsManagementPage({
         />
       ) : (
         <DonorsTable
-          rows={paginatedRows}
+          rows={rows}
           view={view}
           onEditRow={(row) => openEdit(row)}
           onDeleteRow={(row) => openDelete(row)}
