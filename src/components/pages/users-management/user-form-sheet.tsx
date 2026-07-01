@@ -28,6 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   userRoleLabels,
   userStatusLabels,
@@ -41,6 +42,7 @@ export type UserFormValues = {
   phone: string;
   role: UserRole;
   status: UserStatus;
+  password?: string;
 };
 
 export const EMPTY_USER_FORM_VALUES: UserFormValues = {
@@ -49,6 +51,7 @@ export const EMPTY_USER_FORM_VALUES: UserFormValues = {
   phone: "",
   role: "general",
   status: "active",
+  password: "",
 };
 
 type UserFormSheetProps = {
@@ -67,7 +70,8 @@ function areValuesEqual(first: UserFormValues, second: UserFormValues): boolean 
     first.email === second.email &&
     first.phone === second.phone &&
     first.role === second.role &&
-    first.status === second.status
+    first.status === second.status &&
+    (first.password ?? "") === (second.password ?? "")
   );
 }
 
@@ -129,6 +133,7 @@ export function UserFormSheet({
                 phone: formValues.phone.trim(),
                 role: formValues.role,
                 status: formValues.status,
+                ...(mode === "create" && { password: formValues.password?.trim() }),
               });
             }}
           >
@@ -194,6 +199,28 @@ export function UserFormSheet({
                   placeholder="+9665XXXXXXXX"
                 />
               </div>
+
+              {mode === "create" && (
+                <div className="space-y-2">
+                  <Label htmlFor="user-password">كلمة المرور</Label>
+                  <PasswordInput
+                    id="user-password"
+                    required
+                    disabled={isSubmitting}
+                    value={formValues.password ?? ""}
+                    onChange={(event) =>
+                      setFormValues((currentValues) => ({
+                        ...currentValues,
+                        password: event.target.value,
+                      }))
+                    }
+                    placeholder="أدخل كلمة المرور"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    الحد الأدنى 8 أحرف.
+                  </p>
+                </div>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">

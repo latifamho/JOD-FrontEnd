@@ -54,7 +54,7 @@ export function useToggleUserStatus() {
 export function useChangeUserPassword() {
   return useMutation({
     mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
-      adminUsersServices.changeUserPassword(userId, { newPassword }),
+      adminUsersServices.changeUserPassword(userId, newPassword),
   })
 }
 

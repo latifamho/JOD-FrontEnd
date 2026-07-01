@@ -16,7 +16,8 @@ import {
 } from "@/components/pages/users-management/user-form-sheet";
 import { UserDeleteDialog } from "@/components/pages/users-management/user-delete-dialog";
 import { UserChangePasswordDialog } from "@/components/pages/users-management/user-change-password-dialog";
-import { type UserStatus } from "@/components/pages/users-management/static-data";
+import { type UserRole, type UserStatus } from "@/components/pages/users-management/static-data";
+import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";
 import {
   useAdminUsers,
@@ -34,6 +35,9 @@ export function UsersManagementPage() {
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
+  const [statusFilter, setStatusFilter] = React.useState<"all" | UserStatus>("all");
+  const [roleFilter, setRoleFilter] = React.useState<"all" | UserRole>("all");
+  const [searchFilter, setSearchFilter] = React.useState("");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -41,6 +45,12 @@ export function UsersManagementPage() {
   const { data, isLoading, isError, refetch } = useAdminUsers({
     page: pagination.currentPage,
     perPage: pageSize,
+    sort: "-createdAt",
+    filter: {
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      role: roleFilter !== "all" ? roleFilter : undefined,
+      search: searchFilter.trim() || undefined,
+    },
   });
 
   React.useEffect(() => {
@@ -51,7 +61,7 @@ export function UsersManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, setCurrentPage]);
+  }, [pageSize, statusFilter, roleFilter, searchFilter, setCurrentPage]);
 
   const users = data?.data ?? [];
 
@@ -155,20 +165,39 @@ export function UsersManagementPage() {
       };
 
       if (formMode === "create") {
-        createMutation.mutate(values, {
-          onSuccess: () => {
-            setFormOpen(false);
-            setFormEmailError(null);
+        createMutation.mutate(
+          {
+            name: values.name,
+            email: values.email,
+            phone: values.phone,
+            role: values.role,
+            status: values.status,
+            password: values.password ?? "",
           },
-          onError,
-        });
+          {
+            onSuccess: () => {
+              setFormOpen(false);
+              setFormEmailError(null);
+            },
+            onError,
+          },
+        );
         return;
       }
 
       if (!editingUserId) return;
 
       updateMutation.mutate(
-        { userId: editingUserId, body: values },
+        {
+          userId: editingUserId,
+          body: {
+            name: values.name,
+            email: values.email,
+            phone: values.phone,
+            role: values.role,
+            status: values.status,
+          },
+        },
         {
           onSuccess: () => {
             setFormOpen(false);
@@ -255,6 +284,15 @@ export function UsersManagementPage() {
           </Button>
         </div>
       </div>
+
+      <UsersFilters
+        statusFilter={statusFilter}
+        roleFilter={roleFilter}
+        searchFilter={searchFilter}
+        onStatusFilterChange={setStatusFilter}
+        onRoleFilterChange={setRoleFilter}
+        onSearchFilterChange={setSearchFilter}
+      />
 
       {isError && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">

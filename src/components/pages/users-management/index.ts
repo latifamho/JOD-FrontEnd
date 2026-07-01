@@ -1,6 +1,5 @@
 export { UsersManagementPage } from "@/components/pages/users-management/users-management-page";
 export {
-  usersStaticData,
   userStatusLabels,
   userRoleLabels,
   type AdminUserItem,

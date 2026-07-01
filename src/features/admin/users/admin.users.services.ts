@@ -6,7 +6,6 @@ import type {
   UserCreateRequest,
   UserUpdateRequest,
   UserStatusToggleRequest,
-  UserPasswordChangeRequest,
   CreateUserResponse,
   UpdateUserResponse,
   ToggleUserStatusResponse,
@@ -21,9 +20,24 @@ const ENDPOINTS = {
   USER_PASSWORD: (id: string) => `/admin/users/${id}/password`,
 } as const
 
+function buildParams(params: AdminUsersParams): Record<string, unknown> {
+  const flat: Record<string, unknown> = {}
+  if (params.page !== undefined) flat.page = params.page
+  if (params.perPage !== undefined) flat.perPage = params.perPage
+  if (params.sort) flat.sort = params.sort
+  if (params.filter) {
+    for (const [key, value] of Object.entries(params.filter)) {
+      if (value !== undefined && value !== '') {
+        flat[`filter.${key}`] = value
+      }
+    }
+  }
+  return flat
+}
+
 export const adminUsersServices = {
   async getUsers(params: AdminUsersParams): Promise<AdminUsersResponse> {
-    const response = await api.get<AdminUsersResponse>(ENDPOINTS.USERS, { params })
+    const response = await api.get<AdminUsersResponse>(ENDPOINTS.USERS, { params: buildParams(params) })
     return response.data
   },
 
@@ -47,8 +61,11 @@ export const adminUsersServices = {
     return response.data
   },
 
-  async changeUserPassword(userId: string, body: UserPasswordChangeRequest): Promise<ChangeUserPasswordResponse> {
-    const response = await api.patch<ChangeUserPasswordResponse>(ENDPOINTS.USER_PASSWORD(userId), body)
+  async changeUserPassword(userId: string, newPassword: string): Promise<ChangeUserPasswordResponse> {
+    const response = await api.patch<ChangeUserPasswordResponse>(ENDPOINTS.USER_PASSWORD(userId), {
+      newPassword,
+      confirmPassword: newPassword,
+    })
     return response.data
   },
 

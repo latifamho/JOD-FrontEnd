@@ -1,9 +1,17 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type { AdminUserItem, UserRole, UserStatus } from '@/components/pages/users-management/static-data'
 
+export interface AdminUsersFilter {
+  status?: UserStatus
+  role?: UserRole
+  search?: string
+}
+
 export interface AdminUsersParams {
   page?: number
   perPage?: number
+  sort?: string
+  filter?: AdminUsersFilter
 }
 
 export interface UserCreateRequest {
@@ -12,6 +20,7 @@ export interface UserCreateRequest {
   phone: string
   role: UserRole
   status: UserStatus
+  password: string
 }
 
 export interface UserUpdateRequest {
@@ -28,6 +37,7 @@ export interface UserStatusToggleRequest {
 
 export interface UserPasswordChangeRequest {
   newPassword: string
+  confirmPassword: string
 }
 
 export type AdminUsersResponse = ApiListResponse<AdminUserItem>
