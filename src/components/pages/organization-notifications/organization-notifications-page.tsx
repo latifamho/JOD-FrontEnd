@@ -20,11 +20,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDateTime } from "@/lib/date";
+import { orgNotificationCategoryLabels } from "@/components/pages/organization-notifications/static-data";
+import { PaginationControls } from "@/components/shared";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { usePagination } from "@/hooks/use-pagination";
 import {
-  orgNotificationCategoryLabels,
-  organizationNotificationsStaticData,
-  type OrgNotificationItem,
-} from "@/components/pages/organization-notifications/static-data";
+  useOrgNotifications,
+  useUpdateOrgNotificationReadState,
+} from "@/features/org/notifications/org.notifications.query";
 
 type Filter = "all" | "unread" | "read";
 
@@ -35,40 +38,50 @@ const filterLabels: Record<Filter, string> = {
 };
 
 export function OrganizationNotificationsPage() {
-  const [items, setItems] = React.useState<OrgNotificationItem[]>(
-    organizationNotificationsStaticData,
-  );
   const [filter, setFilter] = React.useState<Filter>("all");
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
-  const filtered = React.useMemo(() => {
-    return items.filter((n) => {
-      if (filter === "unread") return !n.read;
-      if (filter === "read") return n.read;
-      return true;
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
+
+  const { data, isError, refetch } = useOrgNotifications({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    filter: {
+      status: filter !== "all" ? filter : undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, pageSize, setCurrentPage]);
+
+  const updateReadState = useUpdateOrgNotificationReadState();
+
+  const rows = data?.data ?? [];
+  const selected = rows.find((n) => n.id === openId) ?? null;
+  const unreadCount = rows.filter((n) => !n.read).length;
+
+  function toggleRead(id: string, currentlyRead: boolean) {
+    updateReadState.mutate({
+      notificationId: id,
+      body: { status: currentlyRead ? "unread" : "read" },
     });
-  }, [items, filter]);
-
-  const selected = React.useMemo(
-    () => items.find((n) => n.id === openId) ?? null,
-    [items, openId],
-  );
-
-  function toggleRead(id: string) {
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n)),
-    );
   }
-
-  const unreadCount = items.filter((n) => !n.read).length;
 
   return (
     <section className="flex flex-col flex-1 gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-foreground">
-            الإشعارات
-          </h2>
+          <h2 className="text-base font-semibold text-foreground">الإشعارات</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             تنبيهات الحملات والتبرعات والموظفين والمنشورات.{" "}
             {unreadCount > 0 ? (
@@ -97,6 +110,17 @@ export function OrganizationNotificationsPage() {
         </div>
       </div>
 
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل الإشعارات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
         <Table className="min-w-[min(100%,720px)] bg-background">
           <TableHeader className="bg-muted/35">
@@ -109,11 +133,8 @@ export function OrganizationNotificationsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((row) => (
-              <TableRow
-                key={row.id}
-                className={row.read ? "" : "bg-sky-500/5"}
-              >
+            {rows.map((row) => (
+              <TableRow key={row.id} className={row.read ? "" : "bg-sky-500/5"}>
                 <TableCell className="align-top">
                   {!row.read ? (
                     <span
@@ -159,7 +180,8 @@ export function OrganizationNotificationsPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 px-2 text-xs"
-                      onClick={() => toggleRead(row.id)}
+                      disabled={updateReadState.isPending}
+                      onClick={() => toggleRead(row.id, row.read)}
                     >
                       {row.read ? "تعيين غير مقروء" : "تعيين مقروء"}
                     </Button>
@@ -170,6 +192,20 @@ export function OrganizationNotificationsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        hasPreviousPage={pagination.hasPreviousPage}
+        hasNextPage={pagination.hasNextPage}
+        paginationRange={pagination.paginationRange}
+        onPageChange={pagination.goToPage}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
 
       <Sheet open={openId !== null} onOpenChange={(o) => !o && setOpenId(null)}>
         <SheetContent side="right" dir="rtl" className="sm:max-w-md">
@@ -199,14 +235,13 @@ export function OrganizationNotificationsPage() {
                     <Button
                       type="button"
                       className="mt-2"
+                      disabled={updateReadState.isPending}
                       onClick={() => {
-                        if (selected) toggleRead(selected.id);
+                        if (selected) toggleRead(selected.id, selected.read);
                         setOpenId(null);
                       }}
                     >
-                      {selected?.read
-                        ? "إعادة كغير مقروء"
-                        : "تعيين كمقروء وإغلاق"}
+                      {selected?.read ? "إعادة كغير مقروء" : "تعيين كمقروء وإغلاق"}
                     </Button>
                   </>
                 ) : null}
