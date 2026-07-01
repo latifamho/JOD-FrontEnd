@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { EmptyState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -19,15 +20,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { routePaths } from "@/constant/routes";
 import {
   articleStatusLabels,
-  type ArticleItem,
   type ArticleStatus,
 } from "@/components/pages/content-management/static-data";
+import { createArticleSlug } from "@/components/pages/content-management/helpers";
 import {
-  createArticleSlug,
-  createNextArticleId,
-  readStoredArticles,
-  writeStoredArticles,
-} from "@/components/pages/content-management/helpers";
+  useCreateArticle,
+  useUpdateArticle,
+} from "@/features/admin/articles/admin.articles.query";
+import { adminArticlesServices } from "@/features/admin/articles/admin.articles.services";
+import { adminArticlesKeys } from "@/features/admin/articles/admin.articles.query-keys";
 
 type ContentEditorPageProps = {
   mode: "create" | "edit";
@@ -50,25 +51,18 @@ const EMPTY_FORM_VALUES: ArticleFormValues = {
   status: "draft",
 };
 
-function toFormValues(article: ArticleItem): ArticleFormValues {
-  return {
-    title: article.title,
-    slug: article.slug,
-    excerpt: article.excerpt,
-    authorName: article.authorName,
-    status: article.status,
-  };
-}
-
 export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [isReady, setIsReady] = React.useState(mode === "create");
   const [hasNotFoundArticle, setHasNotFoundArticle] = React.useState(false);
-  const [formValues, setFormValues] = React.useState<ArticleFormValues>(
-    EMPTY_FORM_VALUES,
-  );
+  const [formValues, setFormValues] = React.useState<ArticleFormValues>(EMPTY_FORM_VALUES);
   const [isSlugDirty, setIsSlugDirty] = React.useState(false);
+
+  const createMutation = useCreateArticle();
+  const updateMutation = useUpdateArticle();
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   React.useEffect(() => {
     if (mode === "create") {
@@ -78,22 +72,36 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
       return;
     }
 
-    const articles = readStoredArticles();
-    const article = articleId
-      ? articles.find((candidate) => candidate.id === articleId)
-      : null;
-
-    if (!article) {
+    if (!articleId) {
       setHasNotFoundArticle(true);
       setIsReady(true);
       return;
     }
 
-    setFormValues(toFormValues(article));
-    setHasNotFoundArticle(false);
-    setIsSlugDirty(true);
-    setIsReady(true);
-  }, [articleId, mode]);
+    queryClient
+      .fetchQuery({
+        queryKey: adminArticlesKeys.detail(articleId),
+        queryFn: () => adminArticlesServices.getArticleById(articleId),
+        staleTime: 0,
+      })
+      .then((response) => {
+        const article = response.data;
+        setFormValues({
+          title: article.title,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          authorName: article.authorName,
+          status: article.status,
+        });
+        setIsSlugDirty(true);
+        setHasNotFoundArticle(false);
+        setIsReady(true);
+      })
+      .catch(() => {
+        setHasNotFoundArticle(true);
+        setIsReady(true);
+      });
+  }, [articleId, mode, queryClient]);
 
   if (!isReady) {
     return <section className="flex flex-1" />;
@@ -116,6 +124,47 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
     );
   }
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedSlug = formValues.slug.trim() || createArticleSlug(formValues.title);
+    if (!normalizedSlug) return;
+
+    if (mode === "create") {
+      createMutation.mutate(
+        {
+          title: formValues.title.trim(),
+          slug: normalizedSlug,
+          excerpt: formValues.excerpt.trim(),
+          authorName: formValues.authorName.trim(),
+          status: formValues.status,
+        },
+        {
+          onSuccess: () => router.push(routePaths.adminScope.content),
+        },
+      );
+      return;
+    }
+
+    if (!articleId) return;
+
+    updateMutation.mutate(
+      {
+        articleId,
+        body: {
+          title: formValues.title.trim(),
+          slug: normalizedSlug,
+          excerpt: formValues.excerpt.trim(),
+          authorName: formValues.authorName.trim(),
+          status: formValues.status,
+        },
+      },
+      {
+        onSuccess: () => router.push(routePaths.adminScope.content),
+      },
+    );
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">
@@ -131,53 +180,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
 
       <form
         className="rounded-md border border-border bg-background p-4 shadow-xs"
-        onSubmit={(event) => {
-          event.preventDefault();
-
-          const normalizedSlug =
-            formValues.slug.trim() || createArticleSlug(formValues.title);
-          if (!normalizedSlug) {
-            return;
-          }
-
-          const articles = readStoredArticles();
-          const now = new Date().toISOString();
-
-          let nextArticles: ArticleItem[];
-          if (mode === "create") {
-            const nextArticle: ArticleItem = {
-              id: createNextArticleId(articles),
-              title: formValues.title.trim(),
-              slug: normalizedSlug,
-              excerpt: formValues.excerpt.trim(),
-              authorName: formValues.authorName.trim(),
-              status: formValues.status,
-              createdAt: now,
-              publishedAt: formValues.status === "published" ? now : undefined,
-            };
-            nextArticles = [nextArticle, ...articles];
-          } else {
-            nextArticles = articles.map((article) =>
-              article.id === articleId
-                ? {
-                    ...article,
-                    title: formValues.title.trim(),
-                    slug: normalizedSlug,
-                    excerpt: formValues.excerpt.trim(),
-                    authorName: formValues.authorName.trim(),
-                    status: formValues.status,
-                    publishedAt:
-                      formValues.status === "published"
-                        ? article.publishedAt ?? now
-                        : undefined,
-                  }
-                : article,
-            );
-          }
-
-          writeStoredArticles(nextArticles);
-          router.push(routePaths.adminScope.content);
-        }}
+        onSubmit={handleSubmit}
       >
         <div className="grid gap-4">
           <div className="space-y-2">
@@ -283,10 +286,15 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
         </div>
 
         <div className="mt-4 flex items-center justify-start gap-2">
-          <Button type="button" variant="outline" onClick={() => router.push(routePaths.adminScope.content)}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={() => router.push(routePaths.adminScope.content)}
+          >
             إلغاء
           </Button>
-          <Button type="submit">
+          <Button type="submit" disabled={isSubmitting}>
             {mode === "create" ? "إضافة المقال" : "حفظ التعديلات"}
           </Button>
         </div>

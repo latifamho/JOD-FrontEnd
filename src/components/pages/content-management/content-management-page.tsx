@@ -5,22 +5,39 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { ContentTable } from "@/components/pages/content-management/content-table";
-import {
-  type ArticleItem,
-} from "@/components/pages/content-management/static-data";
-import { readStoredArticles } from "@/components/pages/content-management/helpers";
 import { AppIcons } from "@/constant/icons";
 import { routePaths } from "@/constant/routes";
+import { EmptyState, PaginationControls } from "@/components/shared";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import { useAdminArticles } from "@/features/admin/articles/admin.articles.query";
 
 export function ContentManagementPage() {
   const router = useRouter();
-  const [articles, setArticles] = React.useState<ArticleItem[]>(() =>
-    readStoredArticles(),
-  );
+
+  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
+
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
+
+  const { data, isLoading, isError, refetch } = useAdminArticles({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: "-createdAt",
+  });
 
   React.useEffect(() => {
-    setArticles(readStoredArticles());
-  }, []);
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize, setCurrentPage]);
+
+  const articles = data?.data ?? [];
 
   const handleEdit = React.useCallback(
     (id: string) => {
@@ -37,12 +54,13 @@ export function ContentManagementPage() {
             إدارة المحتوى والمدونة
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {articles.length} مقال
+            {apiTotal} مقال
           </p>
         </div>
         <Button
           size="sm"
           className="w-fit"
+          disabled={isLoading}
           onClick={() => router.push(routePaths.adminScope.contentNew)}
         >
           <AppIcons.content className="size-4" />
@@ -50,15 +68,40 @@ export function ContentManagementPage() {
         </Button>
       </div>
 
-      {articles.length === 0 ? (
-        <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background px-6 text-center">
-          <p className="text-sm font-medium text-foreground">
-            لا توجد مقالات حتى الآن
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل المقالات. حاول مرة أخرى.
           </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
         </div>
+      )}
+
+      {!isLoading && articles.length === 0 ? (
+        <EmptyState
+          icon="content"
+          title="لا توجد مقالات حتى الآن"
+          description="أنشئ مقالاً جديداً من الزر أعلاه."
+        />
       ) : (
         <ContentTable rows={articles} onEdit={handleEdit} />
       )}
+
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        hasPreviousPage={pagination.hasPreviousPage}
+        hasNextPage={pagination.hasNextPage}
+        paginationRange={pagination.paginationRange}
+        onPageChange={pagination.goToPage}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
     </section>
   );
 }
