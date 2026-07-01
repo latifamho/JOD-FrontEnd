@@ -4,22 +4,75 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { RewardsTable } from "@/components/pages/rewards-management/rewards-table";
-import { badgeStaticData, type BadgeItem } from "@/components/pages/rewards-management/static-data";
 import {
   EMPTY_REWARD_FORM_VALUES,
   RewardFormSheet,
   type RewardFormValues,
 } from "@/components/pages/rewards-management/reward-form-sheet";
-import { createNextBadgeId } from "@/components/pages/rewards-management/helpers";
 import { AppIcons } from "@/constant/icons";
+import { EmptyState, PaginationControls } from "@/components/shared";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import {
+  useAdminBadges,
+  useCreateBadge,
+  useUpdateBadge,
+  useToggleBadgeStatus,
+  useDeleteBadge,
+} from "@/features/admin/badges/admin.badges.query";
+import { adminBadgesServices } from "@/features/admin/badges/admin.badges.services";
+import { adminBadgesKeys } from "@/features/admin/badges/admin.badges.query-keys";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function RewardsManagementPage() {
-  const [badges, setBadges] = React.useState<BadgeItem[]>(badgeStaticData);
+  const queryClient = useQueryClient();
+
+  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<RewardFormValues>(EMPTY_REWARD_FORM_VALUES);
   const [editingBadgeId, setEditingBadgeId] = React.useState<string | null>(null);
+  const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
+
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
+
+  const { data, isLoading, isError, refetch } = useAdminBadges({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: "-createdAt",
+  });
+
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize, setCurrentPage]);
+
+  const badges = data?.data ?? [];
+
+  const createMutation = useCreateBadge();
+  const updateMutation = useUpdateBadge();
+  const toggleMutation = useToggleBadgeStatus();
+  const deleteMutation = useDeleteBadge();
+
+  const addLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => new Set([...prev, id]));
+  }, []);
+
+  const removeLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const openCreateSheet = React.useCallback(() => {
     setFormMode("create");
@@ -28,66 +81,73 @@ export function RewardsManagementPage() {
     setFormOpen(true);
   }, []);
 
-  const openEditSheet = React.useCallback((rewardId: string) => {
-    const badge = badges.find((candidate) => candidate.id === rewardId);
-    if (!badge) {
-      return;
-    }
+  const openEditSheet = React.useCallback(
+    async (rewardId: string) => {
+      addLoadingRow(rewardId);
+      try {
+        const response = await queryClient.fetchQuery({
+          queryKey: adminBadgesKeys.detail(rewardId),
+          queryFn: () => adminBadgesServices.getBadgeById(rewardId),
+          staleTime: 0,
+        });
+        const badge = response.data;
+        setFormMode("edit");
+        setEditingBadgeId(rewardId);
+        setFormInitialValues({
+          name: badge.name,
+          description: badge.description,
+          criteria: badge.criteria,
+          iconName: badge.iconName,
+          isActive: badge.isActive,
+        });
+        setFormOpen(true);
+      } catch {
+        // error handled by api interceptor
+      } finally {
+        removeLoadingRow(rewardId);
+      }
+    },
+    [queryClient, addLoadingRow, removeLoadingRow],
+  );
 
-    setFormMode("edit");
-    setEditingBadgeId(badge.id);
-    setFormInitialValues({
-      name: badge.name,
-      description: badge.description,
-      criteria: badge.criteria,
-      iconName: badge.iconName,
-      isActive: badge.isActive,
-    });
-    setFormOpen(true);
-  }, [badges]);
-
-  const handleSaveForm = React.useCallback((values: RewardFormValues) => {
-    setBadges((currentBadges) => {
+  const handleSaveForm = React.useCallback(
+    (values: RewardFormValues) => {
       if (formMode === "create") {
-        const nextBadge: BadgeItem = {
-          id: createNextBadgeId(currentBadges),
-          name: values.name,
-          description: values.description,
-          criteria: values.criteria,
-          iconName: values.iconName,
-          isActive: values.isActive,
-          createdAt: new Date().toISOString(),
-        };
-
-        return [nextBadge, ...currentBadges];
+        createMutation.mutate(values, {
+          onSuccess: () => setFormOpen(false),
+        });
+        return;
       }
 
-      if (!editingBadgeId) {
-        return currentBadges;
-      }
+      if (!editingBadgeId) return;
 
-      return currentBadges.map((badge) =>
-        badge.id === editingBadgeId
-          ? {
-              ...badge,
-              name: values.name,
-              description: values.description,
-              criteria: values.criteria,
-              iconName: values.iconName,
-              isActive: values.isActive,
-            }
-          : badge,
+      updateMutation.mutate(
+        { badgeId: editingBadgeId, body: values },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            setEditingBadgeId(null);
+          },
+        },
       );
-    });
-  }, [editingBadgeId, formMode]);
+    },
+    [formMode, editingBadgeId, createMutation, updateMutation],
+  );
 
-  const handleToggleRewardStatus = React.useCallback((rewardId: string) => {
-    setBadges((currentBadges) =>
-      currentBadges.map((badge) =>
-        badge.id === rewardId ? { ...badge, isActive: !badge.isActive } : badge,
-      ),
-    );
-  }, []);
+  const handleToggleRewardStatus = React.useCallback(
+    (rewardId: string) => {
+      const badge = badges.find((b) => b.id === rewardId);
+      if (!badge) return;
+      addLoadingRow(rewardId);
+      toggleMutation.mutate(
+        { badgeId: rewardId, isActive: !badge.isActive },
+        { onSettled: () => removeLoadingRow(rewardId) },
+      );
+    },
+    [badges, toggleMutation, addLoadingRow, removeLoadingRow],
+  );
+
+  const isFormSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <section className="flex flex-col flex-1 gap-4">
@@ -97,24 +157,32 @@ export function RewardsManagementPage() {
             إدارة الشارات والمكافآت
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {badges.length} شارة
+            {apiTotal} شارة
           </p>
         </div>
-        <Button size="sm" className="w-fit" onClick={openCreateSheet}>
+        <Button size="sm" className="w-fit" disabled={isLoading} onClick={openCreateSheet}>
           <AppIcons.rewards className="size-4" />
           إضافة شارة
         </Button>
       </div>
 
-      {badges.length === 0 ? (
-        <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background px-6 text-center">
-          <p className="text-sm font-medium text-foreground">
-            لا توجد شارات حتى الآن
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل الشارات. حاول مرة أخرى.
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            أضف شارة جديدة من الزر أعلاه
-          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
         </div>
+      )}
+
+      {!isLoading && badges.length === 0 ? (
+        <EmptyState
+          icon="rewards"
+          title="لا توجد شارات حتى الآن"
+          description="أضف شارة جديدة من الزر أعلاه"
+        />
       ) : (
         <RewardsTable
           rows={badges}
@@ -123,11 +191,28 @@ export function RewardsManagementPage() {
         />
       )}
 
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        hasPreviousPage={pagination.hasPreviousPage}
+        hasNextPage={pagination.hasNextPage}
+        paginationRange={pagination.paginationRange}
+        onPageChange={pagination.goToPage}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
+
       <RewardFormSheet
         open={formOpen}
         mode={formMode}
         initialValues={formInitialValues}
-        onOpenChange={setFormOpen}
+        onOpenChange={(nextOpen) => {
+          setFormOpen(nextOpen);
+          if (!nextOpen) setEditingBadgeId(null);
+        }}
         onSubmit={handleSaveForm}
       />
     </section>

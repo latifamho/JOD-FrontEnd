@@ -57,7 +57,7 @@ export function RewardsTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const RewardIcon = AppIcons[row.iconName];
+            const RewardIcon = AppIcons[row.iconName] ?? AppIcons.rewards;
 
             return (
               <TableRow key={row.id} className="align-middle">
