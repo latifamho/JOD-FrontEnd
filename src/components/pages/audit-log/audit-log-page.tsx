@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { EmptyState, PaginationControls } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   Table,
@@ -13,12 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  auditLogStaticData,
-  type AuditLogActionType,
-} from "@/components/pages/audit-log/audit-log.data";
+import { type AuditLogActionType } from "@/components/pages/audit-log/audit-log.data";
 import { usePagination } from "@/hooks/use-pagination";
-import { formatUtcDateTime, toUtcTimestamp } from "@/lib/date";
+import { formatUtcDateTime } from "@/lib/date";
+import { useAdminAuditLogs } from "@/features/admin/audit-logs/admin.audit-logs.query";
 
 const actionTypeLabels: Record<AuditLogActionType, string> = {
   authentication: "مصادقة",
@@ -38,43 +37,29 @@ const actionTypeBadgeClassNames: Record<AuditLogActionType, string> = {
 
 export function AuditLogPage() {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
-  const sortedRows = React.useMemo(() => {
-    return [...auditLogStaticData].sort((firstRow, secondRow) => {
-      return toUtcTimestamp(secondRow.at) - toUtcTimestamp(firstRow.at);
-    });
-  }, []);
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
 
-  const summary = React.useMemo(() => {
-    const totalEntries = sortedRows.length;
-    const totalUsers = new Set(sortedRows.map((row) => row.user)).size;
-    const latestTimestamp = sortedRows[0]?.at;
-    const recentEntries =
-      latestTimestamp === undefined
-        ? 0
-        : sortedRows.filter((row) => {
-            const differenceMs =
-              toUtcTimestamp(latestTimestamp) - toUtcTimestamp(row.at);
-            return differenceMs <= 24 * 60 * 60 * 1000;
-          }).length;
-
-    return {
-      totalEntries,
-      totalUsers,
-      recentEntries,
-      latestTimestamp,
-    };
-  }, [sortedRows]);
-
-  const pagination = usePagination({
-    totalItems: sortedRows.length,
-    pageSize,
+  const { data, isLoading, isError, refetch } = useAdminAuditLogs({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: "-at",
   });
 
-  const currentPageRows = React.useMemo(
-    () => sortedRows.slice(pagination.startIndex, pagination.endIndex),
-    [sortedRows, pagination.endIndex, pagination.startIndex],
-  );
+  React.useEffect(() => {
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
+    }
+  }, [data?.meta.total]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize, setCurrentPage]);
+
+  const rows = data?.data ?? [];
+  const latestTimestamp = rows[0]?.at;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -85,37 +70,32 @@ export function AuditLogPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">إجمالي الأحداث</p>
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            {summary.totalEntries}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">مستخدمون ظاهرون</p>
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            {summary.totalUsers}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">آخر 24 ساعة (نسبيًا)</p>
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            {summary.recentEntries}
-          </p>
+          <p className="mt-1 text-xl font-semibold text-foreground">{apiTotal}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">أحدث تحديث</p>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {summary.latestTimestamp
-              ? formatUtcDateTime(summary.latestTimestamp)
-              : "—"}
+            {latestTimestamp ? formatUtcDateTime(latestTimestamp) : "—"}
           </p>
         </div>
       </div>
 
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل السجل. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <div className="rounded-xl border border-border bg-card shadow-sm">
-        {sortedRows.length === 0 ? (
+        {!isLoading && rows.length === 0 ? (
           <div className="p-4">
             <EmptyState
               icon="auditLog"
@@ -145,7 +125,7 @@ export function AuditLogPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentPageRows.map((row) => (
+              {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="text-right">{row.action}</TableCell>
                   <TableCell className="text-right">
@@ -172,21 +152,19 @@ export function AuditLogPage() {
         )}
       </div>
 
-      {sortedRows.length > 0 ? (
-        <PaginationControls
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          hasPreviousPage={pagination.hasPreviousPage}
-          hasNextPage={pagination.hasNextPage}
-          paginationRange={pagination.paginationRange}
-          onPageChange={pagination.goToPage}
-          onPreviousPage={pagination.goToPreviousPage}
-          onNextPage={pagination.goToNextPage}
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
-          pageSizeOptions={PAGE_SIZE_OPTIONS}
-        />
-      ) : null}
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        hasPreviousPage={pagination.hasPreviousPage}
+        hasNextPage={pagination.hasNextPage}
+        paginationRange={pagination.paginationRange}
+        onPageChange={pagination.goToPage}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
     </section>
   );
 }
