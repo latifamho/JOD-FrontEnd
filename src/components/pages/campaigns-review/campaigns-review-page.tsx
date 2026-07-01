@@ -5,137 +5,80 @@ import * as React from "react";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import type { ModerationStatus } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { Button } from "@/components/ui/button";
 import { ReviewCampaignCard } from "@/components/pages/campaigns-review/review-campaign-card";
 import {
   CampaignReviewToolbar,
   type ReviewSortOption,
 } from "@/components/pages/campaigns-review/review-toolbar";
 import {
-  reviewCampaignsStaticData,
   reviewStatusLabels,
-  type ReviewCampaignItem,
 } from "@/components/pages/campaigns-review/static-data";
+import {
+  useAdminReviewCampaigns,
+  useApproveReviewCampaign,
+  useRejectReviewCampaign,
+} from "@/features/admin/review-campaigns/admin.review-campaigns.query";
 
 type CampaignsReviewPageProps = {
   status: ModerationStatus;
 };
 
+const sortToApiSort: Record<ReviewSortOption, string> = {
+  created_at_newest: "-submittedAt",
+  created_at_oldest: "submittedAt",
+  title_asc: "title",
+  title_desc: "-title",
+};
+
 export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
-  const [campaigns, setCampaigns] = React.useState<ReviewCampaignItem[]>(
-    reviewCampaignsStaticData,
-  );
-  const [organizationFilter, setOrganizationFilter] = React.useState("all");
-  const [sortBy, setSortBy] =
-    React.useState<ReviewSortOption>("created_at_newest");
+  const [sortBy, setSortBy] = React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [apiTotal, setApiTotal] = React.useState(0);
 
-  const organizationOptions = React.useMemo(() => {
-    const scopedOrganizations = campaigns
-      .filter((campaign) => campaign.status === status)
-      .map((campaign) => campaign.organizationName);
-    const uniqueOrganizations = Array.from(new Set(scopedOrganizations));
+  const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const { setCurrentPage } = pagination;
 
-    return uniqueOrganizations.sort((firstOrg, secondOrg) =>
-      firstOrg.localeCompare(secondOrg, "ar", { sensitivity: "base" }),
-    );
-  }, [campaigns, status]);
+  const { data, isError, refetch } = useAdminReviewCampaigns({
+    page: pagination.currentPage,
+    perPage: pageSize,
+    sort: sortToApiSort[sortBy],
+    filter: { status },
+  });
 
   React.useEffect(() => {
-    if (
-      organizationFilter !== "all" &&
-      !organizationOptions.includes(organizationFilter)
-    ) {
-      setOrganizationFilter("all");
+    if (data?.meta.total !== undefined) {
+      setApiTotal(data.meta.total);
     }
-  }, [organizationFilter, organizationOptions]);
-
-  const filteredCampaigns = React.useMemo(() => {
-    const filtered = campaigns.filter((campaign) => {
-      if (campaign.status !== status) {
-        return false;
-      }
-
-      if (
-        organizationFilter !== "all" &&
-        campaign.organizationName !== organizationFilter
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstCampaign, secondCampaign) => {
-      if (sortBy === "title_asc") {
-        return firstCampaign.title.localeCompare(secondCampaign.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      if (sortBy === "title_desc") {
-        return secondCampaign.title.localeCompare(firstCampaign.title, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      const firstDate = toUtcTimestamp(firstCampaign.submittedAt);
-      const secondDate = toUtcTimestamp(secondCampaign.submittedAt);
-
-      return sortBy === "created_at_oldest"
-        ? firstDate - secondDate
-        : secondDate - firstDate;
-    });
-  }, [campaigns, organizationFilter, sortBy, status]);
-
-  const pagination = usePagination({
-    totalItems: filteredCampaigns.length,
-    pageSize,
-  });
-  const { setCurrentPage } = pagination;
+  }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [organizationFilter, pageSize, setCurrentPage, sortBy, status]);
+  }, [pageSize, sortBy, status, setCurrentPage]);
 
-  const currentPageCampaigns = React.useMemo(
-    () =>
-      filteredCampaigns.slice(pagination.startIndex, pagination.endIndex),
-    [filteredCampaigns, pagination.endIndex, pagination.startIndex],
+  const campaigns = data?.data ?? [];
+
+  const organizationOptions = React.useMemo(() => {
+    const unique = Array.from(new Set(campaigns.map((c) => c.organizationName)));
+    return unique.sort((a, b) => a.localeCompare(b, "ar", { sensitivity: "base" }));
+  }, [campaigns]);
+
+  const approveMutation = useApproveReviewCampaign();
+  const rejectMutation = useRejectReviewCampaign();
+
+  const handleApprove = React.useCallback(
+    (campaignId: string) => {
+      approveMutation.mutate({ campaignId });
+    },
+    [approveMutation],
   );
-
-  const handleApprove = React.useCallback((campaignId: string) => {
-    setCampaigns((currentCampaigns) =>
-      currentCampaigns.map((campaign) =>
-        campaign.id === campaignId
-          ? {
-              ...campaign,
-              status: "approved",
-              reviewedBy: "فريق مراجعة الحملات",
-              rejectionReason: undefined,
-            }
-          : campaign,
-      ),
-    );
-  }, []);
 
   const handleReject = React.useCallback(
     (campaignId: string, reason: string) => {
-      setCampaigns((currentCampaigns) =>
-        currentCampaigns.map((campaign) =>
-          campaign.id === campaignId
-            ? {
-                ...campaign,
-                status: "rejected",
-                reviewedBy: "فريق مراجعة الحملات",
-                rejectionReason: reason,
-              }
-            : campaign,
-        ),
-      );
+      rejectMutation.mutate({ campaignId, body: { reason } });
     },
-    [],
+    [rejectMutation],
   );
 
   return (
@@ -144,13 +87,24 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
         status={status}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        organizationFilter={organizationFilter}
+        organizationFilter="all"
         organizations={organizationOptions}
-        onOrganizationFilterChange={setOrganizationFilter}
-        totalResults={filteredCampaigns.length}
+        onOrganizationFilterChange={() => undefined}
+        totalResults={apiTotal}
       />
 
-      {currentPageCampaigns.length === 0 ? (
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل الحملات. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {campaigns.length === 0 ? (
         <EmptyState
           icon="campaigns"
           title={`لا توجد حملات ضمن حالة ${reviewStatusLabels[status]}`}
@@ -158,7 +112,7 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {currentPageCampaigns.map((campaign) => (
+          {campaigns.map((campaign) => (
             <ReviewCampaignCard
               key={campaign.id}
               campaign={campaign}
