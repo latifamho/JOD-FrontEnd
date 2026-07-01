@@ -19,11 +19,7 @@ import { StaffRoleDeleteDialog } from "@/components/pages/staff-management/staff
 import { StaffTable } from "@/components/pages/staff-management/staff-table";
 import {
   staffRoleLabels,
-  staffRolesStaticData,
-  staffStaticData,
-  type StaffMemberItem,
   type StaffRole,
-  type StaffRoleItem,
 } from "@/components/pages/staff-management/static-data";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +32,16 @@ import {
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { AppIcons } from "@/constant/icons";
 import { usePagination } from "@/hooks/use-pagination";
-import { toUtcTimestamp } from "@/lib/date";
+import {
+  useOrgStaff,
+  useCreateOrgStaff,
+  useUpdateOrgStaff,
+  useDeleteOrgStaff,
+  useOrgRoles,
+  useCreateOrgRole,
+  useUpdateOrgRole,
+  useDeleteOrgRole,
+} from "@/features/org/staff/org.staff.query";
 
 type StaffManagementPageProps = {
   view?: "employees" | "roles";
@@ -54,33 +59,30 @@ type RolesSortOption =
   | "permissions_most"
   | "members_most";
 
-function createNextStaffId(staff: StaffMemberItem[]): string {
-  const max = staff.reduce((acc, member) => {
-    const suffix = member.id.split("-")[1];
-    const parsed = suffix ? Number.parseInt(suffix, 10) : Number.NaN;
-    return Number.isFinite(parsed) ? Math.max(acc, parsed) : acc;
-  }, 0);
+const employeesSortToApi: Record<EmployeesSortOption, string> = {
+  invited_newest: "-invitedAt",
+  invited_oldest: "invitedAt",
+  name_asc: "name",
+  name_desc: "-name",
+};
 
-  return `STF-${String(max + 1).padStart(3, "0")}`;
-}
+const rolesSortToApi: Record<RolesSortOption, string> = {
+  updated_newest: "-updatedAt",
+  updated_oldest: "updatedAt",
+  permissions_most: "-permissionsCount",
+  members_most: "-membersCount",
+};
 
-function createNextRoleId(roles: StaffRoleItem[]): string {
-  const max = roles.reduce((acc, role) => {
-    const suffix = role.id.split("-")[1];
-    const parsed = suffix ? Number.parseInt(suffix, 10) : Number.NaN;
-    return Number.isFinite(parsed) ? Math.max(acc, parsed) : acc;
-  }, 0);
-
-  return `ROLE-${String(max + 1).padStart(3, "0")}`;
-}
+const allRoles = Object.keys(staffRoleLabels) as StaffRole[];
 
 export function StaffManagementPage({ view = "employees" }: StaffManagementPageProps) {
-  const [staff, setStaff] = React.useState(staffStaticData);
-  const [roles, setRoles] = React.useState(staffRolesStaticData);
-
   const [employeesPageSize, setEmployeesPageSize] =
     React.useState<number>(DEFAULT_PAGE_SIZE);
   const [rolesPageSize, setRolesPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+
+  const [staffApiTotal, setStaffApiTotal] = React.useState(0);
+  const [rolesApiTotal, setRolesApiTotal] = React.useState(0);
+
   const [employeesRoleFilter, setEmployeesRoleFilter] =
     React.useState<"all" | StaffRole>("all");
   const [employeesSortBy, setEmployeesSortBy] =
@@ -99,6 +101,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
 
   const [memberDeleteDialogOpen, setMemberDeleteDialogOpen] = React.useState(false);
   const [deleteMemberId, setDeleteMemberId] = React.useState<string | null>(null);
+  const [deleteMemberName, setDeleteMemberName] = React.useState("");
 
   const [roleFormOpen, setRoleFormOpen] = React.useState(false);
   const [roleFormMode, setRoleFormMode] = React.useState<"create" | "edit">("create");
@@ -108,145 +111,14 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
 
   const [roleDeleteDialogOpen, setRoleDeleteDialogOpen] = React.useState(false);
   const [deleteRoleId, setDeleteRoleId] = React.useState<string | null>(null);
-
-  const sortedStaff = React.useMemo(
-    () =>
-      [...staff].sort(
-        (firstMember, secondMember) =>
-          toUtcTimestamp(secondMember.invitedAt) -
-          toUtcTimestamp(firstMember.invitedAt),
-      ),
-    [staff],
-  );
-
-  const roleMemberCounts = React.useMemo(() => {
-    const initialCounts: Record<StaffRole, number> = {
-      owner: 0,
-      manager: 0,
-      editor: 0,
-      viewer: 0,
-    };
-
-    return staff.reduce<Record<StaffRole, number>>((acc, member) => {
-      acc[member.role] += 1;
-      return acc;
-    }, initialCounts);
-  }, [staff]);
-
-  const sortedRoles = React.useMemo(
-    () =>
-      [...roles]
-        .map((role) => ({
-          ...role,
-          membersCount: roleMemberCounts[role.role],
-        }))
-        .sort(
-          (firstRole, secondRole) =>
-            toUtcTimestamp(secondRole.updatedAt) -
-            toUtcTimestamp(firstRole.updatedAt),
-        ),
-    [roleMemberCounts, roles],
-  );
-
-  const filteredStaffRows = React.useMemo(() => {
-    const filtered = sortedStaff.filter((member) =>
-      employeesRoleFilter === "all" ? true : member.role === employeesRoleFilter,
-    );
-
-    return filtered.sort((firstMember, secondMember) => {
-      if (employeesSortBy === "invited_oldest") {
-        return toUtcTimestamp(firstMember.invitedAt) - toUtcTimestamp(secondMember.invitedAt);
-      }
-
-      if (employeesSortBy === "name_asc") {
-        return firstMember.name.localeCompare(secondMember.name, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      if (employeesSortBy === "name_desc") {
-        return secondMember.name.localeCompare(firstMember.name, "ar", {
-          sensitivity: "base",
-        });
-      }
-
-      return toUtcTimestamp(secondMember.invitedAt) - toUtcTimestamp(firstMember.invitedAt);
-    });
-  }, [employeesRoleFilter, employeesSortBy, sortedStaff]);
-
-  const filteredRolesRows = React.useMemo(() => {
-    const filtered = sortedRoles.filter((role) => {
-      if (rolesStatusFilter === "active") {
-        return role.isActive;
-      }
-
-      if (rolesStatusFilter === "inactive") {
-        return !role.isActive;
-      }
-
-      return true;
-    });
-
-    return filtered.sort((firstRole, secondRole) => {
-      if (rolesSortBy === "updated_oldest") {
-        return toUtcTimestamp(firstRole.updatedAt) - toUtcTimestamp(secondRole.updatedAt);
-      }
-
-      if (rolesSortBy === "permissions_most") {
-        return secondRole.permissions.length - firstRole.permissions.length;
-      }
-
-      if (rolesSortBy === "members_most") {
-        return secondRole.membersCount - firstRole.membersCount;
-      }
-
-      return toUtcTimestamp(secondRole.updatedAt) - toUtcTimestamp(firstRole.updatedAt);
-    });
-  }, [rolesSortBy, rolesStatusFilter, sortedRoles]);
-
-  const activeAssignableRoles = React.useMemo(
-    () =>
-      roles
-        .filter((role) => role.isActive)
-        .map((role) => role.role),
-    [roles],
-  );
-
-  const allRoles = React.useMemo(
-    () => Object.keys(staffRoleLabels) as StaffRole[],
-    [],
-  );
-
-  const createRoleOptions = React.useMemo(
-    () =>
-      allRoles.filter(
-        (roleKey) => !roles.some((existingRole) => existingRole.role === roleKey),
-      ),
-    [allRoles, roles],
-  );
-
-  const memberFormRoleOptions = React.useMemo(() => {
-    if (activeAssignableRoles.length > 0) {
-      return activeAssignableRoles;
-    }
-
-    return ["viewer"] as StaffRole[];
-  }, [activeAssignableRoles]);
-
-  const roleFormRoleOptions = React.useMemo(() => {
-    if (roleFormMode === "create") {
-      return createRoleOptions.length > 0 ? createRoleOptions : allRoles;
-    }
-
-    return allRoles;
-  }, [allRoles, createRoleOptions, roleFormMode]);
+  const [deleteRoleName, setDeleteRoleName] = React.useState("");
 
   const employeesPagination = usePagination({
-    totalItems: filteredStaffRows.length,
+    totalItems: staffApiTotal,
     pageSize: employeesPageSize,
   });
   const rolesPagination = usePagination({
-    totalItems: filteredRolesRows.length,
+    totalItems: rolesApiTotal,
     pageSize: rolesPageSize,
   });
 
@@ -255,66 +127,66 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
 
   React.useEffect(() => {
     setEmployeesCurrentPage(1);
-  }, [
-    employeesPageSize,
-    employeesRoleFilter,
-    employeesSortBy,
-    setEmployeesCurrentPage,
-  ]);
+  }, [employeesPageSize, employeesRoleFilter, employeesSortBy, setEmployeesCurrentPage]);
 
   React.useEffect(() => {
     setRolesCurrentPage(1);
   }, [rolesPageSize, rolesSortBy, rolesStatusFilter, setRolesCurrentPage]);
 
-  const paginatedStaff = React.useMemo(
-    () =>
-      filteredStaffRows.slice(
-        employeesPagination.startIndex,
-        employeesPagination.endIndex,
-      ),
-    [
-      employeesPagination.endIndex,
-      employeesPagination.startIndex,
-      filteredStaffRows,
-    ],
+  const staffQuery = useOrgStaff({
+    page: employeesPagination.currentPage,
+    perPage: employeesPageSize,
+    sort: employeesSortToApi[employeesSortBy],
+    filter: {
+      role: employeesRoleFilter !== "all" ? employeesRoleFilter : undefined,
+    },
+  });
+
+  const rolesQuery = useOrgRoles({
+    page: rolesPagination.currentPage,
+    perPage: rolesPageSize,
+    sort: rolesSortToApi[rolesSortBy],
+    filter: {
+      status: rolesStatusFilter !== "all" ? rolesStatusFilter : undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (staffQuery.data?.meta.total !== undefined) {
+      setStaffApiTotal(staffQuery.data.meta.total);
+    }
+  }, [staffQuery.data?.meta.total]);
+
+  React.useEffect(() => {
+    if (rolesQuery.data?.meta.total !== undefined) {
+      setRolesApiTotal(rolesQuery.data.meta.total);
+    }
+  }, [rolesQuery.data?.meta.total]);
+
+  const staffRows = staffQuery.data?.data ?? [];
+  const rolesRows = React.useMemo(
+    () => (rolesQuery.data?.data ?? []).map((role) => ({ ...role, membersCount: 0 })),
+    [rolesQuery.data?.data],
   );
 
-  const paginatedRoles = React.useMemo(
-    () =>
-      filteredRolesRows.slice(rolesPagination.startIndex, rolesPagination.endIndex),
-    [filteredRolesRows, rolesPagination.endIndex, rolesPagination.startIndex],
-  );
-
-  const deleteTargetMember = React.useMemo(
-    () =>
-      deleteMemberId
-        ? (staff.find((member) => member.id === deleteMemberId) ?? null)
-        : null,
-    [deleteMemberId, staff],
-  );
-
-  const deleteTargetRole = React.useMemo(
-    () =>
-      deleteRoleId ? (roles.find((role) => role.id === deleteRoleId) ?? null) : null,
-    [deleteRoleId, roles],
-  );
+  const createStaffMutation = useCreateOrgStaff();
+  const updateStaffMutation = useUpdateOrgStaff();
+  const deleteStaffMutation = useDeleteOrgStaff();
+  const createRoleMutation = useCreateOrgRole();
+  const updateRoleMutation = useUpdateOrgRole();
+  const deleteRoleMutation = useDeleteOrgRole();
 
   const openCreateMemberSheet = React.useCallback(() => {
     setMemberFormMode("create");
     setEditingMemberId(null);
-    setMemberFormInitialValues({
-      ...EMPTY_STAFF_MEMBER_FORM_VALUES,
-      role: memberFormRoleOptions[0] ?? "viewer",
-    });
+    setMemberFormInitialValues({ ...EMPTY_STAFF_MEMBER_FORM_VALUES });
     setMemberFormOpen(true);
-  }, [memberFormRoleOptions]);
+  }, []);
 
   const openEditMemberSheet = React.useCallback(
     (staffId: string) => {
-      const member = staff.find((candidate) => candidate.id === staffId);
-      if (!member) {
-        return;
-      }
+      const member = staffRows.find((m) => m.id === staffId);
+      if (!member) return;
 
       setMemberFormMode("edit");
       setEditingMemberId(member.id);
@@ -325,78 +197,65 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
       });
       setMemberFormOpen(true);
     },
-    [staff],
+    [staffRows],
   );
 
   const handleSubmitMember = React.useCallback(
     (values: StaffMemberFormValues) => {
       if (memberFormMode === "create") {
-        setStaff((currentStaff) => [
-          {
-            id: createNextStaffId(currentStaff),
-            name: values.name,
-            email: values.email,
-            role: values.role,
-            invitedAt: new Date().toISOString(),
+        createStaffMutation.mutate(
+          { name: values.name, email: values.email, role: values.role },
+          { onSuccess: () => setMemberFormOpen(false) },
+        );
+        return;
+      }
+
+      if (!editingMemberId) return;
+
+      updateStaffMutation.mutate(
+        { staffId: editingMemberId, body: { role: values.role } },
+        {
+          onSuccess: () => {
+            setMemberFormOpen(false);
+            setEditingMemberId(null);
           },
-          ...currentStaff,
-        ]);
-        return;
-      }
-
-      if (!editingMemberId) {
-        return;
-      }
-
-      setStaff((currentStaff) =>
-        currentStaff.map((member) =>
-          member.id === editingMemberId
-            ? {
-                ...member,
-                name: values.name,
-                email: values.email,
-                role: values.role,
-              }
-            : member,
-        ),
+        },
       );
     },
-    [editingMemberId, memberFormMode],
+    [memberFormMode, editingMemberId, createStaffMutation, updateStaffMutation],
   );
 
-  const openDeleteMemberDialog = React.useCallback((staffId: string) => {
-    setDeleteMemberId(staffId);
-    setMemberDeleteDialogOpen(true);
-  }, []);
+  const openDeleteMemberDialog = React.useCallback(
+    (staffId: string) => {
+      const member = staffRows.find((m) => m.id === staffId);
+      setDeleteMemberId(staffId);
+      setDeleteMemberName(member?.name ?? "-");
+      setMemberDeleteDialogOpen(true);
+    },
+    [staffRows],
+  );
 
   const handleDeleteMember = React.useCallback(() => {
-    if (!deleteMemberId) {
-      return;
-    }
-
-    setStaff((currentStaff) =>
-      currentStaff.filter((member) => member.id !== deleteMemberId),
-    );
-    setDeleteMemberId(null);
-    setMemberDeleteDialogOpen(false);
-  }, [deleteMemberId]);
+    if (!deleteMemberId) return;
+    deleteStaffMutation.mutate(deleteMemberId, {
+      onSuccess: () => {
+        setDeleteMemberId(null);
+        setMemberDeleteDialogOpen(false);
+      },
+    });
+  }, [deleteMemberId, deleteStaffMutation]);
 
   const openCreateRoleSheet = React.useCallback(() => {
     setRoleFormMode("create");
     setEditingRoleId(null);
-    setRoleFormInitialValues({
-      ...EMPTY_STAFF_ROLE_FORM_VALUES,
-      role: createRoleOptions[0] ?? allRoles[0] ?? "viewer",
-    });
+    setRoleFormInitialValues({ ...EMPTY_STAFF_ROLE_FORM_VALUES });
     setRoleFormOpen(true);
-  }, [allRoles, createRoleOptions]);
+  }, []);
 
   const openEditRoleSheet = React.useCallback(
     (roleId: string) => {
-      const role = roles.find((candidate) => candidate.id === roleId);
-      if (!role) {
-        return;
-      }
+      const role = rolesRows.find((r) => r.id === roleId);
+      if (!role) return;
 
       setRoleFormMode("edit");
       setEditingRoleId(role.id);
@@ -408,144 +267,68 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
       });
       setRoleFormOpen(true);
     },
-    [roles],
+    [rolesRows],
   );
 
   const handleSubmitRole = React.useCallback(
     (values: StaffRoleFormValues) => {
-      const now = new Date().toISOString();
-
       if (roleFormMode === "create") {
-        const existingRole = roles.find((role) => role.role === values.role);
-        if (existingRole) {
-          setRoles((currentRoles) =>
-            currentRoles.map((role) =>
-              role.id === existingRole.id
-                ? {
-                    ...role,
-                    description: values.description,
-                    permissions:
-                      values.permissions.length > 0
-                        ? values.permissions
-                        : role.permissions,
-                    isActive: values.isActive,
-                    updatedAt: now,
-                  }
-                : role,
-            ),
-          );
-
-          if (!values.isActive) {
-            setStaff((currentStaff) =>
-              currentStaff.map((member) =>
-                member.role === existingRole.role
-                  ? {
-                      ...member,
-                      role: "viewer",
-                    }
-                  : member,
-              ),
-            );
-          }
-          return;
-        }
-
-        setRoles((currentRoles) => [
+        createRoleMutation.mutate(
           {
-            id: createNextRoleId(currentRoles),
             role: values.role,
             description: values.description,
-            permissions:
-              values.permissions.length > 0 ? values.permissions : ["عرض اللوحة"],
-            updatedAt: now,
+            permissions: values.permissions,
             isActive: values.isActive,
-            isSystem: false,
           },
-          ...currentRoles,
-        ]);
-        return;
-      }
-
-      if (!editingRoleId) {
-        return;
-      }
-
-      const targetRole = roles.find((role) => role.id === editingRoleId);
-      if (!targetRole) {
-        return;
-      }
-
-      setRoles((currentRoles) =>
-        currentRoles.map((role) =>
-          role.id === editingRoleId
-            ? {
-                ...role,
-                description: values.description,
-                permissions:
-                  values.permissions.length > 0 ? values.permissions : role.permissions,
-                isActive: values.isActive,
-                updatedAt: now,
-              }
-            : role,
-        ),
-      );
-
-      if (!values.isActive) {
-        setStaff((currentStaff) =>
-          currentStaff.map((member) =>
-            member.role === targetRole.role
-              ? {
-                  ...member,
-                  role: "viewer",
-                }
-              : member,
-          ),
+          { onSuccess: () => setRoleFormOpen(false) },
         );
+        return;
       }
+
+      if (!editingRoleId) return;
+
+      updateRoleMutation.mutate(
+        {
+          roleId: editingRoleId,
+          body: {
+            description: values.description,
+            permissions: values.permissions,
+            isActive: values.isActive,
+          },
+        },
+        {
+          onSuccess: () => {
+            setRoleFormOpen(false);
+            setEditingRoleId(null);
+          },
+        },
+      );
     },
-    [editingRoleId, roleFormMode, roles],
+    [roleFormMode, editingRoleId, createRoleMutation, updateRoleMutation],
   );
 
-  const openDeleteRoleDialog = React.useCallback((roleId: string) => {
-    setDeleteRoleId(roleId);
-    setRoleDeleteDialogOpen(true);
-  }, []);
+  const openDeleteRoleDialog = React.useCallback(
+    (roleId: string) => {
+      const role = rolesRows.find((r) => r.id === roleId);
+      setDeleteRoleId(roleId);
+      setDeleteRoleName(role ? (staffRoleLabels[role.role] ?? role.role) : "-");
+      setRoleDeleteDialogOpen(true);
+    },
+    [rolesRows],
+  );
 
   const handleDeleteRole = React.useCallback(() => {
-    if (!deleteRoleId) {
-      return;
-    }
-
-    const roleToDelete = roles.find((role) => role.id === deleteRoleId);
-    if (!roleToDelete || roleToDelete.isSystem) {
-      setRoleDeleteDialogOpen(false);
-      setDeleteRoleId(null);
-      return;
-    }
-
-    setRoles((currentRoles) =>
-      currentRoles.filter((role) => role.id !== deleteRoleId),
-    );
-
-    setStaff((currentStaff) =>
-      currentStaff.map((member) =>
-        member.role === roleToDelete.role
-          ? {
-              ...member,
-              role: "viewer",
-            }
-          : member,
-      ),
-    );
-
-    setDeleteRoleId(null);
-    setRoleDeleteDialogOpen(false);
-  }, [deleteRoleId, roles]);
+    if (!deleteRoleId) return;
+    deleteRoleMutation.mutate(deleteRoleId, {
+      onSuccess: () => {
+        setDeleteRoleId(null);
+        setRoleDeleteDialogOpen(false);
+      },
+    });
+  }, [deleteRoleId, deleteRoleMutation]);
 
   const isEmployeesView = view === "employees";
-  const activeCount = isEmployeesView
-    ? filteredStaffRows.length
-    : filteredRolesRows.length;
+  const activeCount = isEmployeesView ? staffApiTotal : rolesApiTotal;
   const pageTitle = isEmployeesView ? "إدارة الموظفين" : "إدارة الصلاحيات";
   const pageDescription = isEmployeesView
     ? `إدارة أعضاء المنظمة وتوزيع الأدوار عليهم. النتائج الحالية: ${activeCount}`
@@ -567,11 +350,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
             إضافة موظف
           </Button>
         ) : (
-          <Button
-            size="sm"
-            className="w-fit"
-            onClick={openCreateRoleSheet}
-          >
+          <Button size="sm" className="w-fit" onClick={openCreateRoleSheet}>
             <AppIcons.settings className="size-4" />
             إضافة دور
           </Button>
@@ -583,9 +362,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
           <Select
             dir="rtl"
             value={employeesRoleFilter}
-            onValueChange={(value) =>
-              setEmployeesRoleFilter(value as "all" | StaffRole)
-            }
+            onValueChange={(value) => setEmployeesRoleFilter(value as "all" | StaffRole)}
           >
             <SelectTrigger className="w-full text-right text-xs">
               <SelectValue placeholder="كل الأدوار" />
@@ -605,9 +382,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
           <Select
             dir="rtl"
             value={employeesSortBy}
-            onValueChange={(value) =>
-              setEmployeesSortBy(value as EmployeesSortOption)
-            }
+            onValueChange={(value) => setEmployeesSortBy(value as EmployeesSortOption)}
           >
             <SelectTrigger className="w-full text-right text-xs">
               <SelectValue placeholder="الترتيب" />
@@ -681,7 +456,23 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
 
       {isEmployeesView ? (
         <div className="space-y-3">
-          {filteredStaffRows.length === 0 ? (
+          {staffQuery.isError && (
+            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <p className="flex-1 text-sm text-destructive">
+                تعذّر تحميل الموظفين. حاول مرة أخرى.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => staffQuery.refetch()}
+              >
+                إعادة المحاولة
+              </Button>
+            </div>
+          )}
+
+          {staffRows.length === 0 ? (
             <EmptyState
               icon="staff"
               title="لا يوجد موظفون مضافون"
@@ -689,7 +480,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
             />
           ) : (
             <StaffTable
-              rows={paginatedStaff}
+              rows={staffRows}
               onEdit={openEditMemberSheet}
               onDelete={openDeleteMemberDialog}
             />
@@ -711,7 +502,23 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredRolesRows.length === 0 ? (
+          {rolesQuery.isError && (
+            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <p className="flex-1 text-sm text-destructive">
+                تعذّر تحميل الأدوار. حاول مرة أخرى.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => rolesQuery.refetch()}
+              >
+                إعادة المحاولة
+              </Button>
+            </div>
+          )}
+
+          {rolesRows.length === 0 ? (
             <EmptyState
               icon="settings"
               title="لا توجد أدوار معرفة"
@@ -719,7 +526,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
             />
           ) : (
             <RolesTable
-              rows={paginatedRoles}
+              rows={rolesRows}
               onEditRole={openEditRoleSheet}
               onDeleteRole={openDeleteRoleDialog}
             />
@@ -745,24 +552,20 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
         open={memberFormOpen}
         mode={memberFormMode}
         initialValues={memberFormInitialValues}
-        roleOptions={memberFormRoleOptions}
+        roleOptions={allRoles}
         onOpenChange={(nextOpen) => {
           setMemberFormOpen(nextOpen);
-          if (!nextOpen) {
-            setEditingMemberId(null);
-          }
+          if (!nextOpen) setEditingMemberId(null);
         }}
         onSubmit={handleSubmitMember}
       />
 
       <StaffMemberDeleteDialog
         open={memberDeleteDialogOpen}
-        staffName={deleteTargetMember?.name ?? "-"}
+        staffName={deleteMemberName}
         onOpenChange={(nextOpen) => {
           setMemberDeleteDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setDeleteMemberId(null);
-          }
+          if (!nextOpen) setDeleteMemberId(null);
         }}
         onConfirm={handleDeleteMember}
       />
@@ -771,27 +574,21 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
         open={roleFormOpen}
         mode={roleFormMode}
         initialValues={roleFormInitialValues}
-        roleOptions={roleFormRoleOptions}
+        roleOptions={allRoles}
         onOpenChange={(nextOpen) => {
           setRoleFormOpen(nextOpen);
-          if (!nextOpen) {
-            setEditingRoleId(null);
-          }
+          if (!nextOpen) setEditingRoleId(null);
         }}
         onSubmit={handleSubmitRole}
       />
 
       <StaffRoleDeleteDialog
         open={roleDeleteDialogOpen}
-        roleName={
-          deleteTargetRole ? (staffRoleLabels[deleteTargetRole.role] ?? deleteTargetRole.role) : "-"
-        }
-        membersCount={deleteTargetRole ? roleMemberCounts[deleteTargetRole.role] : 0}
+        roleName={deleteRoleName}
+        membersCount={0}
         onOpenChange={(nextOpen) => {
           setRoleDeleteDialogOpen(nextOpen);
-          if (!nextOpen) {
-            setDeleteRoleId(null);
-          }
+          if (!nextOpen) setDeleteRoleId(null);
         }}
         onConfirm={handleDeleteRole}
       />
