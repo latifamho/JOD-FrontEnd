@@ -7,7 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
-import { formatUtcDate, formatUtcDateTime } from "@/lib/date";
+import {
+  formatUtcDate,
+  formatUtcDateOrDash,
+  formatUtcDateTime,
+  formatUtcDateTimeOrDash,
+} from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getOrganizationStatusBadgeClass,
   getOrganizationVerificationBadgeClass,
@@ -102,8 +108,12 @@ export function OrganizationDetailsPage({
               <Badge variant="outline">{organization.id}</Badge>
             </div>
 
-            <h2 className="text-xl font-semibold text-foreground">{organization.name}</h2>
-            <p className="text-sm text-muted-foreground">{organization.description}</p>
+            <h2 className="text-xl font-semibold text-foreground">
+              {displayOrDash(organization.name)}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {displayOrDash(organization.description)}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -137,24 +147,26 @@ export function OrganizationDetailsPage({
             <p className="text-muted-foreground">
               رقم السجل/الترخيص:{" "}
               <span className="font-semibold text-foreground">
-                {organization.registrationNumber}
+                {displayOrDash(organization.registrationNumber)}
               </span>
             </p>
             <p className="text-muted-foreground">
               تاريخ التأسيس:{" "}
               <span className="font-semibold text-foreground">
-                {formatUtcDate(organization.establishmentDate)}
+                {formatUtcDateOrDash(organization.establishmentDate)}
               </span>
             </p>
             <p className="text-muted-foreground">
               العنوان المختصر:{" "}
               <span className="font-semibold text-foreground">
-                {organization.shortAddress}
+                {displayOrDash(organization.shortAddress)}
               </span>
             </p>
             <p className="text-muted-foreground">
               المدينة:{" "}
-              <span className="font-semibold text-foreground">{organization.location}</span>
+              <span className="font-semibold text-foreground">
+                {displayOrDash(organization.location)}
+              </span>
             </p>
             <p className="text-muted-foreground">
               تاريخ الإنشاء:{" "}
@@ -168,14 +180,12 @@ export function OrganizationDetailsPage({
                 {formatUtcDateTime(organization.lastActiveAt)}
               </span>
             </p>
-            {acceptedAt && (
-              <p className="text-muted-foreground">
-                تاريخ القبول:{" "}
-                <span className="font-semibold text-foreground">
-                  {formatUtcDateTime(acceptedAt)}
-                </span>
-              </p>
-            )}
+            <p className="text-muted-foreground">
+              تاريخ القبول:{" "}
+              <span className="font-semibold text-foreground">
+                {formatUtcDateTimeOrDash(acceptedAt)}
+              </span>
+            </p>
           </div>
         </div>
 
@@ -185,19 +195,19 @@ export function OrganizationDetailsPage({
             <p className="text-muted-foreground">
               الاسم:{" "}
               <span className="font-semibold text-foreground">
-                {organization.ownerFullName}
+                {displayOrDash(organization.ownerFullName)}
               </span>
             </p>
             <p className="text-muted-foreground">
               البريد:{" "}
               <span className="font-semibold text-foreground">
-                {organization.ownerEmail}
+                {displayOrDash(organization.ownerEmail)}
               </span>
             </p>
             <p className="text-muted-foreground">
               الجوال:{" "}
               <span className="font-semibold text-foreground">
-                {organization.ownerPhone}
+                {displayOrDash(organization.ownerPhone)}
               </span>
             </p>
           </div>
@@ -206,22 +216,26 @@ export function OrganizationDetailsPage({
           <div className="mt-3 grid gap-3 text-sm">
             <p className="text-muted-foreground">
               البريد الرسمي:{" "}
-              <span className="font-semibold text-foreground">{organization.email}</span>
+              <span className="font-semibold text-foreground">
+                {displayOrDash(organization.email)}
+              </span>
             </p>
             <p className="text-muted-foreground">
               الهاتف الرسمي:{" "}
-              <span className="font-semibold text-foreground">{organization.phone}</span>
+              <span className="font-semibold text-foreground">
+                {displayOrDash(organization.phone)}
+              </span>
             </p>
             <p className="text-muted-foreground">
               الموقع الإلكتروني:{" "}
               <span className="font-semibold text-foreground">
-                {organization.website ?? "-"}
+                {displayOrDash(organization.website)}
               </span>
             </p>
             <p className="text-muted-foreground">
               حسابات التواصل:{" "}
               <span className="font-semibold text-foreground">
-                {organization.socialMedia ?? "-"}
+                {displayOrDash(organization.socialMedia)}
               </span>
             </p>
           </div>
@@ -234,13 +248,13 @@ export function OrganizationDetailsPage({
           <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-muted-foreground">
             وثيقة الترخيص:{" "}
             <span className="font-semibold text-foreground">
-              {organization.licenseDocumentName}
+              {displayOrDash(organization.licenseDocumentName)}
             </span>
           </p>
           <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-muted-foreground">
             وثيقة التفويض:{" "}
             <span className="font-semibold text-foreground">
-              {organization.delegationDocumentName}
+              {displayOrDash(organization.delegationDocumentName)}
             </span>
           </p>
         </div>

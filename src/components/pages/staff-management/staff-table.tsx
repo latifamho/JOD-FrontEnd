@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDate } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import {
   staffRoleLabels,
@@ -47,8 +48,12 @@ export function StaffTable({ rows, onEdit, onDelete }: StaffTableProps) {
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="text-right">
-                <p className="font-medium text-foreground">{row.name}</p>
-                <p className="text-xs text-muted-foreground">{row.email}</p>
+                <p className="font-medium text-foreground">
+                  {displayOrDash(row.name)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {displayOrDash(row.email)}
+                </p>
               </TableCell>
               <TableCell>
                 <Badge variant="outline">{staffRoleLabels[row.role]}</Badge>

@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { AppIcons } from "@/constant/icons";
+import { displayOrDash } from "@/lib/text";
 import {
   analyticsKpiPreviewData,
   analyticsWeeklyPreviewData,
@@ -26,10 +27,12 @@ export function AnalyticsDashboardPage() {
             key={kpi.id}
             className="rounded-xl border border-border bg-card p-4 shadow-sm"
           >
-            <p className="text-xs text-muted-foreground">{kpi.label}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{kpi.value}</p>
+            <p className="text-xs text-muted-foreground">{displayOrDash(kpi.label)}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground">
+              {displayOrDash(kpi.value)}
+            </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              مقارنة بالشهر الماضي: {kpi.changeVsLastMonth}
+              مقارنة بالشهر الماضي: {displayOrDash(kpi.changeVsLastMonth)}
             </p>
           </div>
         ))}
@@ -59,11 +62,17 @@ export function AnalyticsDashboardPage() {
                   className="border-b border-border/50 last:border-0"
                 >
                   <td className="py-2.5 font-medium text-foreground">
-                    {row.weekLabel}
+                    {displayOrDash(row.weekLabel)}
                   </td>
-                  <td className="py-2.5 text-muted-foreground">{row.visits}</td>
-                  <td className="py-2.5 text-muted-foreground">{row.newUsers}</td>
-                  <td className="py-2.5 text-muted-foreground">{row.donations}</td>
+                  <td className="py-2.5 text-muted-foreground">
+                    {displayOrDash(row.visits)}
+                  </td>
+                  <td className="py-2.5 text-muted-foreground">
+                    {displayOrDash(row.newUsers)}
+                  </td>
+                  <td className="py-2.5 text-muted-foreground">
+                    {displayOrDash(row.donations)}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -5,6 +5,7 @@ import * as React from "react";
 import { AppIcons, type AppIconName } from "@/constant/icons";
 import { type StatCardItem } from "@/components/pages/admin-overview/static-data";
 import { formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { useAdminOverview } from "@/features/admin/dashboard/admin.dash.query";
 import type { AdminOverviewStatIcon } from "@/features/admin/dashboard/admin.dash.types";
@@ -77,10 +78,10 @@ export function AdminOverviewPage() {
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {row.title}
+                    {displayOrDash(row.title)}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {row.detail}
+                    {displayOrDash(row.detail)}
                   </p>
                 </div>
                 <p className="shrink-0 text-[11px] text-muted-foreground sm:text-end">
@@ -106,10 +107,10 @@ function StatCard({ stat }: { stat: StatCardItem }) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-muted-foreground">
-            {stat.label}
+            {displayOrDash(stat.label)}
           </p>
           <p className="mt-1 text-2xl font-bold text-foreground">
-            {stat.value}
+            {displayOrDash(stat.value)}
           </p>
           {stat.subLabel && (
             <p className="mt-0.5 text-xs text-muted-foreground">

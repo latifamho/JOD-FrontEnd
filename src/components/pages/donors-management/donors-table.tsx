@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constant/icons";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
 
 type DonorsTableProps = {
@@ -57,17 +58,21 @@ export function DonorsTable({
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="text-right">
-                <p className="font-medium text-foreground">{row.name}</p>
-                <p className="text-xs text-muted-foreground">{row.email}</p>
+                <p className="font-medium text-foreground">
+                  {displayOrDash(row.name)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {displayOrDash(row.email)}
+                </p>
               </TableCell>
               <TableCell className="text-right text-sm">
-                {row.campaignTitle}
+                {displayOrDash(row.campaignTitle)}
               </TableCell>
               <TableCell className="text-right text-sm">
-                {row.amountOrType}
+                {displayOrDash(row.amountOrType)}
               </TableCell>
               <TableCell className="text-right text-xs text-muted-foreground">
-                {formatUtcDate(row.donatedAt)}
+                {formatUtcDateOrDash(row.donatedAt)}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">

@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import { getRewardStatusBadgeClass } from "@/components/pages/rewards-management/helpers";
 import { rewardStatusLabels } from "@/components/pages/rewards-management/static-data";
@@ -62,7 +63,9 @@ export function RewardsTable({
             return (
               <TableRow key={row.id} className="align-middle">
                 <TableCell>
-                  <p className="font-medium text-foreground">{row.name}</p>
+                  <p className="font-medium text-foreground">
+                    {displayOrDash(row.name)}
+                  </p>
                   <p className="text-xs text-muted-foreground">{row.id}</p>
                 </TableCell>
                 <TableCell>
@@ -71,16 +74,18 @@ export function RewardsTable({
                   </div>
                 </TableCell>
                 <TableCell className="max-w-[260px] text-sm text-muted-foreground">
-                  {row.description}
+                  {displayOrDash(row.description)}
                 </TableCell>
-                <TableCell className="text-sm">{row.criteria}</TableCell>
+                <TableCell className="text-sm">
+                  {displayOrDash(row.criteria)}
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={getRewardStatusBadgeClass(row.isActive)}>
                     {rewardStatusLabels[row.isActive ? "active" : "inactive"]}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {formatUtcDate(row.createdAt)}
+                  {formatUtcDateOrDash(row.createdAt)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ReviewStatusBadge } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { CampaignDetailsDialog } from "@/components/pages/campaigns-review/campaign-details-dialog";
 import {
   formatAmount,
@@ -86,15 +87,15 @@ export function ReviewCampaignCard({
         <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-muted/35 p-3 text-xs text-muted-foreground sm:grid-cols-3">
           <p>
             <span className="font-semibold text-foreground">الجهة:</span>{" "}
-            {campaign.organizationName}
+            {displayOrDash(campaign.organizationName)}
           </p>
           <p>
             <span className="font-semibold text-foreground">المستفيدون:</span>{" "}
-            {campaign.beneficiariesCount}
+            {displayOrDash(campaign.beneficiariesCount)}
           </p>
           <p>
             <span className="font-semibold text-foreground">المدينة:</span>{" "}
-            {campaign.location}
+            {displayOrDash(campaign.location)}
           </p>
         </div>
 

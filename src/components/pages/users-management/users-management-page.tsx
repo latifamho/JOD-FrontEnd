@@ -17,6 +17,7 @@ import {
 import { UserDeleteDialog } from "@/components/pages/users-management/user-delete-dialog";
 import { UserChangePasswordDialog } from "@/components/pages/users-management/user-change-password-dialog";
 import { type UserRole, type UserStatus } from "@/components/pages/users-management/static-data";
+import { displayOrDash } from "@/lib/text";
 import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";
 import {
@@ -353,7 +354,7 @@ export function UsersManagementPage() {
 
       <UserDeleteDialog
         open={deleteDialogOpen}
-        userName={deleteTargetUser?.name ?? "-"}
+        userName={displayOrDash(deleteTargetUser?.name)}
         isDeleting={deleteMutation.isPending}
         onOpenChange={(nextOpen) => {
           if (!deleteMutation.isPending) {
@@ -366,7 +367,7 @@ export function UsersManagementPage() {
 
       <UserChangePasswordDialog
         open={changePasswordDialogOpen}
-        userName={changePasswordTargetUser?.name ?? "-"}
+        userName={displayOrDash(changePasswordTargetUser?.name)}
         isSubmitting={changePasswordMutation.isPending}
         onOpenChange={(nextOpen) => {
           if (!changePasswordMutation.isPending) {

@@ -4,7 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
-import { formatUtcDate, formatUtcDateTime } from "@/lib/date";
+import {
+  formatUtcDate,
+  formatUtcDateTime,
+  formatUtcDateTimeOrDash,
+} from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   formatAmount,
   getCampaignStatusBadgeClass,
@@ -123,7 +128,10 @@ export function OrganizationCampaignDetailsPage({
           <h3 className="text-sm font-semibold text-foreground">بيانات الحملة</h3>
           <div className="mt-3 grid gap-3 text-sm">
             <p className="text-muted-foreground">
-              المدينة: <span className="font-semibold text-foreground">{campaign.location}</span>
+              المدينة:{" "}
+              <span className="font-semibold text-foreground">
+                {displayOrDash(campaign.location)}
+              </span>
             </p>
             <p className="text-muted-foreground">
               تاريخ البداية:{" "}
@@ -169,14 +177,12 @@ export function OrganizationCampaignDetailsPage({
                 {campaign.beneficiariesCount}
               </span>
             </p>
-            {campaign.closedAt && (
-              <p className="text-muted-foreground">
-                تاريخ الإغلاق:{" "}
-                <span className="font-semibold text-foreground">
-                  {formatUtcDateTime(campaign.closedAt)}
-                </span>
-              </p>
-            )}
+            <p className="text-muted-foreground">
+              تاريخ الإغلاق:{" "}
+              <span className="font-semibold text-foreground">
+                {formatUtcDateTimeOrDash(campaign.closedAt)}
+              </span>
+            </p>
           </div>
         </div>
       </div>

@@ -11,7 +11,8 @@ import { AppIcons } from "@/constant/icons";
 import { routePaths } from "@/constant/routes";
 import { dashboardProfileDefaultsByScope } from "@/components/pages/dashboard-profile/dashboard-profile.data";
 import type { DashboardProfileScope } from "@/components/pages/dashboard-profile/dashboard-profile.types";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { getPostStatusBadgeClass } from "@/components/pages/organization-posts-management/helpers";
 import {
   organizationPostStatusLabels,
@@ -234,10 +235,11 @@ export function DashboardProfilePage({ scope }: DashboardProfilePageProps) {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-foreground">
-                        {post.authorName}
+                        {displayOrDash(post.authorName)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatUtcDate(post.updatedAt)} • {post.location}
+                        {formatUtcDateOrDash(post.updatedAt)} •{" "}
+                        {displayOrDash(post.location)}
                       </p>
                     </div>
                     <Badge className={getPostStatusBadgeClass(post.status)}>

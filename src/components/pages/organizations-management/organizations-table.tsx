@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getOrganizationStatusBadgeClass,
   getOrganizationVerificationBadgeClass,
@@ -59,10 +60,10 @@ export function OrganizationsTable({
               <TableRow key={organization.id}>
                 <TableCell>
                   <p className="font-semibold text-foreground">
-                    {organization.name}
+                    {displayOrDash(organization.name)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {organization.id}
+                    {displayOrDash(organization.id)}
                   </p>
                 </TableCell>
 
@@ -94,16 +95,16 @@ export function OrganizationsTable({
 
                 <TableCell>
                   <p className="text-xs text-foreground">
-                    {organization.email}
+                    {displayOrDash(organization.email)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {organization.phone}
+                    {displayOrDash(organization.phone)}
                   </p>
                 </TableCell>
 
                 <TableCell>
                   <p className="text-xs text-foreground">
-                    {organization.location}
+                    {displayOrDash(organization.location)}
                   </p>
                 </TableCell>
 

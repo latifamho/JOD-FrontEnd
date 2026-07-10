@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   staffRoleLabels,
   type StaffRole,
@@ -81,7 +82,7 @@ export function RolesTable({
                   <Badge variant="outline">{staffRoleLabels[row.role]}</Badge>
                 </TableCell>
                 <TableCell className="max-w-[280px] text-right text-xs text-muted-foreground">
-                  {row.description}
+                  {displayOrDash(row.description)}
                 </TableCell>
                 <TableCell className="text-right text-sm">
                   {row.permissions.length} صلاحية

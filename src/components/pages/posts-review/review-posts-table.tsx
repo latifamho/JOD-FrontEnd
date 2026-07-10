@@ -19,6 +19,7 @@ import {
 import { ReviewStatusBadge } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { RejectPostDialog } from "@/components/pages/posts-review/reject-post-dialog";
 import {
   postTypeLabels,
@@ -132,10 +133,10 @@ function ReviewPostRow({
           </div>
         </TableCell>
         <TableCell className="align-middle text-right text-sm">
-          {post.organizationName}
+          {displayOrDash(post.organizationName)}
         </TableCell>
         <TableCell className="hidden align-middle text-right text-sm md:table-cell">
-          {post.authorName}
+          {displayOrDash(post.authorName)}
         </TableCell>
         <TableCell className="hidden align-middle text-right lg:table-cell">
           <span className="text-sm text-muted-foreground">
@@ -144,7 +145,7 @@ function ReviewPostRow({
         </TableCell>
         {showReviewedBy && (
           <TableCell className="hidden align-middle text-right text-sm text-muted-foreground lg:table-cell">
-            {post.reviewedBy ?? "—"}
+            {displayOrDash(post.reviewedBy)}
           </TableCell>
         )}
         <TableCell className="align-middle text-left text-xs text-muted-foreground">

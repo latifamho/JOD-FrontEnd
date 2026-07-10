@@ -31,3 +31,17 @@ export function formatUtcDateTime(input: string): string {
   return `${datePart} ${hours}:${minutes}`;
 }
 
+const EMPTY_DATE_PLACEHOLDER = "-";
+
+/** Like {@link formatUtcDate}, but falls back to "-" for null/undefined input. */
+export function formatUtcDateOrDash(input: string | null | undefined): string {
+  return input ? formatUtcDate(input) : EMPTY_DATE_PLACEHOLDER;
+}
+
+/** Like {@link formatUtcDateTime}, but falls back to "-" for null/undefined input. */
+export function formatUtcDateTimeOrDash(
+  input: string | null | undefined,
+): string {
+  return input ? formatUtcDateTime(input) : EMPTY_DATE_PLACEHOLDER;
+}
+

@@ -8,7 +8,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ReviewStatusBadge } from "@/components/shared";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
   type ReviewPostItem,
@@ -53,15 +54,21 @@ export function PostDetailsDialog({
           <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-muted-foreground">الجهة الناشرة</p>
-              <p className="text-sm font-medium">{post.organizationName}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(post.organizationName)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">كاتب المنشور</p>
-              <p className="text-sm font-medium">{post.authorName}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(post.authorName)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">الموقع</p>
-              <p className="text-sm font-medium">{post.location}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(post.location)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">
@@ -71,20 +78,18 @@ export function PostDetailsDialog({
                 {formatUtcDateTime(post.submittedAt)}
               </p>
             </div>
-            {post.publishedAt && (
-              <div>
-                <p className="text-xs text-muted-foreground">تاريخ النشر</p>
-                <p className="text-sm font-medium">
-                  {formatUtcDateTime(post.publishedAt)}
-                </p>
-              </div>
-            )}
-            {post.reviewedBy && (
-              <div>
-                <p className="text-xs text-muted-foreground">راجعه</p>
-                <p className="text-sm font-medium">{post.reviewedBy}</p>
-              </div>
-            )}
+            <div>
+              <p className="text-xs text-muted-foreground">تاريخ النشر</p>
+              <p className="text-sm font-medium">
+                {formatUtcDateTimeOrDash(post.publishedAt)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">راجعه</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(post.reviewedBy)}
+              </p>
+            </div>
           </div>
 
           {isLoading ? (

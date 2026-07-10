@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import { getArticleStatusBadgeClass } from "@/components/pages/content-management/helpers";
 import {
@@ -50,11 +51,11 @@ export function ContentTable({ rows, onEdit }: ContentTableProps) {
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="text-right">
-                <p className="font-medium text-foreground">{row.title}</p>
-                <p className="text-xs text-muted-foreground">/{row.slug}</p>
+                <p className="font-medium text-foreground">{displayOrDash(row.title)}</p>
+                <p className="text-xs text-muted-foreground">/{displayOrDash(row.slug)}</p>
               </TableCell>
               <TableCell className="max-w-[240px] text-right text-sm text-muted-foreground line-clamp-2">
-                {row.excerpt}
+                {displayOrDash(row.excerpt)}
               </TableCell>
               <TableCell>
                 <Badge variant="outline" className={getArticleStatusBadgeClass(row.status)}>
@@ -63,8 +64,8 @@ export function ContentTable({ rows, onEdit }: ContentTableProps) {
               </TableCell>
               <TableCell className="text-right text-xs text-muted-foreground">
                 {row.publishedAt
-                  ? formatUtcDate(row.publishedAt)
-                  : formatUtcDate(row.createdAt)}
+                  ? formatUtcDateOrDash(row.publishedAt)
+                  : formatUtcDateOrDash(row.createdAt)}
               </TableCell>
               <TableCell className="text-center">
                 <Button

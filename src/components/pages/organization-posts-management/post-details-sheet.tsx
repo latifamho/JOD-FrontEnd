@@ -7,7 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getPostStatusBadgeClass,
   isCampaignRelatedPostType,
@@ -63,11 +64,11 @@ export function PostDetailsSheet({
           <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-muted-foreground">الكاتب</p>
-              <p className="text-sm font-medium">{post.authorName}</p>
+              <p className="text-sm font-medium">{displayOrDash(post.authorName)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">الموقع</p>
-              <p className="text-sm font-medium">{post.location}</p>
+              <p className="text-sm font-medium">{displayOrDash(post.location)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">تاريخ الإنشاء</p>
@@ -77,16 +78,18 @@ export function PostDetailsSheet({
               <p className="text-xs text-muted-foreground">آخر تحديث</p>
               <p className="text-sm font-medium">{formatUtcDateTime(post.updatedAt)}</p>
             </div>
-            {post.publishedAt && (
-              <div>
-                <p className="text-xs text-muted-foreground">تاريخ النشر</p>
-                <p className="text-sm font-medium">{formatUtcDateTime(post.publishedAt)}</p>
-              </div>
-            )}
+            <div>
+              <p className="text-xs text-muted-foreground">تاريخ النشر</p>
+              <p className="text-sm font-medium">
+                {formatUtcDateTimeOrDash(post.publishedAt)}
+              </p>
+            </div>
             {campaignRelated && (
               <div>
                 <p className="text-xs text-muted-foreground">الحملة المرتبطة</p>
-                <p className="text-sm font-medium">{post.campaignTitle ?? "—"}</p>
+                <p className="text-sm font-medium">
+                  {displayOrDash(post.campaignTitle)}
+                </p>
               </div>
             )}
           </div>

@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getOrgReportStatusBadgeClass,
   orgReportCategoryLabels,
@@ -93,12 +94,14 @@ export function OrganizationReportsPage() {
             {rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell>
-                  <p className="font-semibold text-foreground">{row.subject}</p>
+                  <p className="font-semibold text-foreground">
+                    {displayOrDash(row.subject)}
+                  </p>
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {row.summary}
+                    {displayOrDash(row.summary)}
                   </p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    {row.id}
+                    {displayOrDash(row.id)}
                   </p>
                 </TableCell>
                 <TableCell>
@@ -115,7 +118,7 @@ export function OrganizationReportsPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs text-foreground">
-                  {row.reporterLabel}
+                  {displayOrDash(row.reporterLabel)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   {formatUtcDateTime(row.submittedAt)}
@@ -140,13 +143,13 @@ export function OrganizationReportsPage() {
       <Sheet open={openId !== null} onOpenChange={(o) => !o && setOpenId(null)}>
         <SheetContent side="right" dir="rtl" className="sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>{selected?.subject}</SheetTitle>
+            <SheetTitle>{displayOrDash(selected?.subject)}</SheetTitle>
             <SheetDescription asChild>
               <div className="space-y-3 pt-2 text-start">
                 {selected ? (
                   <>
                     <p className="text-sm leading-relaxed text-foreground">
-                      {selected.summary}
+                      {displayOrDash(selected.summary)}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline">
@@ -160,7 +163,7 @@ export function OrganizationReportsPage() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      المرسل: {selected.reporterLabel}
+                      المرسل: {displayOrDash(selected.reporterLabel)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatUtcDateTime(selected.submittedAt)}

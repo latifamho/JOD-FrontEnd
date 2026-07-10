@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   userStatusLabels,
   type AdminUserItem,
@@ -97,9 +98,11 @@ export function UsersTable({
               return (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <p className="font-semibold text-foreground">{user.name}</p>
+                    <p className="font-semibold text-foreground">
+                      {displayOrDash(user.name)}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {user.id}
+                      {displayOrDash(user.id)}
                     </p>
                   </TableCell>
 
@@ -113,9 +116,11 @@ export function UsersTable({
                   </TableCell>
 
                   <TableCell>
-                    <p className="text-xs text-foreground">{user.email}</p>
+                    <p className="text-xs text-foreground">
+                      {displayOrDash(user.email)}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {user.phone}
+                      {displayOrDash(user.phone)}
                     </p>
                   </TableCell>
 

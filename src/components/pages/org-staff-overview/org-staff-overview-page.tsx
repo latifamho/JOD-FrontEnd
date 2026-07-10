@@ -17,7 +17,7 @@ import {
   orgStaffOverviewActivityData,
   orgStaffOverviewStatsData,
 } from "@/components/pages/org-staff-overview/org-staff-overview.data";
-import { formatUtcDateTime, toUtcTimestamp } from "@/lib/date";
+import { formatUtcDateTime, formatUtcDateTimeOrDash, toUtcTimestamp } from "@/lib/date";
 import { normalizeText } from "@/lib/text";
 
 const statIcons = {
@@ -120,9 +120,7 @@ export function OrgStaffOverviewPage() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">آخر تحديث</p>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {filteredActivities[0]
-              ? formatUtcDateTime(filteredActivities[0].at)
-              : "—"}
+            {formatUtcDateTimeOrDash(filteredActivities[0]?.at)}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">

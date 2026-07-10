@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/table";
 import { type AuditLogActionType } from "@/components/pages/audit-log/audit-log.data";
 import { usePagination } from "@/hooks/use-pagination";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { useAdminAuditLogs } from "@/features/admin/audit-logs/admin.audit-logs.query";
 
 const actionTypeLabels: Record<AuditLogActionType, string> = {
@@ -78,7 +79,7 @@ export function AuditLogPage() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">أحدث تحديث</p>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {latestTimestamp ? formatUtcDateTime(latestTimestamp) : "—"}
+            {formatUtcDateTimeOrDash(latestTimestamp)}
           </p>
         </div>
       </div>
@@ -127,7 +128,9 @@ export function AuditLogPage() {
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="text-right">{row.action}</TableCell>
+                  <TableCell className="text-right">
+                    {displayOrDash(row.action)}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Badge
                       variant="secondary"
@@ -137,10 +140,10 @@ export function AuditLogPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
-                    {row.user}
+                    {displayOrDash(row.user)}
                   </TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">
-                    {row.reference ?? "—"}
+                    {displayOrDash(row.reference)}
                   </TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">
                     {formatUtcDateTime(row.at)}

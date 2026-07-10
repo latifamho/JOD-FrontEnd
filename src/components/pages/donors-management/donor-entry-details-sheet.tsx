@@ -11,7 +11,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { AppIcons } from "@/constant/icons";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
 
@@ -115,10 +116,10 @@ export function DonorEntryDetailsSheet({
                 ) : null}
               </div>
               <SheetTitle className="text-right text-xl leading-snug sm:text-2xl">
-                {entry.name}
+                {displayOrDash(entry.name)}
               </SheetTitle>
               <SheetDescription className="text-right text-sm text-muted-foreground">
-                {entry.email}
+                {displayOrDash(entry.email)}
               </SheetDescription>
             </div>
           </div>
@@ -129,23 +130,19 @@ export function DonorEntryDetailsSheet({
           <section className="rounded-xl border border-border bg-card/60 p-4 shadow-sm">
             <SectionTitle icon={AppIcons.mail}>بيانات التواصل</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="البريد الإلكتروني" value={entry.email} />
+              <Field label="البريد الإلكتروني" value={displayOrDash(entry.email)} />
               <Field
                 label="رقم الجوال"
-                value={entry.phone}
+                value={displayOrDash(entry.phone)}
                 dir="ltr"
                 className="sm:text-end"
               />
-              {entry.city ? (
-                <Field label="المدينة / المنطقة" value={entry.city} />
-              ) : null}
-              {entry.source ? (
-                <Field
-                  className="sm:col-span-2"
-                  label="مصدر التسجيل"
-                  value={entry.source}
-                />
-              ) : null}
+              <Field label="المدينة / المنطقة" value={displayOrDash(entry.city)} />
+              <Field
+                className="sm:col-span-2"
+                label="مصدر التسجيل"
+                value={displayOrDash(entry.source)}
+              />
             </div>
           </section>
 
@@ -158,22 +155,22 @@ export function DonorEntryDetailsSheet({
               <Field
                 className="sm:col-span-2"
                 label="اسم الحملة أو الفرصة"
-                value={entry.campaignTitle}
+                value={displayOrDash(entry.campaignTitle)}
               />
-              <Field label={amountLabel} value={entry.amountOrType} />
+              <Field label={amountLabel} value={displayOrDash(entry.amountOrType)} />
               <Field
                 label={dateLabel}
-                value={formatUtcDateTime(entry.donatedAt)}
+                value={formatUtcDateTimeOrDash(entry.donatedAt)}
               />
               {!isApplicants ? (
                 <Field
                   label={midLabel}
-                  value={entry.paymentMethod ?? "—"}
+                  value={displayOrDash(entry.paymentMethod)}
                 />
               ) : (
                 <Field
                   label={midLabel}
-                  value={entry.requestType ?? "—"}
+                  value={displayOrDash(entry.requestType)}
                 />
               )}
             </div>
@@ -183,11 +180,7 @@ export function DonorEntryDetailsSheet({
           <section className="rounded-xl border border-dashed border-border bg-muted/25 p-4">
             <SectionTitle icon={AppIcons.staff}>تتبع داخلي</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              {entry.assignedTo ? (
-                <Field label="مسؤول المتابعة" value={entry.assignedTo} />
-              ) : (
-                <Field label="مسؤول المتابعة" value="—" />
-              )}
+              <Field label="مسؤول المتابعة" value={displayOrDash(entry.assignedTo)} />
             </div>
           </section>
 

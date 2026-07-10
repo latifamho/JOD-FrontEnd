@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { ReviewStatusBadge } from "@/components/shared";
 import { formatUtcDate, formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   formatAmount,
   getProgress,
@@ -81,19 +82,27 @@ export function CampaignDetailsDialog({
           <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-muted-foreground">الجهة الناشرة</p>
-              <p className="text-sm font-medium">{campaign.organizationName}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(campaign.organizationName)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">مدير الحملة</p>
-              <p className="text-sm font-medium">{campaign.campaignManagerName}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(campaign.campaignManagerName)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">المدينة</p>
-              <p className="text-sm font-medium">{campaign.location}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(campaign.location)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">المستفيدون</p>
-              <p className="text-sm font-medium">{campaign.beneficiariesCount}</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(campaign.beneficiariesCount)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">تاريخ البداية</p>
@@ -116,7 +125,7 @@ export function CampaignDetailsDialog({
             <div>
               <p className="text-xs text-muted-foreground">آخر مراجعة بواسطة</p>
               <p className="text-sm font-medium">
-                {campaign.reviewedBy ?? "—"}
+                {displayOrDash(campaign.reviewedBy)}
               </p>
             </div>
           </div>

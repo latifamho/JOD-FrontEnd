@@ -21,6 +21,7 @@ import {
   staffRoleLabels,
   type StaffRole,
 } from "@/components/pages/staff-management/static-data";
+import { displayOrDash } from "@/lib/text";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -229,7 +230,7 @@ export function StaffManagementPage({ view = "employees" }: StaffManagementPageP
     (staffId: string) => {
       const member = staffRows.find((m) => m.id === staffId);
       setDeleteMemberId(staffId);
-      setDeleteMemberName(member?.name ?? "-");
+      setDeleteMemberName(displayOrDash(member?.name));
       setMemberDeleteDialogOpen(true);
     },
     [staffRows],

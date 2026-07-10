@@ -19,6 +19,7 @@ import {
 import { CategoriesTable } from "@/components/pages/categories-management/categories-table";
 import { CategoryDeleteDialog } from "@/components/pages/categories-management/category-delete-dialog";
 import { CategoriesFilters } from "@/components/pages/categories-management/categories-filters";
+import { displayOrDash } from "@/lib/text";
 import {
   useAdminCategories,
   useCreateCategory,
@@ -268,7 +269,7 @@ export function CategoriesManagementPage() {
 
       <CategoryDeleteDialog
         open={deleteDialogOpen}
-        categoryName={deleteTargetCategory?.name ?? "-"}
+        categoryName={displayOrDash(deleteTargetCategory?.name)}
         isDeleting={deleteMutation.isPending}
         onOpenChange={(nextOpen) => {
           if (!deleteMutation.isPending) {

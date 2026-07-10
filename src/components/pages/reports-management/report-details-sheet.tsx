@@ -102,7 +102,7 @@ export function ReportDetailsSheet({
                   <p>
                     المكلّف الحالي:{" "}
                     <span className="font-semibold text-foreground">
-                      {toDisplayName(report?.assignee, "غير مكلّف")}
+                      {toDisplayName(report?.assignee)}
                     </span>
                   </p>
                 </div>

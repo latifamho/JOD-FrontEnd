@@ -12,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import {
   categoryStatusLabels,
@@ -87,14 +88,14 @@ export function CategoriesTable({
               return (
                 <TableRow key={row.id} className="align-middle">
                   <TableCell>
-                    <p className="font-medium text-foreground">{row.name}</p>
+                    <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
                     <p className="text-xs text-muted-foreground">{row.id}</p>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{categoryTargetLabels[row.target]}</Badge>
                   </TableCell>
                   <TableCell className="max-w-[280px] text-sm text-muted-foreground">
-                    {row.description}
+                    {displayOrDash(row.description)}
                   </TableCell>
                   <TableCell className="text-sm">{row.usageCount} عنصر</TableCell>
                   <TableCell>
@@ -103,7 +104,7 @@ export function CategoriesTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {formatUtcDate(row.updatedAt)}
+                    {formatUtcDateOrDash(row.updatedAt)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">

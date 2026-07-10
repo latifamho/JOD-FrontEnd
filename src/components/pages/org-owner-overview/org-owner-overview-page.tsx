@@ -18,7 +18,7 @@ import {
   orgOwnerOverviewStatsData,
 } from "@/components/pages/org-owner-overview/org-owner-overview.data";
 import { formatUtcDateTime, toUtcTimestamp } from "@/lib/date";
-import { normalizeText } from "@/lib/text";
+import { displayOrDash, normalizeText } from "@/lib/text";
 
 const statIcons = {
   campaigns: AppIcons.campaigns,
@@ -149,10 +149,12 @@ export function OrgOwnerOverviewPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    {stat.label}
+                    {displayOrDash(stat.label)}
                   </p>
                   <p className="text-xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-[11px] text-muted-foreground">{stat.hint}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {displayOrDash(stat.hint)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -235,8 +237,12 @@ export function OrgOwnerOverviewPage() {
             <ul className="mt-3 space-y-3">
               {topPriorityActivities.map((item) => (
                 <li key={item.id} className="rounded-lg border border-border/70 p-3">
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {displayOrDash(item.title)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {displayOrDash(item.detail)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -267,7 +273,9 @@ export function OrgOwnerOverviewPage() {
               >
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-medium text-foreground">{row.title}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {displayOrDash(row.title)}
+                    </p>
                     <Badge
                       variant="secondary"
                       className={priorityBadgeClassNames[row.priority]}
@@ -279,7 +287,7 @@ export function OrgOwnerOverviewPage() {
                     </Badge>
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {row.detail}
+                    {displayOrDash(row.detail)}
                   </p>
                 </div>
                 <p className="shrink-0 text-[11px] text-muted-foreground sm:text-end">

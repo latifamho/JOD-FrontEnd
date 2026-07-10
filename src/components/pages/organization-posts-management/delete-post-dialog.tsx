@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { displayOrDash } from "@/lib/text";
 
 type DeletePostDialogProps = {
   open: boolean;
@@ -34,7 +35,7 @@ export function DeletePostDialog({
         </DialogHeader>
 
         <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-          البوست: {postTitle}
+          البوست: {displayOrDash(postTitle)}
         </p>
 
         <DialogFooter className="sm:justify-start">

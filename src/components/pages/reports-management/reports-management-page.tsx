@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { EmptyState, PaginationControls } from "@/components/shared";
-import { ReportCard } from "@/components/pages/reports-management/report-card";
+import { ReportsTable } from "@/components/pages/reports-management/reports-table";
 import { ReportsToolbar } from "@/components/pages/reports-management/reports-toolbar";
 import {
   reportStatusLabels,
@@ -109,23 +109,15 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-md border border-border bg-card shadow-sm divide-y divide-border">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex min-h-65 flex-col rounded-xl border border-border bg-background p-4 shadow-xs"
-            >
-              <div className="mb-3 flex items-center gap-2">
-                <div className="h-5 w-16 rounded bg-muted animate-pulse" />
-                <div className="h-5 w-12 rounded bg-muted animate-pulse" />
+            <div key={i} className="flex items-center gap-4 px-4 py-3">
+              <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-4 w-48 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-72 rounded bg-muted animate-pulse" />
               </div>
-              <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-              <div className="mt-2 h-3 w-full rounded bg-muted animate-pulse" />
-              <div className="mt-1 h-3 w-5/6 rounded bg-muted animate-pulse" />
-              <div className="mt-auto pt-4 flex gap-2">
-                <div className="h-8 w-24 rounded bg-muted animate-pulse" />
-                <div className="h-8 w-16 rounded bg-muted animate-pulse" />
-              </div>
+              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
             </div>
           ))}
         </div>
@@ -136,17 +128,12 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
           description="جرّب تغيير الفلاتر لعرض نتائج إضافية."
         />
       ) : (
-        <div className="flex-1 content-start items-start grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {reports.map((report) => (
-            <ReportCard
-              key={report.id}
-              report={report}
-              onClaim={handleClaim}
-              onMoveToWaiting={handleMoveToWaiting}
-              onCloseReport={handleCloseReport}
-            />
-          ))}
-        </div>
+        <ReportsTable
+          reports={reports}
+          onClaim={handleClaim}
+          onMoveToWaiting={handleMoveToWaiting}
+          onCloseReport={handleCloseReport}
+        />
       )}
 
       <PaginationControls

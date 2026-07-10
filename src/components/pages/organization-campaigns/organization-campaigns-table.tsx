@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/table";
 import { AppIcons } from "@/constant/icons";
 import { routePaths } from "@/constant/routes";
-import { formatUtcDate, formatUtcDateTime } from "@/lib/date";
+import {
+  formatUtcDate,
+  formatUtcDateOrDash,
+  formatUtcDateTime,
+} from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   formatAmount,
   getCampaignStatusBadgeClass,
@@ -137,7 +142,7 @@ export function OrganizationCampaignsTable({
                     <p className="mt-1 text-xs text-muted-foreground">
                       المدينة:{" "}
                       <span className="font-semibold text-foreground">
-                        {campaign.location}
+                        {displayOrDash(campaign.location)}
                       </span>
                     </p>
                   </TableCell>
@@ -149,11 +154,9 @@ export function OrganizationCampaignsTable({
                     <p className="mt-1 text-xs text-muted-foreground">
                       النهاية: {formatUtcDate(campaign.endDate)}
                     </p>
-                    {campaign.closedAt && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        الإغلاق: {formatUtcDate(campaign.closedAt)}
-                      </p>
-                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      الإغلاق: {formatUtcDateOrDash(campaign.closedAt)}
+                    </p>
                   </TableCell>
 
                   <TableCell>

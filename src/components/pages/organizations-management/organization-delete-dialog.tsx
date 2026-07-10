@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { displayOrDash } from "@/lib/text";
 
 type OrganizationDeleteDialogProps = {
   open: boolean;
@@ -30,7 +31,9 @@ export function OrganizationDeleteDialog({
           <DialogTitle>حذف المنظمة</DialogTitle>
           <DialogDescription>
             سيتم حذف المنظمة{" "}
-            <span className="font-semibold text-foreground">{organizationName}</span>{" "}
+            <span className="font-semibold text-foreground">
+              {displayOrDash(organizationName)}
+            </span>{" "}
             من القائمة الحالية.
           </DialogDescription>
         </DialogHeader>

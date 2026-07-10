@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ReviewStatusBadge } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
   type ReviewPostItem,
@@ -54,15 +55,15 @@ export function ReviewPostCard({
         <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-muted/35 p-3 text-xs text-muted-foreground sm:grid-cols-3">
           <p>
             <span className="font-semibold text-foreground">الجهة:</span>{" "}
-            {post.organizationName}
+            {displayOrDash(post.organizationName)}
           </p>
           <p>
             <span className="font-semibold text-foreground">الكاتب:</span>{" "}
-            {post.authorName}
+            {displayOrDash(post.authorName)}
           </p>
           <p>
             <span className="font-semibold text-foreground">المدينة:</span>{" "}
-            {post.location}
+            {displayOrDash(post.location)}
           </p>
         </div>
 

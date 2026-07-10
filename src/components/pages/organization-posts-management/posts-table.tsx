@@ -11,7 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AppIcons } from "@/constant/icons";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getPostStatusBadgeClass,
   getWorkflowActionForStatus,
@@ -145,15 +146,21 @@ export function PostsTable({
 
                 <TableCell>
                   {isCampaignRelatedPostType(post.type) ? (
-                    <p className="text-xs text-foreground">{post.campaignTitle ?? "—"}</p>
+                    <p className="text-xs text-foreground">
+                      {displayOrDash(post.campaignTitle)}
+                    </p>
                   ) : (
                     <p className="text-xs text-muted-foreground">مستقل</p>
                   )}
                 </TableCell>
 
                 <TableCell>
-                  <p className="text-xs text-foreground">{post.authorName}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{post.location}</p>
+                  <p className="text-xs text-foreground">
+                    {displayOrDash(post.authorName)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {displayOrDash(post.location)}
+                  </p>
                 </TableCell>
 
                 <TableCell>
@@ -184,11 +191,9 @@ export function PostsTable({
                   <p className="mt-1 text-xs text-muted-foreground">
                     التحديث: {formatUtcDateTime(post.updatedAt)}
                   </p>
-                  {post.publishedAt && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      النشر: {formatUtcDateTime(post.publishedAt)}
-                    </p>
-                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    النشر: {formatUtcDateTimeOrDash(post.publishedAt)}
+                  </p>
                 </TableCell>
 
                 <TableCell>

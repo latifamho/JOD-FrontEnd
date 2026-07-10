@@ -11,7 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AppIcons } from "@/constant/icons";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { getNotificationStatusBadgeClass } from "@/components/pages/notifications-management/helpers";
 import {
   notificationCategoryLabels,
@@ -75,7 +76,7 @@ export function NotificationsTable({
 
                 <TableCell>
                   <p className="text-xs text-foreground">
-                    {notification.recipientLabel}
+                    {displayOrDash(notification.recipientLabel)}
                   </p>
                 </TableCell>
 
@@ -92,7 +93,7 @@ export function NotificationsTable({
 
                 <TableCell>
                   <p className="text-xs text-muted-foreground">
-                    {formatUtcDateTime(notification.sentAt)}
+                    {formatUtcDateTimeOrDash(notification.sentAt)}
                   </p>
                 </TableCell>
 

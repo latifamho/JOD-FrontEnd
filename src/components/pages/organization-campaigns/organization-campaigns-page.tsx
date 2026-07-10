@@ -7,6 +7,7 @@ import { EmptyState, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { displayOrDash } from "@/lib/text";
 import {
   CampaignFormSheet,
   EMPTY_CAMPAIGN_FORM_VALUES,
@@ -184,7 +185,7 @@ export function OrganizationCampaignsPage({
     (campaignId: string) => {
       const campaign = campaigns.find((c) => c.id === campaignId);
       setCloseTargetCampaignId(campaignId);
-      setCloseTargetTitle(campaign?.title ?? "-");
+      setCloseTargetTitle(displayOrDash(campaign?.title));
       setCloseDialogOpen(true);
     },
     [campaigns],
@@ -210,7 +211,7 @@ export function OrganizationCampaignsPage({
     (campaignId: string) => {
       const campaign = campaigns.find((c) => c.id === campaignId);
       setDeleteTargetCampaignId(campaignId);
-      setDeleteTargetTitle(campaign?.title ?? "-");
+      setDeleteTargetTitle(displayOrDash(campaign?.title));
       setDeleteDialogOpen(true);
     },
     [campaigns],

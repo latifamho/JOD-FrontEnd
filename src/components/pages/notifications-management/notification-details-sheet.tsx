@@ -9,7 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { formatUtcDateTime } from "@/lib/date";
+import { formatUtcDateTimeOrDash } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import {
   getNotificationPriorityBadgeClass,
   getNotificationStatusBadgeClass,
@@ -87,39 +88,37 @@ export function NotificationDetailsSheet({
                   <p>
                     المستلم:{" "}
                     <span className="font-semibold text-foreground">
-                      {notification.recipientLabel}
+                      {displayOrDash(notification.recipientLabel)}
                     </span>
                   </p>
                   <p>
                     أنشئ بواسطة:{" "}
                     <span className="font-semibold text-foreground">
-                      {notification.createdBy}
+                      {displayOrDash(notification.createdBy)}
                     </span>
                   </p>
                   <p>
                     تاريخ الإنشاء:{" "}
                     <span className="font-semibold text-foreground">
-                      {formatUtcDateTime(notification.createdAt)}
+                      {formatUtcDateTimeOrDash(notification.createdAt)}
                     </span>
                   </p>
                   <p>
                     تاريخ الإرسال:{" "}
                     <span className="font-semibold text-foreground">
-                      {formatUtcDateTime(notification.sentAt)}
+                      {formatUtcDateTimeOrDash(notification.sentAt)}
                     </span>
                   </p>
                   <p>
                     وقت القراءة:{" "}
                     <span className="font-semibold text-foreground">
-                      {notification.readAt
-                        ? formatUtcDateTime(notification.readAt)
-                        : "—"}
+                      {formatUtcDateTimeOrDash(notification.readAt)}
                     </span>
                   </p>
                   <p>
                     المرجع:{" "}
                     <span className="font-semibold text-foreground">
-                      {notification.referenceLabel}
+                      {displayOrDash(notification.referenceLabel)}
                     </span>
                   </p>
                 </div>

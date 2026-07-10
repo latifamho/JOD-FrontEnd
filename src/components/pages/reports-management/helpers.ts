@@ -3,14 +3,14 @@ import type {
   ReportSeverity,
   ReportStatus,
 } from "@/components/pages/reports-management/static-data";
+import { displayOrDash } from "@/lib/text";
 
 export function toDisplayName(
   value: string | NameObject | null | undefined,
-  fallback = "—",
 ): string {
-  if (!value) return fallback;
-  if (typeof value === "string") return value || fallback;
-  return value.name || fallback;
+  if (!value) return displayOrDash(value);
+  if (typeof value === "string") return displayOrDash(value);
+  return displayOrDash(value.name);
 }
 
 export function getSeverityBadgeClass(severity: ReportSeverity): string {

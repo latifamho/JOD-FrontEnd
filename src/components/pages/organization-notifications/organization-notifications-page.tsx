@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatUtcDateTime } from "@/lib/date";
+import { displayOrDash } from "@/lib/text";
 import { orgNotificationCategoryLabels } from "@/components/pages/organization-notifications/static-data";
 import { PaginationControls } from "@/components/shared";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
@@ -146,9 +147,11 @@ export function OrganizationNotificationsPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <p className="font-semibold text-foreground">{row.title}</p>
+                  <p className="font-semibold text-foreground">
+                    {displayOrDash(row.title)}
+                  </p>
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {row.body}
+                    {displayOrDash(row.body)}
                   </p>
                   {row.referenceLabel ? (
                     <p className="mt-1 text-[11px] text-muted-foreground">
@@ -215,7 +218,9 @@ export function OrganizationNotificationsPage() {
               <div className="space-y-3 pt-2 text-start">
                 {selected ? (
                   <>
-                    <p className="text-sm text-foreground">{selected.body}</p>
+                    <p className="text-sm text-foreground">
+                      {displayOrDash(selected.body)}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline">
                         {orgNotificationCategoryLabels[selected.category]}
@@ -227,11 +232,9 @@ export function OrganizationNotificationsPage() {
                     <p className="text-xs text-muted-foreground">
                       {formatUtcDateTime(selected.createdAt)}
                     </p>
-                    {selected.referenceLabel ? (
-                      <p className="text-xs text-muted-foreground">
-                        مرجع: {selected.referenceLabel}
-                      </p>
-                    ) : null}
+                    <p className="text-xs text-muted-foreground">
+                      مرجع: {displayOrDash(selected.referenceLabel)}
+                    </p>
                     <Button
                       type="button"
                       className="mt-2"
