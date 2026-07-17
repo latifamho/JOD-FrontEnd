@@ -13,12 +13,13 @@ export type ReviewPostItem = {
   title: string;
   summary: string;
   organizationName: string;
-  authorName: string;
+  authorName: string | null;
   location: string;
   submittedAt: string;
   publishedAt: string | null;
   status: ModerationStatus;
   type: ReviewPostType;
+  campaignTitle?: string | null;
   reviewedBy?: string | null;
   rejectionReason?: string | null;
 };

@@ -25,11 +25,13 @@ export type AdminReviewPostsResponse = ApiListResponse<ReviewPostItem>
 // ─── Single post detail ───────────────────────────────────────────────────────
 
 export interface ReviewPostDetail extends ReviewPostItem {
-  body: string | null
-  images: string[] | null
+  createdAt: string
+  updatedAt: string
   viewsCount: number
   reactionsCount: number
-  reportsCount: number
+  applicationsCount: number
+  body?: string | null
+  images?: string[] | null
 }
 
 export type AdminReviewPostDetailResponse = ApiSingleResponse<ReviewPostDetail>

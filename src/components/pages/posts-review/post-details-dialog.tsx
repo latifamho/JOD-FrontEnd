@@ -90,6 +90,30 @@ export function PostDetailsDialog({
                 {displayOrDash(post.reviewedBy)}
               </p>
             </div>
+            {(detail?.campaignTitle ?? post.campaignTitle) && (
+              <div>
+                <p className="text-xs text-muted-foreground">الحملة المرتبطة</p>
+                <p className="text-sm font-medium">
+                  {displayOrDash(detail?.campaignTitle ?? post.campaignTitle)}
+                </p>
+              </div>
+            )}
+            {detail && (
+              <>
+                <div>
+                  <p className="text-xs text-muted-foreground">تاريخ الإنشاء</p>
+                  <p className="text-sm font-medium">
+                    {formatUtcDateTime(detail.createdAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">آخر تحديث</p>
+                  <p className="text-sm font-medium">
+                    {formatUtcDateTime(detail.updatedAt)}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {isLoading ? (
@@ -130,7 +154,7 @@ export function PostDetailsDialog({
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="rounded-lg border border-border bg-muted/30 p-3">
                     <p className="text-lg font-bold text-foreground">
-                      {detail.viewsCount }
+                      {detail.viewsCount}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       المشاهدات
@@ -138,7 +162,7 @@ export function PostDetailsDialog({
                   </div>
                   <div className="rounded-lg border border-border bg-muted/30 p-3">
                     <p className="text-lg font-bold text-foreground">
-                      {detail.reactionsCount }
+                      {detail.reactionsCount}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       التفاعلات
@@ -146,10 +170,10 @@ export function PostDetailsDialog({
                   </div>
                   <div className="rounded-lg border border-border bg-muted/30 p-3">
                     <p className="text-lg font-bold text-foreground">
-                      {detail.reportsCount }
+                      {detail.applicationsCount}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      البلاغات
+                      المتقدمون
                     </p>
                   </div>
                 </div>
