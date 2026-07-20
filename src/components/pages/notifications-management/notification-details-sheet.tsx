@@ -21,7 +21,7 @@ import {
   notificationStatusLabels,
   type AdminNotificationItem,
   type NotificationMailbox,
-} from "@/components/pages/notifications-management/static-data";
+} from "@/components/pages/notifications-management/notifications-management.types";
 
 type NotificationDetailsSheetProps = {
   mailbox: NotificationMailbox;

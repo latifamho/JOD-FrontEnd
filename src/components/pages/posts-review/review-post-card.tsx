@@ -11,7 +11,7 @@ import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
   type ReviewPostItem,
-} from "@/components/pages/posts-review/static-data";
+} from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
 import { RejectPostDialog } from "@/components/pages/posts-review/reject-post-dialog";
 

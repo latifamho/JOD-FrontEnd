@@ -13,7 +13,7 @@ import {
   categoryTargetLabels,
   type CategoryStatus,
   type CategoryTarget,
-} from "@/components/pages/categories-management/static-data";
+} from "@/components/pages/categories-management/categories-management.types";
 
 type CategoriesFiltersProps = {
   targetFilter: "all" | CategoryTarget;

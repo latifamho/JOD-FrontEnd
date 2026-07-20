@@ -17,7 +17,7 @@ import {
   type NotificationMailbox,
   type NotificationRecipientScope,
   type NotificationStatus,
-} from "@/components/pages/notifications-management/static-data";
+} from "@/components/pages/notifications-management/notifications-management.types";
 
 type NotificationsFiltersProps = {
   mailbox: NotificationMailbox;

@@ -1,15 +1,29 @@
 "use client";
 
-import * as React from "react";
-
 import { AppIcons } from "@/constant/icons";
 import { displayOrDash } from "@/lib/text";
 import {
-  analyticsKpiPreviewData,
-  analyticsWeeklyPreviewData,
-} from "@/components/pages/analytics-dashboard/analytics.data";
+  useAdminAnalyticsKpis,
+  useAdminAnalyticsWeekly,
+} from "@/features/admin/analytics/admin.analytics.query";
+
+const ANALYTICS_RANGE = { range: "30d" } as const;
 
 export function AnalyticsDashboardPage() {
+  const {
+    data: kpisData,
+    isLoading: isKpisLoading,
+    error: kpisError,
+  } = useAdminAnalyticsKpis(ANALYTICS_RANGE);
+  const {
+    data: weeklyData,
+    isLoading: isWeeklyLoading,
+    error: weeklyError,
+  } = useAdminAnalyticsWeekly(ANALYTICS_RANGE);
+
+  const kpis = kpisData?.data.kpis ?? [];
+  const weeklyRows = weeklyData?.data.rows ?? [];
+
   return (
     <section className="flex flex-col flex-1 gap-6">
       <div>
@@ -17,66 +31,94 @@ export function AnalyticsDashboardPage() {
           التحليلات والإحصائيات
         </h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          مؤشرات تجريبية — الرسوم البيانية قيد الإعداد
+          مؤشرات ورسوم أداء المنصة خلال آخر 30 يوماً
         </p>
       </div>
 
+      {kpisError && (
+        <p className="text-sm text-destructive">
+          تعذّر تحميل المؤشرات. حاول مرة أخرى.
+        </p>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {analyticsKpiPreviewData.map((kpi) => (
-          <div
-            key={kpi.id}
-            className="rounded-xl border border-border bg-card p-4 shadow-sm"
-          >
-            <p className="text-xs text-muted-foreground">{displayOrDash(kpi.label)}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">
-              {displayOrDash(kpi.value)}
-            </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              مقارنة بالشهر الماضي: {displayOrDash(kpi.changeVsLastMonth)}
-            </p>
-          </div>
-        ))}
+        {isKpisLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-24 rounded-xl border border-border bg-card animate-pulse"
+              />
+            ))
+          : kpis.map((kpi) => (
+              <div
+                key={kpi.id}
+                className="rounded-xl border border-border bg-card p-4 shadow-sm"
+              >
+                <p className="text-xs text-muted-foreground">
+                  {displayOrDash(kpi.label)}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-foreground">
+                  {displayOrDash(kpi.value)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  مقارنة بالشهر الماضي: {displayOrDash(kpi.changeVsLastMonth)}
+                </p>
+              </div>
+            ))}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-foreground">
-          ملخص أسبوعي (تجريبي)
-        </h3>
+        <h3 className="text-sm font-semibold text-foreground">ملخص أسبوعي</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          زيارات وتسجيلات وتبرعات — بيانات وهمية للعرض
+          زيارات وتسجيلات وتبرعات لكل أسبوع
         </p>
+
+        {weeklyError && (
+          <p className="mt-3 text-sm text-destructive">
+            تعذّر تحميل الملخص الأسبوعي. حاول مرة أخرى.
+          </p>
+        )}
+
         <div className="mt-3 overflow-auto">
-          <table className="w-full min-w-[min(100%,480px)] text-sm">
-            <thead>
-              <tr className="border-b border-border text-start text-xs text-muted-foreground">
-                <th className="pb-2 font-medium">الأسبوع</th>
-                <th className="pb-2 font-medium">زيارات (تقريباً)</th>
-                <th className="pb-2 font-medium">مستخدمون جدد</th>
-                <th className="pb-2 font-medium">تبرعات مسجّلة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {analyticsWeeklyPreviewData.map((row) => (
-                <tr
-                  key={row.weekLabel}
-                  className="border-b border-border/50 last:border-0"
-                >
-                  <td className="py-2.5 font-medium text-foreground">
-                    {displayOrDash(row.weekLabel)}
-                  </td>
-                  <td className="py-2.5 text-muted-foreground">
-                    {displayOrDash(row.visits)}
-                  </td>
-                  <td className="py-2.5 text-muted-foreground">
-                    {displayOrDash(row.newUsers)}
-                  </td>
-                  <td className="py-2.5 text-muted-foreground">
-                    {displayOrDash(row.donations)}
-                  </td>
-                </tr>
+          {isWeeklyLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-9 rounded bg-muted animate-pulse" />
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <table className="w-full min-w-[min(100%,480px)] text-sm">
+              <thead>
+                <tr className="border-b border-border text-start text-xs text-muted-foreground">
+                  <th className="pb-2 font-medium">الأسبوع</th>
+                  <th className="pb-2 font-medium">زيارات</th>
+                  <th className="pb-2 font-medium">مستخدمون جدد</th>
+                  <th className="pb-2 font-medium">تبرعات مسجّلة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {weeklyRows.map((row) => (
+                  <tr
+                    key={row.weekLabel}
+                    className="border-b border-border/50 last:border-0"
+                  >
+                    <td className="py-2.5 font-medium text-foreground">
+                      {displayOrDash(row.weekLabel)}
+                    </td>
+                    <td className="py-2.5 text-muted-foreground">
+                      {displayOrDash(row.visits)}
+                    </td>
+                    <td className="py-2.5 text-muted-foreground">
+                      {displayOrDash(row.newUsers)}
+                    </td>
+                    <td className="py-2.5 text-muted-foreground">
+                      {displayOrDash(row.donations)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 

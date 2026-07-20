@@ -32,7 +32,7 @@ import {
   organizationVerificationLabels,
   type OrganizationStatus,
   type OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 
 export type OrganizationFormValues = {
   name: string;

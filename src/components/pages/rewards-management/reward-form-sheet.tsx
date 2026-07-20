@@ -34,7 +34,7 @@ import {
   rewardStatusLabels,
   type RewardIconName,
   type RewardStatus,
-} from "@/components/pages/rewards-management/static-data";
+} from "@/components/pages/rewards-management/rewards-management.types";
 
 export type RewardFormValues = {
   name: string;

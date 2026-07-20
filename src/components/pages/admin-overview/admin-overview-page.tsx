@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { AppIcons, type AppIconName } from "@/constant/icons";
-import { type StatCardItem } from "@/components/pages/admin-overview/static-data";
+import { type StatCardItem } from "@/components/pages/admin-overview/admin-overview.types";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { cn } from "@/lib/utils";

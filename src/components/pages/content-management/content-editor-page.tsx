@@ -21,7 +21,7 @@ import { routePaths } from "@/constant/routes";
 import {
   articleStatusLabels,
   type ArticleStatus,
-} from "@/components/pages/content-management/static-data";
+} from "@/components/pages/content-management/content-management.types";
 import { createArticleSlug } from "@/components/pages/content-management/helpers";
 import {
   useCreateArticle,

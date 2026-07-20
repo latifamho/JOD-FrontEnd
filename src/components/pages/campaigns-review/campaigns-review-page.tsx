@@ -14,7 +14,7 @@ import {
 } from "@/components/pages/campaigns-review/review-toolbar";
 import {
   reviewStatusLabels,
-} from "@/components/pages/campaigns-review/static-data";
+} from "@/components/pages/campaigns-review/campaigns-review.types";
 import {
   useAdminReviewCampaigns,
   useApproveReviewCampaign,

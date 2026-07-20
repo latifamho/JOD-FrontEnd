@@ -10,7 +10,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import {
   type CategoryStatus,
   type CategoryTarget,
-} from "@/components/pages/categories-management/static-data";
+} from "@/components/pages/categories-management/categories-management.types";
 import {
   CategoryFormSheet,
   EMPTY_CATEGORY_FORM_VALUES,

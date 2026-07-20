@@ -5,4 +5,4 @@ export {
   type AdminUserItem,
   type UserStatus,
   type UserRole,
-} from "@/components/pages/users-management/static-data";
+} from "@/components/pages/users-management/users-management.types";

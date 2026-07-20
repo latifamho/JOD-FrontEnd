@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { ModerationStatus } from "@/components/shared";
-import { reviewStatusLabels } from "@/components/pages/posts-review/static-data";
+import { reviewStatusLabels } from "@/components/pages/posts-review/posts-review.types";
 
 export type { ReviewSortOption } from "@/features/admin/posts/admin.posts.types";
 import type { ReviewSortOption } from "@/features/admin/posts/admin.posts.types";

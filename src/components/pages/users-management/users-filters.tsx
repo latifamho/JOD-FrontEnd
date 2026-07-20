@@ -13,7 +13,7 @@ import {
   userStatusLabels,
   type UserRole,
   type UserStatus,
-} from "@/components/pages/users-management/static-data";
+} from "@/components/pages/users-management/users-management.types";
 
 type UsersFiltersProps = {
   statusFilter: "all" | UserStatus;

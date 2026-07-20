@@ -10,7 +10,7 @@ import {
 import {
   organizationVerificationLabels,
   type OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 
 export type OrganizationsSortOption =
   | "name_asc"

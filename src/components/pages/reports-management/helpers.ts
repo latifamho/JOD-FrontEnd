@@ -2,7 +2,7 @@ import type {
   NameObject,
   ReportSeverity,
   ReportStatus,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 import { displayOrDash } from "@/lib/text";
 
 export function toDisplayName(

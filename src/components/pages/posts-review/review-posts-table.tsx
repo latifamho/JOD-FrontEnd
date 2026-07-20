@@ -24,7 +24,7 @@ import { RejectPostDialog } from "@/components/pages/posts-review/reject-post-di
 import {
   postTypeLabels,
   type ReviewPostItem,
-} from "@/components/pages/posts-review/static-data";
+} from "@/components/pages/posts-review/posts-review.types";
 
 type ReviewPostsTableProps = {
   posts: ReviewPostItem[];

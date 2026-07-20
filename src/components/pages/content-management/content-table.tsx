@@ -17,7 +17,7 @@ import { getArticleStatusBadgeClass } from "@/components/pages/content-managemen
 import {
   articleStatusLabels,
   type ArticleItem,
-} from "@/components/pages/content-management/static-data";
+} from "@/components/pages/content-management/content-management.types";
 
 type ContentTableProps = {
   rows: ArticleItem[];

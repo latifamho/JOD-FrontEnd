@@ -10,7 +10,7 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   reviewStatusLabels,
   type ReviewPostItem,
-} from "@/components/pages/posts-review/static-data";
+} from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
 import { ReviewPostsTable } from "@/components/pages/posts-review/review-posts-table";
 import {

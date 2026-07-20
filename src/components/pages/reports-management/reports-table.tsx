@@ -21,12 +21,13 @@ import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { ReportDetailsSheet } from "@/components/pages/reports-management/report-details-sheet";
+import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
 import {
   reportEntityTypeLabels,
   reportSeverityLabels,
   reportStatusLabels,
   type ReportItem,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 import {
   getSeverityBadgeClass,
   getStatusBadgeClass,
@@ -36,7 +37,7 @@ import {
 type ReportsTableProps = {
   reports: ReportItem[];
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string) => void;
+  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
 };
 
@@ -96,7 +97,7 @@ export function ReportsTable({
 type ReportRowProps = {
   report: ReportItem;
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string) => void;
+  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
 };
 
@@ -107,6 +108,7 @@ function ReportRow({
   onCloseReport,
 }: ReportRowProps) {
   const [detailsOpen, setDetailsOpen] = React.useState(false);
+  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
 
   return (
     <>
@@ -194,7 +196,7 @@ function ReportRow({
                       variant="outline"
                       size="icon"
                       className="size-8"
-                      onClick={() => onMoveToWaiting(report.id)}
+                      onClick={() => setRequestInfoOpen(true)}
                     >
                       <AppIcons.reports className="size-4" />
                     </Button>
@@ -249,6 +251,13 @@ function ReportRow({
         onClaim={onClaim}
         onMoveToWaiting={onMoveToWaiting}
         onCloseReport={onCloseReport}
+      />
+
+      <RequestInfoDialog
+        open={requestInfoOpen}
+        onOpenChange={setRequestInfoOpen}
+        reportTitle={report.title}
+        onConfirm={(note) => onMoveToWaiting(report.id, note)}
       />
     </>
   );

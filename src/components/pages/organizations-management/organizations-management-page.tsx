@@ -15,7 +15,7 @@ import {
 } from "@/components/pages/organizations-management/organizations-filters";
 import {
   type OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 import { routePaths } from "@/constant/routes";
 import {
   useAdminOrganizations,

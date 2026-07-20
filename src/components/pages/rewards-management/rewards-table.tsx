@@ -14,8 +14,8 @@ import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import { getRewardStatusBadgeClass } from "@/components/pages/rewards-management/helpers";
-import { rewardStatusLabels } from "@/components/pages/rewards-management/static-data";
-import type { BadgeItem } from "@/components/pages/rewards-management/static-data";
+import { rewardStatusLabels } from "@/components/pages/rewards-management/rewards-management.types";
+import type { BadgeItem } from "@/components/pages/rewards-management/rewards-management.types";
 
 type RewardsTableProps = {
   rows: BadgeItem[];

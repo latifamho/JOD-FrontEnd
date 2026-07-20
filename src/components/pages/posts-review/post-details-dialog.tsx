@@ -13,7 +13,7 @@ import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
   type ReviewPostItem,
-} from "@/components/pages/posts-review/static-data";
+} from "@/components/pages/posts-review/posts-review.types";
 import { useAdminPostDetail } from "@/features/admin/posts/admin.posts.query";
 
 type PostDetailsDialogProps = {

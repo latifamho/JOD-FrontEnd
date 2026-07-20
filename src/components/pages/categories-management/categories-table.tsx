@@ -19,7 +19,7 @@ import {
   categoryStatusLabels,
   categoryTargetLabels,
   type AdminCategoryItem,
-} from "@/components/pages/categories-management/static-data";
+} from "@/components/pages/categories-management/categories-management.types";
 import { getCategoryStatusBadgeClass } from "@/components/pages/categories-management/helpers";
 
 const SKELETON_ROW_COUNT = 5;

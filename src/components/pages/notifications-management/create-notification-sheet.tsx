@@ -25,7 +25,7 @@ import {
   notificationRecipientScopeLabels,
   type NotificationCategory,
   type NotificationRecipientScope,
-} from "@/components/pages/notifications-management/static-data";
+} from "@/components/pages/notifications-management/notifications-management.types";
 
 export type CreateNotificationValues = {
   title: string;

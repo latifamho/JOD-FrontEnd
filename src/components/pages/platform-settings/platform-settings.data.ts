@@ -1,9 +1,6 @@
-/** قيم افتراضية تجريبية — إعدادات المنصة (الأدمن) */
+/** قيم محلية فقط — لا يوجد endpoint موثّق لهذه الحقول بعد */
 
-export type PlatformSettingsDefaults = {
-  siteName: string;
-  allowNewPosts: boolean;
-  requirePostReview: boolean;
+export type PlatformAccountDefaults = {
   accountName: string;
   accountEmail: string;
   accountPhone: string;
@@ -14,10 +11,7 @@ export type PlatformSettingsDefaults = {
   iban: string;
 };
 
-export const platformSettingsDefaultsData: PlatformSettingsDefaults = {
-  siteName: "منصة جود",
-  allowNewPosts: true,
-  requirePostReview: true,
+export const platformAccountDefaultsData: PlatformAccountDefaults = {
   accountName: "مدير المنصة",
   accountEmail: "admin@jod.sa",
   accountPhone: "+966500000001",

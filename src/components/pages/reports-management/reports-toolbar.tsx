@@ -10,11 +10,11 @@ import {
 import type {
   ReportEntityType,
   ReportSeverity,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 import {
   reportEntityTypeLabels,
   reportSeverityLabels,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 
 type ReportsToolbarProps = {
   severityFilter: "all" | ReportSeverity;

@@ -17,7 +17,7 @@ import {
 import {
   reviewCampaignCategoryLabels,
   type ReviewCampaignItem,
-} from "@/components/pages/campaigns-review/static-data";
+} from "@/components/pages/campaigns-review/campaigns-review.types";
 
 type CampaignDetailsDialogProps = {
   open: boolean;

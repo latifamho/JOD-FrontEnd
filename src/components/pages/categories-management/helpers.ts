@@ -1,4 +1,4 @@
-import type { CategoryStatus } from "@/components/pages/categories-management/static-data";
+import type { CategoryStatus } from "@/components/pages/categories-management/categories-management.types";
 
 export function getCategoryStatusBadgeClass(status: CategoryStatus): string {
   return status === "active"

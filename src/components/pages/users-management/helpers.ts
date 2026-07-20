@@ -1,7 +1,7 @@
 import type {
   AdminUserItem,
   UserStatus,
-} from "@/components/pages/users-management/static-data";
+} from "@/components/pages/users-management/users-management.types";
 
 export function createNextUserId(users: AdminUserItem[]): string {
   const maxId = users.reduce((currentMax, user) => {

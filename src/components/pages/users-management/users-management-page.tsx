@@ -16,7 +16,7 @@ import {
 } from "@/components/pages/users-management/user-form-sheet";
 import { UserDeleteDialog } from "@/components/pages/users-management/user-delete-dialog";
 import { UserChangePasswordDialog } from "@/components/pages/users-management/user-change-password-dialog";
-import { type UserRole, type UserStatus } from "@/components/pages/users-management/static-data";
+import { type UserRole, type UserStatus } from "@/components/pages/users-management/users-management.types";
 import { displayOrDash } from "@/lib/text";
 import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";

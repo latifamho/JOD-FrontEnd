@@ -34,7 +34,7 @@ import {
   userStatusLabels,
   type UserRole,
   type UserStatus,
-} from "@/components/pages/users-management/static-data";
+} from "@/components/pages/users-management/users-management.types";
 
 export type UserFormValues = {
   name: string;

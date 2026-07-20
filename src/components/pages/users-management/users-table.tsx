@@ -17,7 +17,7 @@ import { displayOrDash } from "@/lib/text";
 import {
   userStatusLabels,
   type AdminUserItem,
-} from "@/components/pages/users-management/static-data";
+} from "@/components/pages/users-management/users-management.types";
 import { getUserStatusBadgeClass } from "@/components/pages/users-management/helpers";
 import { AppIcons } from "@/constant/icons";
 

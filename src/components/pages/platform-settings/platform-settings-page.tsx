@@ -7,42 +7,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AppIcons } from "@/constant/icons";
-import { platformSettingsDefaultsData } from "@/components/pages/platform-settings/platform-settings.data";
+import { platformAccountDefaultsData } from "@/components/pages/platform-settings/platform-settings.data";
+import {
+  useAdminPlatformSettings,
+  useUpdatePlatformSettings,
+} from "@/features/admin/platform-settings/admin.platform-settings.query";
 
 export function PlatformSettingsPage() {
-  const [siteName, setSiteName] = React.useState(
-    platformSettingsDefaultsData.siteName,
-  );
-  const [allowNewPosts, setAllowNewPosts] = React.useState(
-    platformSettingsDefaultsData.allowNewPosts,
-  );
-  const [requirePostReview, setRequirePostReview] = React.useState(
-    platformSettingsDefaultsData.requirePostReview,
-  );
+  const { data, isLoading, isError, refetch } = useAdminPlatformSettings();
+  const updateMutation = useUpdatePlatformSettings();
+
+  const [siteName, setSiteName] = React.useState("");
+  const [allowNewPosts, setAllowNewPosts] = React.useState(true);
+  const [requirePostReview, setRequirePostReview] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!data?.data) {
+      return;
+    }
+    setSiteName(data.data.siteName);
+    setAllowNewPosts(data.data.allowNewPosts);
+    setRequirePostReview(data.data.requirePostReview);
+  }, [data]);
+
   const [accountName, setAccountName] = React.useState(
-    platformSettingsDefaultsData.accountName,
+    platformAccountDefaultsData.accountName,
   );
   const [accountEmail, setAccountEmail] = React.useState(
-    platformSettingsDefaultsData.accountEmail,
+    platformAccountDefaultsData.accountEmail,
   );
   const [accountPhone, setAccountPhone] = React.useState(
-    platformSettingsDefaultsData.accountPhone,
+    platformAccountDefaultsData.accountPhone,
   );
   const [recoveryEmail, setRecoveryEmail] = React.useState(
-    platformSettingsDefaultsData.recoveryEmail,
+    platformAccountDefaultsData.recoveryEmail,
   );
   const [twoFactorEnabled, setTwoFactorEnabled] = React.useState(
-    platformSettingsDefaultsData.twoFactorEnabled,
+    platformAccountDefaultsData.twoFactorEnabled,
   );
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [bankName, setBankName] = React.useState(
-    platformSettingsDefaultsData.bankName,
+    platformAccountDefaultsData.bankName,
   );
   const [bankAccountNumber, setBankAccountNumber] = React.useState(
-    platformSettingsDefaultsData.bankAccountNumber,
+    platformAccountDefaultsData.bankAccountNumber,
   );
-  const [iban, setIban] = React.useState(platformSettingsDefaultsData.iban);
+  const [iban, setIban] = React.useState(platformAccountDefaultsData.iban);
+
+  const handleSave = () => {
+    updateMutation.mutate({ siteName, allowNewPosts, requirePostReview });
+  };
 
   return (
     <section className="flex flex-col flex-1 gap-6">
@@ -55,6 +70,17 @@ export function PlatformSettingsPage() {
         </p>
       </div>
 
+      {isError && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="flex-1 text-sm text-destructive">
+            تعذّر تحميل إعدادات المنصة. حاول مرة أخرى.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-6 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="space-y-2">
           <Label htmlFor="site-name">اسم المنصة</Label>
@@ -62,6 +88,7 @@ export function PlatformSettingsPage() {
             id="site-name"
             value={siteName}
             onChange={(e) => setSiteName(e.target.value)}
+            disabled={isLoading}
             className="max-w-md text-right"
             dir="rtl"
           />
@@ -77,6 +104,7 @@ export function PlatformSettingsPage() {
           <Switch
             checked={allowNewPosts}
             onCheckedChange={setAllowNewPosts}
+            disabled={isLoading}
           />
         </div>
 
@@ -90,6 +118,7 @@ export function PlatformSettingsPage() {
           <Switch
             checked={requirePostReview}
             onCheckedChange={setRequirePostReview}
+            disabled={isLoading}
           />
         </div>
 
@@ -207,11 +236,26 @@ export function PlatformSettingsPage() {
           </div>
         </div>
 
-        <div className="pt-2">
-          <Button size="sm">
+        <div className="flex items-center gap-3 pt-2">
+          <Button
+            size="sm"
+            type="button"
+            onClick={handleSave}
+            disabled={isLoading || updateMutation.isPending}
+          >
             <AppIcons.settings className="size-4" />
             حفظ الإعدادات
           </Button>
+          {updateMutation.isSuccess && (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400">
+              تم حفظ إعدادات المنصة بنجاح.
+            </p>
+          )}
+          {updateMutation.isError && (
+            <p className="text-xs text-destructive">
+              تعذّر حفظ إعدادات المنصة. حاول مرة أخرى.
+            </p>
+          )}
         </div>
       </div>
     </section>

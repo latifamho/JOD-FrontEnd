@@ -2,7 +2,7 @@ import type {
   AdminOrganizationItem,
   OrganizationStatus,
   OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 
 const MOST_ACTIVE_SCORE_THRESHOLD = 80;
 
@@ -27,6 +27,14 @@ export function getOrganizationStatusBadgeClass(
     return "border-emerald-200/70 bg-emerald-100 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-100";
   }
 
+  if (status === "pending") {
+    return "border-amber-200/70 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-100";
+  }
+
+  if (status === "rejected") {
+    return "border-rose-200/70 bg-rose-100 text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/20 dark:text-rose-100";
+  }
+
   return "border-slate-200/70 bg-slate-100 text-slate-800 dark:border-slate-500/40 dark:bg-slate-500/20 dark:text-slate-100";
 }
 
@@ -37,7 +45,15 @@ export function getOrganizationVerificationBadgeClass(
     return "border-sky-200/70 bg-sky-100 text-sky-800 dark:border-sky-500/40 dark:bg-sky-500/20 dark:text-sky-100";
   }
 
-  return "border-amber-200/70 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-100";
+  if (verificationStatus === "pending") {
+    return "border-amber-200/70 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-100";
+  }
+
+  if (verificationStatus === "rejected") {
+    return "border-rose-200/70 bg-rose-100 text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/20 dark:text-rose-100";
+  }
+
+  return "border-slate-200/70 bg-slate-100 text-slate-800 dark:border-slate-500/40 dark:bg-slate-500/20 dark:text-slate-100";
 }
 
 export function isMostActiveOrganization(

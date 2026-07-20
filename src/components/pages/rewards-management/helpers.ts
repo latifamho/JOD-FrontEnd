@@ -1,4 +1,4 @@
-import type { BadgeItem } from "@/components/pages/rewards-management/static-data";
+import type { BadgeItem } from "@/components/pages/rewards-management/rewards-management.types";
 
 export function createNextBadgeId(badges: BadgeItem[]): string {
   const maxId = badges.reduce((currentMax, badge) => {

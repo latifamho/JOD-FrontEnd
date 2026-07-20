@@ -17,7 +17,7 @@ import { RejectCampaignDialog } from "@/components/pages/campaigns-review/reject
 import {
   reviewCampaignCategoryLabels,
   type ReviewCampaignItem,
-} from "@/components/pages/campaigns-review/static-data";
+} from "@/components/pages/campaigns-review/campaigns-review.types";
 
 type ReviewCampaignCardProps = {
   campaign: ReviewCampaignItem;

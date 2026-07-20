@@ -10,7 +10,7 @@ import {
   type ReportEntityType,
   type ReportSeverity,
   type ReportStatus,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 import { usePagination } from "@/hooks/use-pagination";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
@@ -71,8 +71,8 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
   );
 
   const handleMoveToWaiting = React.useCallback(
-    (reportId: string) => {
-      waitMutation.mutate(reportId);
+    (reportId: string, note: string) => {
+      waitMutation.mutate({ reportId, body: { note } });
     },
     [waitMutation],
   );

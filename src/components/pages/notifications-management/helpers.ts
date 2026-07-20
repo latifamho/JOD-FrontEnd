@@ -4,7 +4,7 @@ import type {
   NotificationDateFilter,
   NotificationPriority,
   NotificationStatus,
-} from "@/components/pages/notifications-management/static-data";
+} from "@/components/pages/notifications-management/notifications-management.types";
 
 const LAST_7_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const REFERENCE_NOW_UTC = "2026-02-28T12:00:00Z";

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import type { ModerationStatus } from "@/components/shared";
 import { normalizeText } from "@/lib/text";
-import { reviewStatusLabels } from "@/components/pages/campaigns-review/static-data";
+import { reviewStatusLabels } from "@/components/pages/campaigns-review/campaigns-review.types";
 
 export type ReviewSortOption =
   | "title_asc"

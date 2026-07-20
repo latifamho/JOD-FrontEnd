@@ -20,7 +20,7 @@ import {
   organizationStatusLabels,
   organizationVerificationLabels,
   type AdminOrganizationItem,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 import { AppIcons } from "@/constant/icons";
 
 type OrganizationsTableProps = {

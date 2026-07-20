@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
 import {
-  formatUtcDate,
   formatUtcDateOrDash,
   formatUtcDateTime,
   formatUtcDateTimeOrDash,
@@ -19,46 +17,45 @@ import {
   getOrganizationVerificationBadgeClass,
 } from "@/components/pages/organizations-management/helpers";
 import {
-  organizationsStaticData,
   organizationStatusLabels,
   organizationTypeLabels,
   organizationVerificationLabels,
-  type OrganizationStatus,
-  type OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/static-data";
+} from "@/components/pages/organizations-management/organizations-management.types";
 import { AppIcons } from "@/constant/icons";
+import {
+  useAdminOrganizationDetail,
+  useAcceptOrganization,
+} from "@/features/admin/organizations/admin.organizations.query";
 
 type OrganizationDetailsPageProps = {
   organizationId: string;
 };
 
+const SOCIAL_MEDIA_LABELS = {
+  facebook: "فيسبوك",
+  twitter: "إكس (تويتر)",
+  instagram: "إنستغرام",
+} as const;
+
 export function OrganizationDetailsPage({
   organizationId,
 }: OrganizationDetailsPageProps) {
-  const organization = organizationsStaticData.find(
-    (candidate) => candidate.id === organizationId,
-  );
+  const { data, isLoading } = useAdminOrganizationDetail(organizationId);
+  const acceptMutation = useAcceptOrganization();
 
-  const [status, setStatus] = React.useState<OrganizationStatus>(
-    organization?.status ?? "inactive",
-  );
-  const [verificationStatus, setVerificationStatus] =
-    React.useState<OrganizationVerificationStatus>(
-      organization?.verificationStatus ?? "unverified",
+  const organization = data?.data;
+
+  if (isLoading) {
+    return (
+      <section className="flex flex-1 flex-col gap-4">
+        <div className="h-24 rounded-md border border-border bg-muted animate-pulse" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="h-48 rounded-md border border-border bg-muted animate-pulse" />
+          <div className="h-48 rounded-md border border-border bg-muted animate-pulse" />
+        </div>
+      </section>
     );
-  const [acceptedAt, setAcceptedAt] = React.useState<string | null>(
-    organization?.acceptedAt ?? null,
-  );
-
-  React.useEffect(() => {
-    if (!organization) {
-      return;
-    }
-
-    setStatus(organization.status);
-    setVerificationStatus(organization.verificationStatus);
-    setAcceptedAt(organization.acceptedAt ?? null);
-  }, [organization]);
+  }
 
   if (!organization) {
     return (
@@ -79,13 +76,15 @@ export function OrganizationDetailsPage({
     );
   }
 
-  const handleAcceptOrganization = () => {
-    setStatus("active");
-    setVerificationStatus("verified");
-    setAcceptedAt(new Date().toISOString());
-  };
-
-  const isAccepted = verificationStatus === "verified";
+  const isAccepted = organization.verificationStatus === "verified";
+  const socialMediaEntries = organization.socialMedia
+    ? (
+        Object.entries(organization.socialMedia) as [
+          keyof typeof SOCIAL_MEDIA_LABELS,
+          string | undefined,
+        ][]
+      ).filter(([, value]) => !!value)
+    : [];
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -95,15 +94,17 @@ export function OrganizationDetailsPage({
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={getOrganizationVerificationBadgeClass(verificationStatus)}
+                className={getOrganizationVerificationBadgeClass(
+                  organization.verificationStatus,
+                )}
               >
-                {organizationVerificationLabels[verificationStatus]}
+                {organizationVerificationLabels[organization.verificationStatus]}
               </Badge>
               <Badge
                 variant="outline"
-                className={getOrganizationStatusBadgeClass(status)}
+                className={getOrganizationStatusBadgeClass(organization.status)}
               >
-                {organizationStatusLabels[status]}
+                {organizationStatusLabels[organization.status]}
               </Badge>
               <Badge variant="outline">{organization.id}</Badge>
             </div>
@@ -124,8 +125,8 @@ export function OrganizationDetailsPage({
             </Button>
             <Button
               type="button"
-              onClick={handleAcceptOrganization}
-              disabled={isAccepted}
+              onClick={() => acceptMutation.mutate(organization.id)}
+              disabled={isAccepted || acceptMutation.isPending}
             >
               <AppIcons.verification className="size-4" />
               {isAccepted ? "تم قبول المنظمة" : "قبول المنظمة"}
@@ -183,7 +184,7 @@ export function OrganizationDetailsPage({
             <p className="text-muted-foreground">
               تاريخ القبول:{" "}
               <span className="font-semibold text-foreground">
-                {formatUtcDateTimeOrDash(acceptedAt)}
+                {formatUtcDateTimeOrDash(organization.acceptedAt ?? null)}
               </span>
             </p>
           </div>
@@ -234,9 +235,17 @@ export function OrganizationDetailsPage({
             </p>
             <p className="text-muted-foreground">
               حسابات التواصل:{" "}
-              <span className="font-semibold text-foreground">
-                {displayOrDash(organization.socialMedia)}
-              </span>
+              {socialMediaEntries.length > 0 ? (
+                <span className="font-semibold text-foreground">
+                  {socialMediaEntries
+                    .map(([key, value]) => `${SOCIAL_MEDIA_LABELS[key]}: ${value}`)
+                    .join(" · ")}
+                </span>
+              ) : (
+                <span className="font-semibold text-foreground">
+                  {displayOrDash(null)}
+                </span>
+              )}
             </p>
           </div>
         </div>

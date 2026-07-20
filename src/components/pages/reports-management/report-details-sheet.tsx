@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,20 +17,21 @@ import {
   reportSeverityLabels,
   reportStatusLabels,
   type ReportItem,
-} from "@/components/pages/reports-management/static-data";
+} from "@/components/pages/reports-management/reports-management.types";
 import {
   getSeverityBadgeClass,
   getStatusBadgeClass,
   toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
+import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
 
 type ReportDetailsSheetProps = {
   report: ReportItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string) => void;
+  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
 };
 
@@ -40,6 +43,8 @@ export function ReportDetailsSheet({
   onMoveToWaiting,
   onCloseReport,
 }: ReportDetailsSheetProps) {
+  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -161,7 +166,7 @@ export function ReportDetailsSheet({
                 <>
                   <Button
                     variant="outline"
-                    onClick={() => onMoveToWaiting(report.id)}
+                    onClick={() => setRequestInfoOpen(true)}
                   >
                     بانتظار الرد
                   </Button>
@@ -172,6 +177,13 @@ export function ReportDetailsSheet({
                 <Button onClick={() => onCloseReport(report.id)}>إغلاق البلاغ</Button>
               )}
             </SheetFooter>
+
+            <RequestInfoDialog
+              open={requestInfoOpen}
+              onOpenChange={setRequestInfoOpen}
+              reportTitle={report.title}
+              onConfirm={(note) => onMoveToWaiting(report.id, note)}
+            />
           </>
         ) : null}
       </SheetContent>
