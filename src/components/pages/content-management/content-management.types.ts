@@ -9,6 +9,7 @@ export type ArticleItem = {
   publishedAt?: string;
   createdAt: string;
   authorName: string;
+  images?: string[];
 };
 
 export const articleStatusLabels: Record<ArticleStatus, string> = {

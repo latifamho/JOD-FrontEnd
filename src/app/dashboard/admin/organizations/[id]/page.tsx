@@ -8,5 +8,6 @@ export default async function AdminOrganizationDetailsPage({
   params,
 }: AdminOrganizationDetailsPageProps) {
   const resolvedParams = await params;
-  return <OrganizationDetailsPage organizationId={resolvedParams.id} />;
+  const organizationId = decodeURIComponent(resolvedParams.id);
+  return <OrganizationDetailsPage organizationId={organizationId} />;
 }

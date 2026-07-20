@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -28,27 +29,29 @@ type OrganizationsFiltersProps = {
   onLocationFilterChange: (value: string) => void;
   sortBy: OrganizationsSortOption;
   onSortByChange: (value: OrganizationsSortOption) => void;
+  onResetFilters: () => void;
+  isLoading?: boolean;
 };
 
 export function OrganizationsFilters({
   verificationFilter,
   onVerificationFilterChange,
-  locationFilter,
-  locationOptions,
-  onLocationFilterChange,
   sortBy,
   onSortByChange,
+  onResetFilters,
+  isLoading = false,
 }: OrganizationsFiltersProps) {
   return (
-    <div className="grid gap-3 md:grid-cols-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Select
         dir="rtl"
+        disabled={isLoading}
         value={verificationFilter}
         onValueChange={(value) =>
           onVerificationFilterChange(value as "all" | OrganizationVerificationStatus)
         }
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[160px] flex-1 text-right text-xs sm:max-w-[220px]">
           <SelectValue placeholder="فلتر التوثيق" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -63,28 +66,13 @@ export function OrganizationsFilters({
         </SelectContent>
       </Select>
 
-      <Select dir="rtl" value={locationFilter} onValueChange={onLocationFilterChange}>
-        <SelectTrigger className="w-full text-right text-xs">
-          <SelectValue placeholder="فلتر الموقع" />
-        </SelectTrigger>
-        <SelectContent align="start" position="popper" className="text-right">
-          <SelectItem value="all" className="text-right text-xs">
-            كل المواقع
-          </SelectItem>
-          {locationOptions.map((location) => (
-            <SelectItem key={location} value={location} className="text-right text-xs">
-              {location}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
       <Select
         dir="rtl"
+        disabled={isLoading}
         value={sortBy}
         onValueChange={(value) => onSortByChange(value as OrganizationsSortOption)}
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[200px]">
           <SelectValue placeholder="ترتيب النتائج" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -102,6 +90,17 @@ export function OrganizationsFilters({
           </SelectItem>
         </SelectContent>
       </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="ms-auto h-8 shrink-0 px-3 text-xs"
+        disabled={isLoading}
+        onClick={onResetFilters}
+      >
+        إعادة تعيين
+      </Button>
     </div>
   );
 }

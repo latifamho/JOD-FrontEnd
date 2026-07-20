@@ -3,20 +3,21 @@
 import * as React from "react";
 import type { AxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { UsersTable } from "@/components/pages/users-management/users-table";
-import {
-  EMPTY_USER_FORM_VALUES,
-  type UserFormValues,
-  UserFormSheet,
-} from "@/components/pages/users-management/user-form-sheet";
 import { UserDeleteDialog } from "@/components/pages/users-management/user-delete-dialog";
 import { UserChangePasswordDialog } from "@/components/pages/users-management/user-change-password-dialog";
-import { type UserRole, type UserStatus } from "@/components/pages/users-management/users-management.types";
+import {
+  getUserType,
+  normalizeUserStatus,
+  type UserRole,
+  type UserStatus,
+} from "@/components/pages/users-management/users-management.types";
 import { displayOrDash } from "@/lib/text";
 import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";
@@ -30,6 +31,11 @@ import {
 } from "@/features/admin/users/admin.users.query";
 import { adminUsersServices } from "@/features/admin/users/admin.users.services";
 import { adminUsersKeys } from "@/features/admin/users/admin.users.query-keys";
+import {
+  EMPTY_USER_FORM_VALUES,
+  type UserFormValues,
+  UserFormSheet,
+} from "@/components/pages/users-management/user-form-sheet";
 
 export function UsersManagementPage() {
   const queryClient = useQueryClient();
@@ -50,6 +56,7 @@ export function UsersManagementPage() {
     filter: {
       status: statusFilter !== "all" ? statusFilter : undefined,
       role: roleFilter !== "all" ? roleFilter : undefined,
+      userType: roleFilter !== "all" ? roleFilter : undefined,
       search: searchFilter.trim() || undefined,
     },
   });
@@ -73,8 +80,9 @@ export function UsersManagementPage() {
     React.useState<UserFormValues>(EMPTY_USER_FORM_VALUES);
   const [editingUserId, setEditingUserId] = React.useState<string | null>(null);
   const [formEmailError, setFormEmailError] = React.useState<string | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
-  // Per-row loading (edit prefetch + toggle status)
+  // Per-row loading for status toggle only
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(
     new Set(),
   );
@@ -90,6 +98,8 @@ export function UsersManagementPage() {
     React.useState(false);
   const [changePasswordTargetUserId, setChangePasswordTargetUserId] =
     React.useState<string | null>(null);
+  const [changePasswordTargetUserName, setChangePasswordTargetUserName] =
+    React.useState("");
 
   // Mutations
   const createMutation = useCreateUser();
@@ -100,10 +110,6 @@ export function UsersManagementPage() {
 
   const deleteTargetUser = deleteTargetUserId
     ? (users.find((u) => u.id === deleteTargetUserId) ?? null)
-    : null;
-
-  const changePasswordTargetUser = changePasswordTargetUserId
-    ? (users.find((u) => u.id === changePasswordTargetUserId) ?? null)
     : null;
 
   const addLoadingRow = React.useCallback((id: string) => {
@@ -118,17 +124,30 @@ export function UsersManagementPage() {
     });
   }, []);
 
+  const resetFilters = React.useCallback(() => {
+    setStatusFilter("all");
+    setRoleFilter("all");
+    setSearchFilter("");
+  }, []);
+
   const openCreateSheet = React.useCallback(() => {
     setFormMode("create");
     setEditingUserId(null);
     setFormInitialValues(EMPTY_USER_FORM_VALUES);
     setFormEmailError(null);
+    setIsLoadingDetails(false);
     setFormOpen(true);
   }, []);
 
   const openEditSheet = React.useCallback(
     async (userId: string) => {
-      addLoadingRow(userId);
+      setFormMode("edit");
+      setEditingUserId(userId);
+      setFormInitialValues(EMPTY_USER_FORM_VALUES);
+      setFormEmailError(null);
+      setIsLoadingDetails(true);
+      setFormOpen(true);
+
       try {
         const response = await queryClient.fetchQuery({
           queryKey: adminUsersKeys.detail(userId),
@@ -136,24 +155,24 @@ export function UsersManagementPage() {
           staleTime: 0,
         });
         const user = response.data;
-        setFormMode("edit");
-        setEditingUserId(userId);
         setFormInitialValues({
           name: user.name,
           email: user.email,
           phone: user.phone,
-          role: user.role,
-          status: user.status,
+          role: getUserType(user),
+          status: normalizeUserStatus(user.status),
+          password: "",
+          passwordConfirmation: "",
         });
-        setFormEmailError(null);
-        setFormOpen(true);
       } catch {
         // toast already shown by the api interceptor
+        setFormOpen(false);
+        setEditingUserId(null);
       } finally {
-        removeLoadingRow(userId);
+        setIsLoadingDetails(false);
       }
     },
-    [queryClient, addLoadingRow, removeLoadingRow],
+    [queryClient],
   );
 
   const handleSaveForm = React.useCallback(
@@ -166,14 +185,17 @@ export function UsersManagementPage() {
       };
 
       if (formMode === "create") {
+        const password = values.password ?? "";
         createMutation.mutate(
           {
             name: values.name,
             email: values.email,
             phone: values.phone,
+            userType: values.role,
             role: values.role,
             status: values.status,
-            password: values.password ?? "",
+            password,
+            password_confirmation: values.passwordConfirmation ?? password,
           },
           {
             onSuccess: () => {
@@ -195,11 +217,11 @@ export function UsersManagementPage() {
             name: values.name,
             email: values.email,
             phone: values.phone,
+            userType: values.role,
             role: values.role,
             status: values.status,
           },
-        },
-        {
+        },        {
           onSuccess: () => {
             setFormOpen(false);
             setEditingUserId(null);
@@ -236,16 +258,22 @@ export function UsersManagementPage() {
     if (!deleteTargetUserId) return;
     deleteMutation.mutate(deleteTargetUserId, {
       onSuccess: () => {
+        toast.success("تم حذف المستخدم بنجاح");
         setDeleteDialogOpen(false);
         setDeleteTargetUserId(null);
       },
     });
   }, [deleteTargetUserId, deleteMutation]);
 
-  const openChangePasswordDialog = React.useCallback((userId: string) => {
-    setChangePasswordTargetUserId(userId);
-    setChangePasswordDialogOpen(true);
-  }, []);
+  const openChangePasswordDialog = React.useCallback(
+    (userId: string) => {
+      const user = users.find((u) => u.id === userId);
+      setChangePasswordTargetUserId(userId);
+      setChangePasswordTargetUserName(displayOrDash(user?.name));
+      setChangePasswordDialogOpen(true);
+    },
+    [users],
+  );
 
   const handleChangePassword = React.useCallback(
     (newPassword: string) => {
@@ -293,6 +321,7 @@ export function UsersManagementPage() {
         onStatusFilterChange={setStatusFilter}
         onRoleFilterChange={setRoleFilter}
         onSearchFilterChange={setSearchFilter}
+        onResetFilters={resetFilters}
       />
 
       {isError && (
@@ -336,17 +365,20 @@ export function UsersManagementPage() {
       />
 
       <UserFormSheet
+        key={`${formMode}-${editingUserId ?? "new"}`}
         open={formOpen}
         mode={formMode}
         initialValues={formInitialValues}
         isSubmitting={isFormSubmitting}
+        isLoadingDetails={isLoadingDetails}
         emailError={formEmailError}
         onOpenChange={(nextOpen) => {
-          if (isFormSubmitting) return;
+          if (isFormSubmitting || isLoadingDetails) return;
           setFormOpen(nextOpen);
           if (!nextOpen) {
             setEditingUserId(null);
             setFormEmailError(null);
+            setIsLoadingDetails(false);
           }
         }}
         onSubmit={handleSaveForm}
@@ -367,12 +399,15 @@ export function UsersManagementPage() {
 
       <UserChangePasswordDialog
         open={changePasswordDialogOpen}
-        userName={displayOrDash(changePasswordTargetUser?.name)}
+        userName={changePasswordTargetUserName}
         isSubmitting={changePasswordMutation.isPending}
         onOpenChange={(nextOpen) => {
           if (!changePasswordMutation.isPending) {
             setChangePasswordDialogOpen(nextOpen);
-            if (!nextOpen) setChangePasswordTargetUserId(null);
+            if (!nextOpen) {
+              setChangePasswordTargetUserId(null);
+              setChangePasswordTargetUserName("");
+            }
           }
         }}
         onConfirm={handleChangePassword}

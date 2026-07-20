@@ -1,4 +1,5 @@
 import { api } from '@/services/api'
+import { buildListParams } from '@/lib/build-list-params'
 import type {
   AdminArticlesParams,
   AdminArticlesResponse,
@@ -16,16 +17,7 @@ const ENDPOINTS = {
 } as const
 
 function buildParams(params: AdminArticlesParams): Record<string, unknown> {
-  const flat: Record<string, unknown> = {}
-  if (params.page !== undefined) flat.page = params.page
-  if (params.perPage !== undefined) flat.perPage = params.perPage
-  if (params.sort) flat.sort = params.sort
-  if (params.filter) {
-    for (const [key, value] of Object.entries(params.filter)) {
-      if (value !== undefined && value !== '') flat[`filter.${key}`] = value
-    }
-  }
-  return flat
+  return buildListParams(params)
 }
 
 export const adminArticlesServices = {

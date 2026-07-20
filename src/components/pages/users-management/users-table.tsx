@@ -15,6 +15,8 @@ import {
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
+  getUserType,
+  userRoleLabels,
   userStatusLabels,
   type AdminUserItem,
 } from "@/components/pages/users-management/users-management.types";
@@ -52,6 +54,7 @@ export function UsersTable({
         <TableHeader className="bg-muted/35">
           <TableRow>
             <TableHead>المستخدم</TableHead>
+            <TableHead>النوع</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>بيانات التواصل</TableHead>
             <TableHead>النشاط</TableHead>
@@ -67,6 +70,9 @@ export function UsersTable({
                 <TableCell>
                   <SkeletonPulse className="h-3.5 w-28 mb-1.5" />
                   <SkeletonPulse className="h-3 w-16" />
+                </TableCell>
+                <TableCell>
+                  <SkeletonPulse className="h-5 w-16 rounded-full" />
                 </TableCell>
                 <TableCell>
                   <SkeletonPulse className="h-5 w-16 rounded-full" />
@@ -94,7 +100,7 @@ export function UsersTable({
             ))
           ) : rows.length > 0 ? (
             rows.map((user) => {
-              const isRowLoading = loadingRowIds.has(user.id);
+              const isToggleLoading = loadingRowIds.has(user.id);
               return (
                 <TableRow key={user.id}>
                   <TableCell>
@@ -104,6 +110,12 @@ export function UsersTable({
                     <p className="mt-1 text-xs text-muted-foreground">
                       {displayOrDash(user.id)}
                     </p>
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge variant="outline">
+                      {userRoleLabels[getUserType(user)]}
+                    </Badge>
                   </TableCell>
 
                   <TableCell>
@@ -155,15 +167,11 @@ export function UsersTable({
                         size="icon"
                         variant="ghost"
                         title="تعديل المستخدم"
-                        disabled={isRowLoading}
+                        disabled={isToggleLoading}
                         onClick={() => onEditUser(user.id)}
                         className="shadow-sm"
                       >
-                        {isRowLoading ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <AppIcons.UserRoundPen className="size-4 text-info" />
-                        )}
+                        <AppIcons.UserRoundPen className="size-4 text-info" />
                       </Button>
                       <Button
                         type="button"
@@ -174,18 +182,22 @@ export function UsersTable({
                             ? "تعطيل المستخدم"
                             : "تفعيل المستخدم"
                         }
-                        disabled={isRowLoading}
+                        disabled={isToggleLoading}
                         onClick={() => onToggleUserStatus(user.id)}
                         className="shadow-sm"
                       >
-                        <AppIcons.UserRoundX className="size-4 text-warning" />
+                        {isToggleLoading ? (
+                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                        ) : (
+                          <AppIcons.UserRoundX className="size-4 text-warning" />
+                        )}
                       </Button>
                       <Button
                         type="button"
                         size="icon"
                         variant="ghost"
                         title="تغيير كلمة المرور"
-                        disabled={isRowLoading}
+                        disabled={isToggleLoading}
                         onClick={() => onChangeUserPassword(user.id)}
                         className="shadow-sm"
                       >
@@ -196,7 +208,7 @@ export function UsersTable({
                         size="icon"
                         variant="ghost"
                         title="حذف المستخدم"
-                        disabled={isRowLoading}
+                        disabled={isToggleLoading}
                         onClick={() => onDeleteUser(user.id)}
                         className="shadow-sm"
                       >
@@ -210,7 +222,7 @@ export function UsersTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد بيانات مستخدمين للعرض.

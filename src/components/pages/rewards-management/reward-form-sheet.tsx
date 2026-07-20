@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +40,20 @@ import {
   type RewardStatus,
 } from "@/components/pages/rewards-management/rewards-management.types";
 
-export type RewardFormValues = {
-  name: string;
-  description: string;
-  criteria: string;
-  iconName: RewardIconName;
-  isActive: boolean;
-};
+const rewardIconValues = rewardIconOptions.map((o) => o.value) as [
+  RewardIconName,
+  ...RewardIconName[],
+];
+
+const rewardFormSchema = z.object({
+  name: z.string().min(1, "اسم الشارة مطلوب"),
+  description: z.string().optional(),
+  criteria: z.string().optional(),
+  iconName: z.enum(rewardIconValues),
+  isActive: z.boolean(),
+});
+
+export type RewardFormValues = z.infer<typeof rewardFormSchema>;
 
 export const EMPTY_REWARD_FORM_VALUES: RewardFormValues = {
   name: "",
@@ -52,55 +63,64 @@ export const EMPTY_REWARD_FORM_VALUES: RewardFormValues = {
   isActive: true,
 };
 
+export function normalizeRewardIconName(iconName: string | undefined | null): RewardIconName {
+  if (iconName && rewardIconValues.includes(iconName as RewardIconName)) {
+    return iconName as RewardIconName;
+  }
+  return "rewards";
+}
+
 type RewardFormSheetProps = {
   open: boolean;
   mode: "create" | "edit";
   initialValues: RewardFormValues;
+  isSubmitting?: boolean;
+  isLoadingDetails?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: RewardFormValues) => void;
 };
-
-function areValuesEqual(
-  first: RewardFormValues,
-  second: RewardFormValues,
-): boolean {
-  return (
-    first.name === second.name &&
-    first.description === second.description &&
-    first.criteria === second.criteria &&
-    first.iconName === second.iconName &&
-    first.isActive === second.isActive
-  );
-}
 
 export function RewardFormSheet({
   open,
   mode,
   initialValues,
+  isSubmitting = false,
+  isLoadingDetails = false,
   onOpenChange,
   onSubmit,
 }: RewardFormSheetProps) {
-  const [formValues, setFormValues] = React.useState<RewardFormValues>(
-    initialValues,
-  );
   const [discardDialogOpen, setDiscardDialogOpen] = React.useState(false);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm<RewardFormValues>({
+    resolver: zodResolver(rewardFormSchema),
+    defaultValues: initialValues,
+  });
 
   React.useEffect(() => {
     if (open) {
-      setFormValues(initialValues);
+      reset(initialValues);
     }
-  }, [initialValues, open]);
+  }, [initialValues, open, reset]);
 
-  const isDirty = mode === "edit" && !areValuesEqual(formValues, initialValues);
-  const SelectedIcon = AppIcons[formValues.iconName];
+  const iconName = watch("iconName");
+  const SelectedIcon = AppIcons[normalizeRewardIconName(iconName)];
+  const isFormLocked = isSubmitting || isLoadingDetails;
 
   const closeSheetSafely = React.useCallback(() => {
-    if (isDirty) {
+    if (isFormLocked) return;
+    if (mode === "edit" && isDirty) {
       setDiscardDialogOpen(true);
       return;
     }
     onOpenChange(false);
-  }, [isDirty, onOpenChange]);
+  }, [isDirty, isFormLocked, mode, onOpenChange]);
 
   return (
     <>
@@ -121,17 +141,15 @@ export function RewardFormSheet({
         >
           <form
             className="flex h-full flex-col"
-            onSubmit={(event) => {
-              event.preventDefault();
+            onSubmit={handleSubmit((values) => {
               onSubmit({
-                name: formValues.name.trim(),
-                description: formValues.description.trim(),
-                criteria: formValues.criteria.trim(),
-                iconName: formValues.iconName,
-                isActive: formValues.isActive,
+                name: values.name.trim(),
+                description: values.description?.trim() ?? "",
+                criteria: values.criteria?.trim() ?? "",
+                iconName: normalizeRewardIconName(values.iconName),
+                isActive: values.isActive,
               });
-              onOpenChange(false);
-            }}
+            })}
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
               <SheetTitle className="text-right text-lg">
@@ -140,145 +158,150 @@ export function RewardFormSheet({
             </SheetHeader>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <div className="space-y-2">
-                <Label htmlFor="reward-name">اسم الشارة</Label>
-                <Input
-                  id="reward-name"
-                  required
-                  value={formValues.name}
-                  onChange={(event) =>
-                    setFormValues((currentValues) => ({
-                      ...currentValues,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder="مثال: متبرع نشط"
-                />
-              </div>
+              {isLoadingDetails ? (
+                <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="size-6 animate-spin" />
+                  <p className="text-sm">جاري تحميل بيانات الشارة...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward-name">اسم الشارة</Label>
+                    <Input
+                      id="reward-name"
+                      disabled={isFormLocked}
+                      placeholder="مثال: متبرع نشط"
+                      {...register("name")}
+                    />
+                    {errors.name ? (
+                      <p className="text-xs text-destructive">{errors.name.message}</p>
+                    ) : null}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reward-description">الوصف</Label>
-                <Textarea
-                  id="reward-description"
-                  required
-                  rows={3}
-                  value={formValues.description}
-                  onChange={(event) =>
-                    setFormValues((currentValues) => ({
-                      ...currentValues,
-                      description: event.target.value,
-                    }))
-                  }
-                  placeholder="اكتب وصف الشارة"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward-description">الوصف</Label>
+                    <Textarea
+                      id="reward-description"
+                      disabled={isFormLocked}
+                      rows={3}
+                      placeholder="اكتب وصف الشارة (اختياري)"
+                      {...register("description")}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reward-criteria">المعايير</Label>
-                <Input
-                  id="reward-criteria"
-                  required
-                  value={formValues.criteria}
-                  onChange={(event) =>
-                    setFormValues((currentValues) => ({
-                      ...currentValues,
-                      criteria: event.target.value,
-                    }))
-                  }
-                  placeholder="مثال: 10 منشورات مقبولة"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward-criteria">المعايير</Label>
+                    <Input
+                      id="reward-criteria"
+                      disabled={isFormLocked}
+                      placeholder="مثال: 10 منشورات مقبولة (اختياري)"
+                      {...register("criteria")}
+                    />
+                  </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>الأيقونة</Label>
-                  <Select
-                    dir="rtl"
-                    value={formValues.iconName}
-                    onValueChange={(value) =>
-                      setFormValues((currentValues) => ({
-                        ...currentValues,
-                        iconName: value as RewardIconName,
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="w-full text-right">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      align="start"
-                      position="popper"
-                      className="text-right"
-                    >
-                      {rewardIconOptions.map((option) => {
-                        const OptionIcon = AppIcons[option.value];
-
-                        return (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            className="text-right text-xs"
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>الأيقونة</Label>
+                      <Controller
+                        control={control}
+                        name="iconName"
+                        render={({ field }) => (
+                          <Select
+                            dir="rtl"
+                            disabled={isFormLocked}
+                            value={field.value}
+                            onValueChange={field.onChange}
                           >
-                            <span className="inline-flex items-center gap-2">
-                              <OptionIcon className="size-4 text-muted-foreground" />
-                              {option.label}
-                            </span>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
+                            <SelectTrigger className="w-full text-right">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent
+                              align="start"
+                              position="popper"
+                              className="text-right"
+                            >
+                              {rewardIconOptions.map((option) => {
+                                const OptionIcon = AppIcons[option.value];
+                                return (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                    className="text-right text-xs"
+                                  >
+                                    <span className="inline-flex items-center gap-2">
+                                      <OptionIcon className="size-4 text-muted-foreground" />
+                                      {option.label}
+                                    </span>
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label>الحالة</Label>
-                  <Select
-                    dir="rtl"
-                    value={formValues.isActive ? "active" : "inactive"}
-                    onValueChange={(value) =>
-                      setFormValues((currentValues) => ({
-                        ...currentValues,
-                        isActive: value === "active",
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="w-full text-right">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      align="start"
-                      position="popper"
-                      className="text-right"
-                    >
-                      {(Object.keys(rewardStatusLabels) as RewardStatus[]).map(
-                        (status) => (
-                          <SelectItem
-                            key={status}
-                            value={status}
-                            className="text-right text-xs"
+                    <div className="space-y-2">
+                      <Label>الحالة</Label>
+                      <Controller
+                        control={control}
+                        name="isActive"
+                        render={({ field }) => (
+                          <Select
+                            dir="rtl"
+                            disabled={isFormLocked}
+                            value={field.value ? "active" : "inactive"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "active")
+                            }
                           >
-                            {rewardStatusLabels[status]}
-                          </SelectItem>
-                        ),
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                            <SelectTrigger className="w-full text-right">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent
+                              align="start"
+                              position="popper"
+                              className="text-right"
+                            >
+                              {(Object.keys(rewardStatusLabels) as RewardStatus[]).map(
+                                (status) => (
+                                  <SelectItem
+                                    key={status}
+                                    value={status}
+                                    className="text-right text-xs"
+                                  >
+                                    {rewardStatusLabels[status]}
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                  </div>
 
-              <div className="rounded-lg border border-border bg-muted/20 p-3">
-                <p className="text-xs text-muted-foreground">معاينة الأيقونة</p>
-                <div className="mt-2 inline-flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <SelectedIcon className="size-5" />
-                </div>
-              </div>
+                  <div className="rounded-lg border border-border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">معاينة الأيقونة</p>
+                    <div className="mt-2 inline-flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <SelectedIcon className="size-5" />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-              <Button type="button" variant="outline" onClick={closeSheetSafely}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isFormLocked}
+                onClick={closeSheetSafely}
+              >
                 إلغاء
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isFormLocked}>
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
                 {mode === "create" ? "إضافة الشارة" : "حفظ التعديلات"}
               </Button>
             </SheetFooter>

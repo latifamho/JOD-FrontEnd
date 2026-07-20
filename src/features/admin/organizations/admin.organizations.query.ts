@@ -22,7 +22,8 @@ export function useAdminOrganizationDetail(organizationId: string | null) {
   return useQuery({
     queryKey: adminOrganizationsKeys.detail(organizationId ?? ''),
     queryFn: () => adminOrganizationsServices.getOrganizationById(organizationId!),
-    enabled: !!organizationId,
+    enabled: !!organizationId && organizationId !== 'verification',
+    retry: 1,
   })
 }
 

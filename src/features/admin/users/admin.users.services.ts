@@ -1,4 +1,5 @@
 import { api } from '@/services/api'
+import { buildListParams } from '@/lib/build-list-params'
 import type {
   AdminUsersParams,
   AdminUsersResponse,
@@ -21,18 +22,7 @@ const ENDPOINTS = {
 } as const
 
 function buildParams(params: AdminUsersParams): Record<string, unknown> {
-  const flat: Record<string, unknown> = {}
-  if (params.page !== undefined) flat.page = params.page
-  if (params.perPage !== undefined) flat.perPage = params.perPage
-  if (params.sort) flat.sort = params.sort
-  if (params.filter) {
-    for (const [key, value] of Object.entries(params.filter)) {
-      if (value !== undefined && value !== '') {
-        flat[`filter.${key}`] = value
-      }
-    }
-  }
-  return flat
+  return buildListParams(params)
 }
 
 export const adminUsersServices = {
@@ -63,8 +53,8 @@ export const adminUsersServices = {
 
   async changeUserPassword(userId: string, newPassword: string): Promise<ChangeUserPasswordResponse> {
     const response = await api.patch<ChangeUserPasswordResponse>(ENDPOINTS.USER_PASSWORD(userId), {
-      newPassword,
-      confirmPassword: newPassword,
+      password: newPassword,
+      password_confirmation: newPassword,
     })
     return response.data
   },

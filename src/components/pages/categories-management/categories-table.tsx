@@ -31,7 +31,7 @@ function SkeletonPulse({ className }: { className: string }) {
 type CategoriesTableProps = {
   rows: AdminCategoryItem[];
   isLoading: boolean;
-  loadingRowIds: Set<string>;
+  togglingRowIds: Set<string>;
   onEditCategory: (categoryId: string) => void;
   onToggleCategoryStatus: (categoryId: string) => void;
   onDeleteCategory: (categoryId: string) => void;
@@ -40,7 +40,7 @@ type CategoriesTableProps = {
 export function CategoriesTable({
   rows,
   isLoading,
-  loadingRowIds,
+  togglingRowIds,
   onEditCategory,
   onToggleCategoryStatus,
   onDeleteCategory,
@@ -84,7 +84,7 @@ export function CategoriesTable({
             ))
           ) : rows.length > 0 ? (
             rows.map((row) => {
-              const isRowLoading = loadingRowIds.has(row.id);
+              const isToggling = togglingRowIds.has(row.id);
               return (
                 <TableRow key={row.id} className="align-middle">
                   <TableCell>
@@ -114,14 +114,10 @@ export function CategoriesTable({
                         size="icon"
                         title="تعديل التصنيف"
                         className="size-8 shadow-sm"
-                        disabled={isRowLoading}
+                        disabled={isToggling}
                         onClick={() => onEditCategory(row.id)}
                       >
-                        {isRowLoading ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <AppIcons.PencilLine className="size-4 text-info" />
-                        )}
+                        <AppIcons.PencilLine className="size-4 text-info" />
                       </Button>
                       <Button
                         type="button"
@@ -129,10 +125,12 @@ export function CategoriesTable({
                         size="icon"
                         className="size-8 shadow-sm"
                         title={row.status === "active" ? "إيقاف التصنيف" : "تفعيل التصنيف"}
-                        disabled={isRowLoading}
+                        disabled={isToggling}
                         onClick={() => onToggleCategoryStatus(row.id)}
                       >
-                        {row.status === "active" ? (
+                        {isToggling ? (
+                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                        ) : row.status === "active" ? (
                           <AppIcons.ShieldOff className="size-4 text-warning" />
                         ) : (
                           <AppIcons.ShieldCheck className="size-4 text-success" />
@@ -144,7 +142,7 @@ export function CategoriesTable({
                         size="icon"
                         title="حذف التصنيف"
                         className="size-8 shadow-sm"
-                        disabled={isRowLoading}
+                        disabled={isToggling}
                         onClick={() => onDeleteCategory(row.id)}
                       >
                         <AppIcons.Trash className="size-4 text-destructive" />

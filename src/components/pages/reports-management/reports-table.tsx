@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { ReportDetailsSheet } from "@/components/pages/reports-management/report-details-sheet";
-import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
 import {
   reportEntityTypeLabels,
   reportSeverityLabels,
@@ -37,15 +37,21 @@ import {
 type ReportsTableProps = {
   reports: ReportItem[];
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
+  isClaiming: boolean;
+  claimingReportId?: string;
+  isClosing: boolean;
+  closingReportId?: string;
 };
 
 export function ReportsTable({
   reports,
   onClaim,
-  onMoveToWaiting,
   onCloseReport,
+  isClaiming,
+  claimingReportId,
+  isClosing,
+  closingReportId,
 }: ReportsTableProps) {
   return (
     <div className="rounded-md border border-border bg-card shadow-sm">
@@ -84,8 +90,11 @@ export function ReportsTable({
               key={report.id}
               report={report}
               onClaim={onClaim}
-              onMoveToWaiting={onMoveToWaiting}
               onCloseReport={onCloseReport}
+              isClaiming={isClaiming}
+              claimingReportId={claimingReportId}
+              isClosing={isClosing}
+              closingReportId={closingReportId}
             />
           ))}
         </TableBody>
@@ -97,18 +106,25 @@ export function ReportsTable({
 type ReportRowProps = {
   report: ReportItem;
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
+  isClaiming: boolean;
+  claimingReportId?: string;
+  isClosing: boolean;
+  closingReportId?: string;
 };
 
 function ReportRow({
   report,
   onClaim,
-  onMoveToWaiting,
   onCloseReport,
+  isClaiming,
+  claimingReportId,
+  isClosing,
+  closingReportId,
 }: ReportRowProps) {
   const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
+  const isClaimingThis = isClaiming && claimingReportId === report.id;
+  const isClosingThis = isClosing && closingReportId === report.id;
 
   return (
     <>
@@ -176,9 +192,14 @@ function ReportRow({
                     type="button"
                     size="icon"
                     className="size-8"
+                    disabled={isClaimingThis}
                     onClick={() => onClaim(report.id)}
                   >
-                    <AppIcons.posts className="size-4" />
+                    {isClaimingThis ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <AppIcons.posts className="size-4" />
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
@@ -187,52 +208,22 @@ function ReportRow({
               </Tooltip>
             )}
 
-            {report.status === "in_progress" && (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => setRequestInfoOpen(true)}
-                    >
-                      <AppIcons.reports className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    بانتظار الرد
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => onCloseReport(report.id)}
-                    >
-                      <AppIcons.posts className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    إغلاق
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            )}
-
-            {report.status === "waiting_response" && (
+            {(report.status === "in_progress" ||
+              report.status === "waiting_response") && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
                     size="icon"
                     className="size-8"
+                    disabled={isClosingThis}
                     onClick={() => onCloseReport(report.id)}
                   >
-                    <AppIcons.posts className="size-4" />
+                    {isClosingThis ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <AppIcons.posts className="size-4" />
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
@@ -249,15 +240,11 @@ function ReportRow({
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         onClaim={onClaim}
-        onMoveToWaiting={onMoveToWaiting}
         onCloseReport={onCloseReport}
-      />
-
-      <RequestInfoDialog
-        open={requestInfoOpen}
-        onOpenChange={setRequestInfoOpen}
-        reportTitle={report.title}
-        onConfirm={(note) => onMoveToWaiting(report.id, note)}
+        isClaiming={isClaiming}
+        claimingReportId={claimingReportId}
+        isClosing={isClosing}
+        closingReportId={closingReportId}
       />
     </>
   );

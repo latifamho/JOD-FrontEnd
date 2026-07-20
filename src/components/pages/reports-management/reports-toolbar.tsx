@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ type ReportsToolbarProps = {
   onSeverityFilterChange: (value: "all" | ReportSeverity) => void;
   entityTypeFilter: "all" | ReportEntityType;
   onEntityTypeFilterChange: (value: "all" | ReportEntityType) => void;
+  onResetFilters: () => void;
 };
 
 export function ReportsToolbar({
@@ -28,9 +30,10 @@ export function ReportsToolbar({
   onSeverityFilterChange,
   entityTypeFilter,
   onEntityTypeFilterChange,
+  onResetFilters,
 }: ReportsToolbarProps) {
   return (
-    <div className="grid gap-3 md:grid-cols-4">
+    <div className="flex flex-wrap items-center gap-3">
       <Select
         dir="rtl"
         value={severityFilter}
@@ -38,7 +41,7 @@ export function ReportsToolbar({
           onSeverityFilterChange(value as "all" | ReportSeverity)
         }
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[160px] flex-1 text-right text-xs sm:max-w-[220px]">
           <SelectValue placeholder="مستوى الخطورة" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -64,7 +67,7 @@ export function ReportsToolbar({
           onEntityTypeFilterChange(value as "all" | ReportEntityType)
         }
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[200px]">
           <SelectValue placeholder="نوع الكيان" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -78,7 +81,16 @@ export function ReportsToolbar({
           ))}
         </SelectContent>
       </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="ms-auto h-8 shrink-0 px-3 text-xs"
+        onClick={onResetFilters}
+      >
+        إعادة تعيين
+      </Button>
     </div>
   );
 }
-

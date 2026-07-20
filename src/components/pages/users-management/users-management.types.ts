@@ -7,7 +7,10 @@ export type AdminUserItem = {
   name: string;
   email: string;
   phone: string;
-  role: UserRole;
+  /** Backend field name (preferred). */
+  userType?: UserRole;
+  /** Legacy alias — some docs still use role. */
+  role?: UserRole;
   status: UserStatus;
   postsCount: number;
   reportsCount: number;
@@ -27,3 +30,11 @@ export const userRoleLabels: Record<UserRole, string> = {
   donor: "متبرع",
 };
 
+export function getUserType(user: Pick<AdminUserItem, "userType" | "role">): UserRole {
+  const value = user.userType ?? user.role ?? "general";
+  return value in userRoleLabels ? (value as UserRole) : "general";
+}
+
+export function normalizeUserStatus(status: string | null | undefined): UserStatus {
+  return status === "inactive" ? "inactive" : "active";
+}

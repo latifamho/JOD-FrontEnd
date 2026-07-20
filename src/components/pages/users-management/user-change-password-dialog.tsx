@@ -50,8 +50,8 @@ export function UserChangePasswordDialog({
         if (!isSubmitting) onOpenChange(nextOpen);
       }}
     >
-      <DialogContent dir="rtl" className="sm:max-w-md">
-        <DialogHeader className="pe-12 text-right sm:text-right">
+      <DialogContent dir="rtl" className="gap-6 sm:max-w-md">
+        <DialogHeader className="space-y-2 pe-12 text-right sm:text-right">
           <DialogTitle>تغيير كلمة المرور</DialogTitle>
           <DialogDescription>
             تعيين كلمة مرور جديدة للمستخدم{" "}
@@ -59,11 +59,12 @@ export function UserChangePasswordDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
             <PasswordInput
               id="new-password"
+              autoComplete="new-password"
               disabled={isSubmitting}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
@@ -75,6 +76,7 @@ export function UserChangePasswordDialog({
             <Label htmlFor="confirm-password">تأكيد كلمة المرور</Label>
             <PasswordInput
               id="confirm-password"
+              autoComplete="new-password"
               disabled={isSubmitting}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
@@ -86,7 +88,7 @@ export function UserChangePasswordDialog({
           </div>
         </div>
 
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="gap-2 sm:justify-start">
           <Button
             type="button"
             variant="outline"

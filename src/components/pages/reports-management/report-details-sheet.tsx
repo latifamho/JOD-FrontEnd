@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,17 @@ import {
   toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
-import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
 
 type ReportDetailsSheetProps = {
   report: ReportItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClaim: (reportId: string) => void;
-  onMoveToWaiting: (reportId: string, note: string) => void;
   onCloseReport: (reportId: string) => void;
+  isClaiming: boolean;
+  claimingReportId?: string;
+  isClosing: boolean;
+  closingReportId?: string;
 };
 
 export function ReportDetailsSheet({
@@ -40,10 +42,16 @@ export function ReportDetailsSheet({
   open,
   onOpenChange,
   onClaim,
-  onMoveToWaiting,
   onCloseReport,
+  isClaiming,
+  claimingReportId,
+  isClosing,
+  closingReportId,
 }: ReportDetailsSheetProps) {
-  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
+  const isClaimingThis =
+    !!report && isClaiming && claimingReportId === report.id;
+  const isClosingThis =
+    !!report && isClosing && closingReportId === report.id;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -160,30 +168,29 @@ export function ReportDetailsSheet({
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
               {report.status === "new" && (
-                <Button onClick={() => onClaim(report.id)}>استلام البلاغ</Button>
+                <Button
+                  disabled={isClaimingThis}
+                  onClick={() => onClaim(report.id)}
+                >
+                  {isClaimingThis && (
+                    <Loader2 className="size-4 animate-spin" />
+                  )}
+                  استلام البلاغ
+                </Button>
               )}
-              {report.status === "in_progress" && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setRequestInfoOpen(true)}
-                  >
-                    بانتظار الرد
-                  </Button>
-                  <Button onClick={() => onCloseReport(report.id)}>إغلاق البلاغ</Button>
-                </>
-              )}
-              {report.status === "waiting_response" && (
-                <Button onClick={() => onCloseReport(report.id)}>إغلاق البلاغ</Button>
+              {(report.status === "in_progress" ||
+                report.status === "waiting_response") && (
+                <Button
+                  disabled={isClosingThis}
+                  onClick={() => onCloseReport(report.id)}
+                >
+                  {isClosingThis && (
+                    <Loader2 className="size-4 animate-spin" />
+                  )}
+                  إغلاق البلاغ
+                </Button>
               )}
             </SheetFooter>
-
-            <RequestInfoDialog
-              open={requestInfoOpen}
-              onOpenChange={setRequestInfoOpen}
-              reportTitle={report.title}
-              onConfirm={(note) => onMoveToWaiting(report.id, note)}
-            />
           </>
         ) : null}
       </SheetContent>

@@ -43,7 +43,8 @@ export interface ApiError {
 // ─── Query params ─────────────────────────────────────────────────────────────
 // Used by all list endpoints. TFilter is the feature-specific filter shape.
 // Example: ApiListParams<{ status: string; search: string }>
-// Serialized as: ?page=1&perPage=20&sort=-createdAt&filter.status=active&filter.search=ahmad
+// Serialized as: ?page=1&perPage=20&sort=-createdAt&filter[status]=active&filter[search]=ahmad
+// (Spatie Laravel Query Builder bracket notation — not filter.status)
 
 export interface ApiListParams<
   TFilter extends Record<string, unknown> = Record<string, unknown>,

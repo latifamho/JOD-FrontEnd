@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import {
-  type CategoryStatus,
-  type CategoryTarget,
-} from "@/components/pages/categories-management/categories-management.types";
+import { type CategoryStatus } from "@/components/pages/categories-management/categories-management.types";
 import {
   CategoryFormSheet,
   EMPTY_CATEGORY_FORM_VALUES,
@@ -36,8 +33,6 @@ export function CategoriesManagementPage() {
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
-  const [targetFilter, setTargetFilter] = React.useState<"all" | CategoryTarget>("all");
-  const [statusFilter, setStatusFilter] = React.useState<"all" | CategoryStatus>("all");
   const [searchFilter, setSearchFilter] = React.useState("");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -48,8 +43,6 @@ export function CategoriesManagementPage() {
     perPage: pageSize,
     sort: "-createdAt",
     filter: {
-      target: targetFilter !== "all" ? targetFilter : undefined,
-      status: statusFilter !== "all" ? statusFilter : undefined,
       search: searchFilter.trim() || undefined,
     },
   });
@@ -62,7 +55,7 @@ export function CategoriesManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, targetFilter, statusFilter, searchFilter, setCurrentPage]);
+  }, [pageSize, searchFilter, setCurrentPage]);
 
   const categories = data?.data ?? [];
 
@@ -72,9 +65,10 @@ export function CategoriesManagementPage() {
   const [formInitialValues, setFormInitialValues] =
     React.useState<CategoryFormValues>(EMPTY_CATEGORY_FORM_VALUES);
   const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
-  // Per-row loading
-  const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
+  // Per-row toggle loading
+  const [togglingRowIds, setTogglingRowIds] = React.useState<Set<string>>(new Set());
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -90,12 +84,12 @@ export function CategoriesManagementPage() {
     ? (categories.find((c) => c.id === deleteTargetCategoryId) ?? null)
     : null;
 
-  const addLoadingRow = React.useCallback((id: string) => {
-    setLoadingRowIds((prev) => new Set([...prev, id]));
+  const addTogglingRow = React.useCallback((id: string) => {
+    setTogglingRowIds((prev) => new Set([...prev, id]));
   }, []);
 
-  const removeLoadingRow = React.useCallback((id: string) => {
-    setLoadingRowIds((prev) => {
+  const removeTogglingRow = React.useCallback((id: string) => {
+    setTogglingRowIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
@@ -106,12 +100,18 @@ export function CategoriesManagementPage() {
     setFormMode("create");
     setEditingCategoryId(null);
     setFormInitialValues(EMPTY_CATEGORY_FORM_VALUES);
+    setIsLoadingDetails(false);
     setFormOpen(true);
   }, []);
 
   const openEditSheet = React.useCallback(
     async (categoryId: string) => {
-      addLoadingRow(categoryId);
+      setFormMode("edit");
+      setEditingCategoryId(categoryId);
+      setFormInitialValues(EMPTY_CATEGORY_FORM_VALUES);
+      setIsLoadingDetails(true);
+      setFormOpen(true);
+
       try {
         const response = await queryClient.fetchQuery({
           queryKey: adminCategoriesKeys.detail(categoryId),
@@ -119,28 +119,34 @@ export function CategoriesManagementPage() {
           staleTime: 0,
         });
         const category = response.data;
-        setFormMode("edit");
-        setEditingCategoryId(categoryId);
         setFormInitialValues({
           name: category.name,
           target: category.target,
-          description: category.description,
+          description: "",
           status: category.status,
         });
-        setFormOpen(true);
       } catch {
         // toast already shown by the api interceptor
+        setFormOpen(false);
+        setEditingCategoryId(null);
       } finally {
-        removeLoadingRow(categoryId);
+        setIsLoadingDetails(false);
       }
     },
-    [queryClient, addLoadingRow, removeLoadingRow],
+    [queryClient],
   );
 
   const handleSaveForm = React.useCallback(
     (values: CategoryFormValues) => {
+      const body = {
+        name: values.name,
+        target: values.target,
+        description: "",
+        status: values.status,
+      };
+
       if (formMode === "create") {
-        createMutation.mutate(values, {
+        createMutation.mutate(body, {
           onSuccess: () => {
             setFormOpen(false);
           },
@@ -151,7 +157,7 @@ export function CategoriesManagementPage() {
       if (!editingCategoryId) return;
 
       updateMutation.mutate(
-        { categoryId: editingCategoryId, body: values },
+        { categoryId: editingCategoryId, body },
         {
           onSuccess: () => {
             setFormOpen(false);
@@ -169,13 +175,13 @@ export function CategoriesManagementPage() {
       if (!category) return;
       const nextStatus: CategoryStatus =
         category.status === "active" ? "inactive" : "active";
-      addLoadingRow(categoryId);
+      addTogglingRow(categoryId);
       toggleStatusMutation.mutate(
         { categoryId, status: nextStatus },
-        { onSettled: () => removeLoadingRow(categoryId) },
+        { onSettled: () => removeTogglingRow(categoryId) },
       );
     },
-    [categories, toggleStatusMutation, addLoadingRow, removeLoadingRow],
+    [categories, toggleStatusMutation, addTogglingRow, removeTogglingRow],
   );
 
   const openDeleteDialog = React.useCallback((categoryId: string) => {
@@ -212,11 +218,7 @@ export function CategoriesManagementPage() {
       </div>
 
       <CategoriesFilters
-        targetFilter={targetFilter}
-        statusFilter={statusFilter}
         searchFilter={searchFilter}
-        onTargetFilterChange={setTargetFilter}
-        onStatusFilterChange={setStatusFilter}
         onSearchFilterChange={setSearchFilter}
       />
 
@@ -234,7 +236,7 @@ export function CategoriesManagementPage() {
       <CategoriesTable
         rows={categories}
         isLoading={isLoading}
-        loadingRowIds={loadingRowIds}
+        togglingRowIds={togglingRowIds}
         onEditCategory={openEditSheet}
         onToggleCategoryStatus={handleToggleCategoryStatus}
         onDeleteCategory={openDeleteDialog}
@@ -259,10 +261,14 @@ export function CategoriesManagementPage() {
         mode={formMode}
         initialValues={formInitialValues}
         isSubmitting={isFormSubmitting}
+        isLoadingDetails={isLoadingDetails}
         onOpenChange={(nextOpen) => {
-          if (isFormSubmitting) return;
+          if (isFormSubmitting || isLoadingDetails) return;
           setFormOpen(nextOpen);
-          if (!nextOpen) setEditingCategoryId(null);
+          if (!nextOpen) {
+            setEditingCategoryId(null);
+            setIsLoadingDetails(false);
+          }
         }}
         onSubmit={handleSaveForm}
       />

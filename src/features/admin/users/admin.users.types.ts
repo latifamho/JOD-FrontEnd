@@ -3,6 +3,7 @@ import type { AdminUserItem, UserRole, UserStatus } from '@/components/pages/use
 
 export interface AdminUsersFilter {
   status?: UserStatus
+  userType?: UserRole
   role?: UserRole
   search?: string
 }
@@ -18,16 +19,21 @@ export interface UserCreateRequest {
   name: string
   email: string
   phone: string
-  role: UserRole
+  userType: UserRole
+  /** Legacy alias accepted by some backend versions */
+  role?: UserRole
   status: UserStatus
   password: string
+  password_confirmation: string
 }
 
 export interface UserUpdateRequest {
   name: string
   email: string
   phone: string
-  role: UserRole
+  userType: UserRole
+  /** Legacy alias accepted by some backend versions */
+  role?: UserRole
   status: UserStatus
 }
 
@@ -36,8 +42,8 @@ export interface UserStatusToggleRequest {
 }
 
 export interface UserPasswordChangeRequest {
-  newPassword: string
-  confirmPassword: string
+  password: string
+  password_confirmation: string
 }
 
 export type AdminUsersResponse = ApiListResponse<AdminUserItem>

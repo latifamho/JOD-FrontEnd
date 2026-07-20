@@ -36,6 +36,12 @@ const actionTypeBadgeClassNames: Record<AuditLogActionType, string> = {
   content: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-100",
 };
 
+const SKELETON_ROW_COUNT = 6;
+
+function SkeletonPulse({ className }: { className: string }) {
+  return <div className={`animate-pulse rounded bg-muted ${className}`} />;
+}
+
 export function AuditLogPage() {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -43,7 +49,7 @@ export function AuditLogPage() {
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isLoading, isError, refetch } = useAdminAuditLogs({
+  const { data, isLoading, isFetching, isError, refetch } = useAdminAuditLogs({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: "-at",
@@ -61,6 +67,7 @@ export function AuditLogPage() {
 
   const rows = data?.data ?? [];
   const latestTimestamp = rows[0]?.at;
+  const showLoading = isLoading || (isFetching && !isLoading);
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -96,7 +103,7 @@ export function AuditLogPage() {
       )}
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
-        {!isLoading && rows.length === 0 ? (
+        {!showLoading && rows.length === 0 ? (
           <div className="p-4">
             <EmptyState
               icon="auditLog"
@@ -126,30 +133,53 @@ export function AuditLogPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="text-right">
-                    {displayOrDash(row.action)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge
-                      variant="secondary"
-                      className={actionTypeBadgeClassNames[row.type]}
-                    >
-                      {actionTypeLabels[row.type]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">
-                    {displayOrDash(row.user)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {displayOrDash(row.reference)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatUtcDateTime(row.at)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {showLoading
+                ? Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <SkeletonPulse className="h-3 w-40" />
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-5 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-3 w-28" />
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-3 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <SkeletonPulse className="h-3 w-32" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : rows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-right">
+                        {displayOrDash(row.action)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge
+                          variant="secondary"
+                          className={
+                            actionTypeBadgeClassNames[row.type] ??
+                            "bg-muted text-muted-foreground"
+                          }
+                        >
+                          {actionTypeLabels[row.type] ?? row.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {displayOrDash(row.user)}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {displayOrDash(row.reference)}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {formatUtcDateTime(row.at)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         )}

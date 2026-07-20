@@ -61,3 +61,34 @@ export function isMostActiveOrganization(
 ): boolean {
   return organization.activityScore >= MOST_ACTIVE_SCORE_THRESHOLD;
 }
+
+/**
+ * Verified orgs are always active; non-verified orgs are always inactive.
+ * Verification is the source of truth when values disagree.
+ */
+export function getDisplayVerificationStatus(
+  organization: Pick<AdminOrganizationItem, "verificationStatus" | "status">,
+): OrganizationVerificationStatus {
+  if (organization.verificationStatus === "verified") {
+    return "verified";
+  }
+  if (
+    organization.verificationStatus === "pending" ||
+    organization.verificationStatus === "rejected"
+  ) {
+    return organization.verificationStatus;
+  }
+  return "unverified";
+}
+
+export function getDisplayOrganizationStatus(
+  organization: Pick<AdminOrganizationItem, "verificationStatus" | "status">,
+): OrganizationStatus {
+  if (organization.status === "pending" || organization.status === "rejected") {
+    return organization.status;
+  }
+  if (organization.verificationStatus === "verified") {
+    return "active";
+  }
+  return "inactive";
+}

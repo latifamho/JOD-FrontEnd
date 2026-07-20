@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import {
 } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
+  getDisplayOrganizationStatus,
+  getDisplayVerificationStatus,
   getOrganizationStatusBadgeClass,
   getOrganizationVerificationBadgeClass,
 } from "@/components/pages/organizations-management/helpers";
@@ -40,7 +43,8 @@ const SOCIAL_MEDIA_LABELS = {
 export function OrganizationDetailsPage({
   organizationId,
 }: OrganizationDetailsPageProps) {
-  const { data, isLoading } = useAdminOrganizationDetail(organizationId);
+  const { data, isLoading, isError, refetch, isFetching } =
+    useAdminOrganizationDetail(organizationId);
   const acceptMutation = useAcceptOrganization();
 
   const organization = data?.data;
@@ -52,6 +56,28 @@ export function OrganizationDetailsPage({
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="h-48 rounded-md border border-border bg-muted animate-pulse" />
           <div className="h-48 rounded-md border border-border bg-muted animate-pulse" />
+        </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section className="flex flex-1 flex-col gap-4">
+        <EmptyState
+          icon="organizations"
+          title="تعذّر تحميل المنظمة"
+          description="حدث خطأ أثناء جلب بيانات المنظمة. حاول مرة أخرى."
+        />
+        <div className="flex justify-start gap-2">
+          <Button type="button" variant="outline" onClick={() => refetch()}>
+            إعادة المحاولة
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={routePaths.adminScope.organizations}>
+              الرجوع إلى إدارة المنظمات
+            </Link>
+          </Button>
         </div>
       </section>
     );
@@ -76,7 +102,9 @@ export function OrganizationDetailsPage({
     );
   }
 
-  const isAccepted = organization.verificationStatus === "verified";
+  const displayVerification = getDisplayVerificationStatus(organization);
+  const displayStatus = getDisplayOrganizationStatus(organization);
+  const isAccepted = displayVerification === "verified";
   const socialMediaEntries = organization.socialMedia
     ? (
         Object.entries(organization.socialMedia) as [
@@ -87,24 +115,31 @@ export function OrganizationDetailsPage({
     : [];
 
   return (
-    <section className="flex flex-1 flex-col gap-4">
+    <section className="relative flex flex-1 flex-col gap-4">
+      {isFetching && (
+        <div className="absolute inset-x-0 top-0 z-10 flex justify-center">
+          <span className="inline-flex items-center gap-2 rounded-b-md bg-muted px-3 py-1 text-xs text-muted-foreground">
+            <Loader2 className="size-3 animate-spin" />
+            جاري التحديث...
+          </span>
+        </div>
+      )}
+
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={getOrganizationVerificationBadgeClass(
-                  organization.verificationStatus,
-                )}
+                className={getOrganizationVerificationBadgeClass(displayVerification)}
               >
-                {organizationVerificationLabels[organization.verificationStatus]}
+                {organizationVerificationLabels[displayVerification]}
               </Badge>
               <Badge
                 variant="outline"
-                className={getOrganizationStatusBadgeClass(organization.status)}
+                className={getOrganizationStatusBadgeClass(displayStatus)}
               >
-                {organizationStatusLabels[organization.status]}
+                {organizationStatusLabels[displayStatus]}
               </Badge>
               <Badge variant="outline">{organization.id}</Badge>
             </div>
@@ -128,6 +163,9 @@ export function OrganizationDetailsPage({
               onClick={() => acceptMutation.mutate(organization.id)}
               disabled={isAccepted || acceptMutation.isPending}
             >
+              {acceptMutation.isPending && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
               <AppIcons.verification className="size-4" />
               {isAccepted ? "تم قبول المنظمة" : "قبول المنظمة"}
             </Button>
@@ -142,7 +180,8 @@ export function OrganizationDetailsPage({
             <p className="text-muted-foreground">
               نوع المنظمة:{" "}
               <span className="font-semibold text-foreground">
-                {organizationTypeLabels[organization.organizationType]}
+                {organizationTypeLabels[organization.organizationType] ??
+                  displayOrDash(organization.organizationType)}
               </span>
             </p>
             <p className="text-muted-foreground">

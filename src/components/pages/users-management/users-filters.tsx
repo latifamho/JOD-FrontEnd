@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,6 +23,7 @@ type UsersFiltersProps = {
   onStatusFilterChange: (value: "all" | UserStatus) => void;
   onRoleFilterChange: (value: "all" | UserRole) => void;
   onSearchFilterChange: (value: string) => void;
+  onResetFilters: () => void;
 };
 
 export function UsersFilters({
@@ -31,15 +33,17 @@ export function UsersFilters({
   onStatusFilterChange,
   onRoleFilterChange,
   onSearchFilterChange,
+  onResetFilters,
 }: UsersFiltersProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Input
         dir="rtl"
+        autoComplete="off"
         placeholder="بحث بالاسم أو البريد..."
         value={searchFilter}
         onChange={(e) => onSearchFilterChange(e.target.value)}
-        className="text-right text-xs"
+        className="min-w-[160px] flex-1 text-right text-xs sm:max-w-xs"
       />
 
       <Select
@@ -49,7 +53,7 @@ export function UsersFilters({
           onStatusFilterChange(value as "all" | UserStatus)
         }
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[180px]">
           <SelectValue placeholder="الحالة" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -71,7 +75,7 @@ export function UsersFilters({
           onRoleFilterChange(value as "all" | UserRole)
         }
       >
-        <SelectTrigger className="w-full text-right text-xs">
+        <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[180px]">
           <SelectValue placeholder="الدور" />
         </SelectTrigger>
         <SelectContent align="start" position="popper" className="text-right">
@@ -85,6 +89,16 @@ export function UsersFilters({
           ))}
         </SelectContent>
       </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="ms-auto h-8 shrink-0 px-3 text-xs"
+        onClick={onResetFilters}
+      >
+        إعادة تعيين
+      </Button>
     </div>
   );
 }

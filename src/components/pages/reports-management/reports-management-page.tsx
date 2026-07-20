@@ -17,7 +17,6 @@ import {
   useAdminReports,
   useClaimReport,
   useCloseReport,
-  useWaitReport,
 } from "@/features/admin/reports.services/admin.reports.query";
 
 type ReportsManagementPageProps = {
@@ -58,23 +57,20 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
   }, [status, severityFilter, entityTypeFilter, pageSize, setCurrentPage]);
 
   const claimMutation = useClaimReport();
-  const waitMutation = useWaitReport();
   const closeMutation = useCloseReport();
 
   const reports = data?.data ?? [];
+
+  const handleResetFilters = React.useCallback(() => {
+    setSeverityFilter("all");
+    setEntityTypeFilter("all");
+  }, []);
 
   const handleClaim = React.useCallback(
     (reportId: string) => {
       claimMutation.mutate(reportId);
     },
     [claimMutation],
-  );
-
-  const handleMoveToWaiting = React.useCallback(
-    (reportId: string, note: string) => {
-      waitMutation.mutate({ reportId, body: { note } });
-    },
-    [waitMutation],
   );
 
   const handleCloseReport = React.useCallback(
@@ -100,6 +96,7 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
         onSeverityFilterChange={setSeverityFilter}
         entityTypeFilter={entityTypeFilter}
         onEntityTypeFilterChange={setEntityTypeFilter}
+        onResetFilters={handleResetFilters}
       />
 
       {isError && (
@@ -131,8 +128,11 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
         <ReportsTable
           reports={reports}
           onClaim={handleClaim}
-          onMoveToWaiting={handleMoveToWaiting}
           onCloseReport={handleCloseReport}
+          isClaiming={claimMutation.isPending}
+          claimingReportId={claimMutation.variables}
+          isClosing={closeMutation.isPending}
+          closingReportId={closeMutation.variables}
         />
       )}
 

@@ -45,11 +45,12 @@ export function OrganizationsManagementPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteTargetOrganizationId, setDeleteTargetOrganizationId] =
     React.useState<string | null>(null);
+  const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isError, refetch } = useAdminOrganizations({
+  const { data, isLoading, isFetching, isError, refetch } = useAdminOrganizations({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
@@ -69,6 +70,7 @@ export function OrganizationsManagementPage() {
   }, [pageSize, verificationFilter, sortBy, setCurrentPage]);
 
   const organizations = data?.data ?? [];
+  const showTableLoading = isLoading;
 
   const deleteTargetOrganization = deleteTargetOrganizationId
     ? (organizations.find((o) => o.id === deleteTargetOrganizationId) ?? null)
@@ -78,6 +80,23 @@ export function OrganizationsManagementPage() {
   const toggleVerificationMutation = useToggleOrganizationVerification();
   const deleteMutation = useDeleteOrganization();
 
+  const addLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => new Set([...prev, id]));
+  }, []);
+
+  const removeLoadingRow = React.useCallback((id: string) => {
+    setLoadingRowIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleResetFilters = React.useCallback(() => {
+    setVerificationFilter("all");
+    setSortBy("created_newest");
+  }, []);
+
   const openOrganizationDetails = React.useCallback(
     (organizationId: string) => {
       router.push(routePaths.adminScope.organizationDetails(organizationId));
@@ -85,25 +104,77 @@ export function OrganizationsManagementPage() {
     [router],
   );
 
+  /** Verified <=> active, unverified <=> inactive (coupled). */
   const handleToggleOrganizationStatus = React.useCallback(
     (organizationId: string) => {
       const org = organizations.find((o) => o.id === organizationId);
       if (!org) return;
-      const nextStatus = org.status === "active" ? "inactive" : "active";
-      toggleStatusMutation.mutate({ organizationId, body: { status: nextStatus } });
+      const nextActive = org.status !== "active";
+      addLoadingRow(organizationId);
+      toggleStatusMutation.mutate(
+        {
+          organizationId,
+          body: { status: nextActive ? "active" : "inactive" },
+        },
+        {
+          onSuccess: () => {
+            toggleVerificationMutation.mutate(
+              {
+                organizationId,
+                body: {
+                  verificationStatus: nextActive ? "verified" : "unverified",
+                },
+              },
+              { onSettled: () => removeLoadingRow(organizationId) },
+            );
+          },
+          onError: () => removeLoadingRow(organizationId),
+        },
+      );
     },
-    [organizations, toggleStatusMutation],
+    [
+      organizations,
+      toggleStatusMutation,
+      toggleVerificationMutation,
+      addLoadingRow,
+      removeLoadingRow,
+    ],
   );
 
   const handleToggleOrganizationVerification = React.useCallback(
     (organizationId: string) => {
       const org = organizations.find((o) => o.id === organizationId);
       if (!org) return;
-      const nextStatus =
-        org.verificationStatus === "verified" ? "unverified" : "verified";
-      toggleVerificationMutation.mutate({ organizationId, body: { verificationStatus: nextStatus } });
+      const nextVerified = org.verificationStatus !== "verified";
+      addLoadingRow(organizationId);
+      toggleVerificationMutation.mutate(
+        {
+          organizationId,
+          body: {
+            verificationStatus: nextVerified ? "verified" : "unverified",
+          },
+        },
+        {
+          onSuccess: () => {
+            toggleStatusMutation.mutate(
+              {
+                organizationId,
+                body: { status: nextVerified ? "active" : "inactive" },
+              },
+              { onSettled: () => removeLoadingRow(organizationId) },
+            );
+          },
+          onError: () => removeLoadingRow(organizationId),
+        },
+      );
     },
-    [organizations, toggleVerificationMutation],
+    [
+      organizations,
+      toggleVerificationMutation,
+      toggleStatusMutation,
+      addLoadingRow,
+      removeLoadingRow,
+    ],
   );
 
   const openDeleteDialog = React.useCallback((organizationId: string) => {
@@ -142,6 +213,8 @@ export function OrganizationsManagementPage() {
         onLocationFilterChange={() => undefined}
         sortBy={sortBy}
         onSortByChange={setSortBy}
+        onResetFilters={handleResetFilters}
+        isLoading={isLoading || isFetching}
       />
 
       {isError && (
@@ -157,6 +230,8 @@ export function OrganizationsManagementPage() {
 
       <OrganizationsTable
         rows={organizations}
+        isLoading={showTableLoading}
+        loadingRowIds={loadingRowIds}
         onViewOrganization={openOrganizationDetails}
         onToggleOrganizationStatus={handleToggleOrganizationStatus}
         onToggleOrganizationVerification={handleToggleOrganizationVerification}

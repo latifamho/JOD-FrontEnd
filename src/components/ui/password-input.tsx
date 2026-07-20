@@ -14,6 +14,7 @@ type PasswordInputProps = Omit<React.ComponentProps<"input">, "type"> & {
 function PasswordInput({
   className,
   containerClassName,
+  disabled,
   ...props
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = React.useState(false)
@@ -22,6 +23,7 @@ function PasswordInput({
     <div className={cn("relative", containerClassName)}>
       <Input
         {...props}
+        disabled={disabled}
         type={showPassword ? "text" : "password"}
         className={cn("ps-3 pe-10", className)}
       />
@@ -29,8 +31,14 @@ function PasswordInput({
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="absolute inset-y-0 end-1 my-auto"
-        onClick={() => setShowPassword((currentValue) => !currentValue)}
+        disabled={disabled}
+        tabIndex={-1}
+        className="absolute inset-y-0 end-1 z-10 my-auto"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          setShowPassword((currentValue) => !currentValue)
+        }}
       >
         {showPassword ? (
           <EyeOffIcon className="size-4" />

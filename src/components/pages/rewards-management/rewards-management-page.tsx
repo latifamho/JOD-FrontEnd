@@ -1,11 +1,21 @@
 "use client";
 
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RewardsTable } from "@/components/pages/rewards-management/rewards-table";
 import {
   EMPTY_REWARD_FORM_VALUES,
+  normalizeRewardIconName,
   RewardFormSheet,
   type RewardFormValues,
 } from "@/components/pages/rewards-management/reward-form-sheet";
@@ -18,31 +28,37 @@ import {
   useCreateBadge,
   useUpdateBadge,
   useToggleBadgeStatus,
-  useDeleteBadge,
 } from "@/features/admin/badges/admin.badges.query";
 import { adminBadgesServices } from "@/features/admin/badges/admin.badges.services";
 import { adminBadgesKeys } from "@/features/admin/badges/admin.badges.query-keys";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function RewardsManagementPage() {
   const queryClient = useQueryClient();
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
+  const [searchFilter, setSearchFilter] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<RewardFormValues>(EMPTY_REWARD_FORM_VALUES);
   const [editingBadgeId, setEditingBadgeId] = React.useState<string | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isLoading, isError, refetch } = useAdminBadges({
+  const { data, isLoading, isFetching, isError, refetch } = useAdminBadges({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: "-createdAt",
+    filter: {
+      search: searchFilter.trim() || undefined,
+      isActive:
+        statusFilter === "all" ? undefined : statusFilter === "active",
+    },
   });
 
   React.useEffect(() => {
@@ -53,14 +69,14 @@ export function RewardsManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, setCurrentPage]);
+  }, [pageSize, searchFilter, statusFilter, setCurrentPage]);
 
   const badges = data?.data ?? [];
+  const showTableLoading = isLoading || (isFetching && !isLoading);
 
   const createMutation = useCreateBadge();
   const updateMutation = useUpdateBadge();
   const toggleMutation = useToggleBadgeStatus();
-  const deleteMutation = useDeleteBadge();
 
   const addLoadingRow = React.useCallback((id: string) => {
     setLoadingRowIds((prev) => new Set([...prev, id]));
@@ -74,16 +90,27 @@ export function RewardsManagementPage() {
     });
   }, []);
 
+  const handleResetFilters = React.useCallback(() => {
+    setSearchFilter("");
+    setStatusFilter("all");
+  }, []);
+
   const openCreateSheet = React.useCallback(() => {
     setFormMode("create");
     setEditingBadgeId(null);
     setFormInitialValues(EMPTY_REWARD_FORM_VALUES);
+    setIsLoadingDetails(false);
     setFormOpen(true);
   }, []);
 
   const openEditSheet = React.useCallback(
     async (rewardId: string) => {
-      addLoadingRow(rewardId);
+      setFormMode("edit");
+      setEditingBadgeId(rewardId);
+      setFormInitialValues(EMPTY_REWARD_FORM_VALUES);
+      setIsLoadingDetails(true);
+      setFormOpen(true);
+
       try {
         const response = await queryClient.fetchQuery({
           queryKey: adminBadgesKeys.detail(rewardId),
@@ -91,29 +118,35 @@ export function RewardsManagementPage() {
           staleTime: 0,
         });
         const badge = response.data;
-        setFormMode("edit");
-        setEditingBadgeId(rewardId);
         setFormInitialValues({
-          name: badge.name,
-          description: badge.description,
-          criteria: badge.criteria,
-          iconName: badge.iconName,
-          isActive: badge.isActive,
+          name: badge.name ?? "",
+          description: badge.description ?? "",
+          criteria: badge.criteria ?? "",
+          iconName: normalizeRewardIconName(badge.iconName),
+          isActive: Boolean(badge.isActive),
         });
-        setFormOpen(true);
       } catch {
-        // error handled by api interceptor
+        setFormOpen(false);
+        setEditingBadgeId(null);
       } finally {
-        removeLoadingRow(rewardId);
+        setIsLoadingDetails(false);
       }
     },
-    [queryClient, addLoadingRow, removeLoadingRow],
+    [queryClient],
   );
 
   const handleSaveForm = React.useCallback(
     (values: RewardFormValues) => {
+      const body = {
+        name: values.name,
+        description: values.description ?? "",
+        criteria: values.criteria ?? "",
+        iconName: values.iconName,
+        isActive: values.isActive,
+      };
+
       if (formMode === "create") {
-        createMutation.mutate(values, {
+        createMutation.mutate(body, {
           onSuccess: () => setFormOpen(false),
         });
         return;
@@ -122,7 +155,7 @@ export function RewardsManagementPage() {
       if (!editingBadgeId) return;
 
       updateMutation.mutate(
-        { badgeId: editingBadgeId, body: values },
+        { badgeId: editingBadgeId, body },
         {
           onSuccess: () => {
             setFormOpen(false);
@@ -160,9 +193,59 @@ export function RewardsManagementPage() {
             {apiTotal} شارة
           </p>
         </div>
-        <Button size="sm" className="w-fit" disabled={isLoading} onClick={openCreateSheet}>
+        <Button
+          size="sm"
+          className="w-fit"
+          disabled={showTableLoading}
+          onClick={openCreateSheet}
+        >
           <AppIcons.rewards className="size-4" />
           إضافة شارة
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          dir="rtl"
+          autoComplete="off"
+          disabled={showTableLoading}
+          placeholder="بحث بالاسم..."
+          value={searchFilter}
+          onChange={(e) => setSearchFilter(e.target.value)}
+          className="min-w-[160px] flex-1 text-right text-xs sm:max-w-xs"
+        />
+        <Select
+          dir="rtl"
+          disabled={showTableLoading}
+          value={statusFilter}
+          onValueChange={(value) =>
+            setStatusFilter(value as "all" | "active" | "inactive")
+          }
+        >
+          <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[180px]">
+            <SelectValue placeholder="الحالة" />
+          </SelectTrigger>
+          <SelectContent align="start" position="popper" className="text-right">
+            <SelectItem value="all" className="text-right text-xs">
+              كل الحالات
+            </SelectItem>
+            <SelectItem value="active" className="text-right text-xs">
+              نشط
+            </SelectItem>
+            <SelectItem value="inactive" className="text-right text-xs">
+              معطّل
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="ms-auto h-8 shrink-0 px-3 text-xs"
+          disabled={showTableLoading}
+          onClick={handleResetFilters}
+        >
+          إعادة تعيين
         </Button>
       </div>
 
@@ -177,7 +260,7 @@ export function RewardsManagementPage() {
         </div>
       )}
 
-      {!isLoading && badges.length === 0 ? (
+      {!showTableLoading && badges.length === 0 ? (
         <EmptyState
           icon="rewards"
           title="لا توجد شارات حتى الآن"
@@ -186,6 +269,8 @@ export function RewardsManagementPage() {
       ) : (
         <RewardsTable
           rows={badges}
+          isLoading={showTableLoading}
+          loadingRowIds={loadingRowIds}
           onEditReward={openEditSheet}
           onToggleRewardStatus={handleToggleRewardStatus}
         />
@@ -209,7 +294,10 @@ export function RewardsManagementPage() {
         open={formOpen}
         mode={formMode}
         initialValues={formInitialValues}
+        isSubmitting={isFormSubmitting}
+        isLoadingDetails={isLoadingDetails}
         onOpenChange={(nextOpen) => {
+          if (isFormSubmitting || isLoadingDetails) return;
           setFormOpen(nextOpen);
           if (!nextOpen) setEditingBadgeId(null);
         }}
