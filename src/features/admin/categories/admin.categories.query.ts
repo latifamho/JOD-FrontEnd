@@ -9,7 +9,7 @@ import type {
   CategoryCreateRequest,
   CategoryUpdateRequest,
 } from './admin.categories.types'
-import type { CategoryStatus } from '@/components/pages/categories-management/static-data'
+import type { CategoryStatus } from '@/components/pages/categories-management/categories-management.types'
 
 export function useAdminCategories(params: AdminCategoriesParams) {
   return useQuery({

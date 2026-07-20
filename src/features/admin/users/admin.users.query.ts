@@ -9,7 +9,7 @@ import type {
   UserCreateRequest,
   UserUpdateRequest,
 } from './admin.users.types'
-import type { UserStatus } from '@/components/pages/users-management/static-data'
+import type { UserStatus } from '@/components/pages/users-management/users-management.types'
 
 export function useAdminUsers(params: AdminUsersParams) {
   return useQuery({

@@ -7,7 +7,7 @@ import type {
   NotificationPriority,
   NotificationRecipientScope,
   NotificationStatus,
-} from '@/components/pages/notifications-management/static-data'
+} from '@/components/pages/notifications-management/notifications-management.types'
 
 export interface AdminNotificationsFilter {
   mailbox?: NotificationMailbox

@@ -1,10 +1,10 @@
-import type { ApiListResponse, ApiMutationResponse } from '@/types/api.types'
+import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type {
   ReportEntityType,
   ReportItem,
   ReportSeverity,
   ReportStatus,
-} from '@/components/pages/reports-management/static-data'
+} from '@/components/pages/reports-management/reports-management.types'
 
 export type ReportSortOption = 'created_at_newest' | 'created_at_oldest'
 
@@ -22,6 +22,12 @@ export interface AdminReportsParams {
 }
 
 export type AdminReportsResponse = ApiListResponse<ReportItem>
+
+export type AdminReportDetailResponse = ApiSingleResponse<ReportItem>
+
+export interface WaitReportRequest {
+  note: string
+}
 
 export type ClaimReportResponse = ApiMutationResponse
 export type WaitReportResponse = ApiMutationResponse

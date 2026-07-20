@@ -1,6 +1,6 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type { ModerationStatus } from '@/components/shared'
-import type { ReviewCampaignCategory, ReviewCampaignItem } from '@/components/pages/campaigns-review/static-data'
+import type { ReviewCampaignCategory, ReviewCampaignItem } from '@/components/pages/campaigns-review/campaigns-review.types'
 
 export interface AdminReviewCampaignsFilter {
   status?: ModerationStatus

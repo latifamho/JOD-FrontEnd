@@ -1,5 +1,5 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
-import type { ArticleItem, ArticleStatus } from '@/components/pages/content-management/static-data'
+import type { ArticleItem, ArticleStatus } from '@/components/pages/content-management/content-management.types'
 
 export interface AdminArticlesFilter {
   status?: ArticleStatus

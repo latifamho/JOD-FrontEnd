@@ -18,6 +18,14 @@ export function useAdminOrganizations(params: AdminOrganizationsParams) {
   })
 }
 
+export function useAdminOrganizationDetail(organizationId: string | null) {
+  return useQuery({
+    queryKey: adminOrganizationsKeys.detail(organizationId ?? ''),
+    queryFn: () => adminOrganizationsServices.getOrganizationById(organizationId!),
+    enabled: !!organizationId,
+  })
+}
+
 export function useUpdateOrganization() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -56,8 +64,9 @@ export function useAcceptOrganization() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (organizationId: string) => adminOrganizationsServices.acceptOrganization(organizationId),
-    onSuccess: () => {
+    onSuccess: (_data, organizationId) => {
       queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.detail(organizationId) })
     },
   })
 }

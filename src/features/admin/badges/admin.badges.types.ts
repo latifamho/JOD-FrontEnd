@@ -1,5 +1,5 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
-import type { BadgeItem, RewardIconName } from '@/components/pages/rewards-management/static-data'
+import type { BadgeItem, RewardIconName } from '@/components/pages/rewards-management/rewards-management.types'
 
 export interface AdminBadgesFilter {
   isActive?: boolean

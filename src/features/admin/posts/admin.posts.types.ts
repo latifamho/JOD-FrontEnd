@@ -1,6 +1,6 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type { ModerationStatus } from '@/components/shared'
-import type { ReviewPostItem } from '@/components/pages/posts-review/static-data'
+import type { ReviewPostItem } from '@/components/pages/posts-review/posts-review.types'
 
 export type ReviewSortOption =
   | 'title_asc'

@@ -1,5 +1,5 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
-import type { AdminUserItem, UserRole, UserStatus } from '@/components/pages/users-management/static-data'
+import type { AdminUserItem, UserRole, UserStatus } from '@/components/pages/users-management/users-management.types'
 
 export interface AdminUsersFilter {
   status?: UserStatus

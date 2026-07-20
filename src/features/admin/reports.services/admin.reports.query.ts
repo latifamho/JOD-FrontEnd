@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { adminReportsServices } from './admin.reports.services'
 import { adminReportsKeys } from './admin.reports.query-keys'
-import type { AdminReportsParams } from './admin.reports.types'
+import type { AdminReportsParams, WaitReportRequest } from './admin.reports.types'
 
 export function useAdminReports(params: AdminReportsParams) {
   return useQuery({
@@ -13,12 +13,21 @@ export function useAdminReports(params: AdminReportsParams) {
   })
 }
 
+export function useAdminReportDetail(reportId: string | null) {
+  return useQuery({
+    queryKey: adminReportsKeys.detail(reportId ?? ''),
+    queryFn: () => adminReportsServices.getReportById(reportId!),
+    enabled: !!reportId,
+  })
+}
+
 export function useClaimReport() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (reportId: string) => adminReportsServices.claimReport(reportId),
-    onSuccess: () => {
+    onSuccess: (_data, reportId) => {
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminReportsKeys.detail(reportId) })
     },
   })
 }
@@ -26,9 +35,11 @@ export function useClaimReport() {
 export function useWaitReport() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (reportId: string) => adminReportsServices.waitReport(reportId),
-    onSuccess: () => {
+    mutationFn: ({ reportId, body }: { reportId: string; body: WaitReportRequest }) =>
+      adminReportsServices.waitReport(reportId, body),
+    onSuccess: (_data, { reportId }) => {
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminReportsKeys.detail(reportId) })
     },
   })
 }
@@ -37,8 +48,9 @@ export function useCloseReport() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (reportId: string) => adminReportsServices.closeReport(reportId),
-    onSuccess: () => {
+    onSuccess: (_data, reportId) => {
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminReportsKeys.detail(reportId) })
     },
   })
 }
