@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,7 +93,7 @@ export function ContentManagementPage() {
     if (!deleteTargetId) return;
     deleteMutation.mutate(deleteTargetId, {
       onSuccess: () => {
-        toast.success("تم حذف المقال بنجاح");
+        // success toast from api interceptor
         setDeleteDialogOpen(false);
         setDeleteTargetId(null);
       },

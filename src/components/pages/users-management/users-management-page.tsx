@@ -3,7 +3,6 @@
 import * as React from "react";
 import type { AxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { PaginationControls } from "@/components/shared";
@@ -258,7 +257,7 @@ export function UsersManagementPage() {
     if (!deleteTargetUserId) return;
     deleteMutation.mutate(deleteTargetUserId, {
       onSuccess: () => {
-        toast.success("تم حذف المستخدم بنجاح");
+        // success toast from api interceptor
         setDeleteDialogOpen(false);
         setDeleteTargetUserId(null);
       },
