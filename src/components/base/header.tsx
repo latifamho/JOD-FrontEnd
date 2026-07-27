@@ -30,12 +30,18 @@ import {
 } from "@/constant/routes";
 import { useLogout } from "@/features/shared/auth.services/auth.query";
 import { useAuth } from "@/providers/AuthProvider";
-import { setDashboardRole } from "@/lib/cookies";
+import { setDashboardRole, type DashboardRoleCookie } from "@/lib/cookies";
 import { cn } from "@/lib/utils";
 
 type ThemeMode = "light" | "dark" | "system";
 
 const THEME_STORAGE_KEY = "jod:theme-mode";
+
+function toDashboardRoleCookie(role: DashboardRole): DashboardRoleCookie {
+  if (role === "admin") return "admin";
+  if (role === "organization_owner") return "org_owner";
+  return "org_staff";
+}
 
 function getSystemThemeIsDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -242,7 +248,7 @@ export function Header() {
                         r === role && "bg-primary/10 text-primary",
                       )}
                       onSelect={() => {
-                        setDashboardRole(r);
+                        setDashboardRole(toDashboardRoleCookie(r));
                         router.push(getDashboardHomeByRole(r));
                       }}
                     >
