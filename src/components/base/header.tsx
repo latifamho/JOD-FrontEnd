@@ -30,6 +30,7 @@ import {
 } from "@/constant/routes";
 import { useLogout } from "@/features/shared/auth.services/auth.query";
 import { useAuth } from "@/providers/AuthProvider";
+import { setDashboardRole } from "@/lib/cookies";
 import { cn } from "@/lib/utils";
 
 type ThemeMode = "light" | "dark" | "system";
@@ -240,7 +241,10 @@ export function Header() {
                         "cursor-pointer",
                         r === role && "bg-primary/10 text-primary",
                       )}
-                      onSelect={() => router.push(getDashboardHomeByRole(r))}
+                      onSelect={() => {
+                        setDashboardRole(r);
+                        router.push(getDashboardHomeByRole(r));
+                      }}
                     >
                       {dashboardRoleLabels[r]}
                       {r === role && (
