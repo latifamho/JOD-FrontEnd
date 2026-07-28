@@ -16,7 +16,7 @@ export interface AdminReviewPostsFilter {
 export interface AdminReviewPostsParams {
   page?: number
   perPage?: number
-  sortBy?: ReviewSortOption
+  sort?: string
   filter?: AdminReviewPostsFilter
 }
 

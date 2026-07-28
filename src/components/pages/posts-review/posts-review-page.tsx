@@ -27,6 +27,13 @@ type PostsReviewPageProps = {
   status: ModerationStatus;
 };
 
+const sortToApiSort: Record<ReviewSortOption, string> = {
+  title_asc: "title",
+  title_desc: "-title",
+  created_at_newest: "-submittedAt",
+  created_at_oldest: "submittedAt",
+};
+
 export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [organizationSearch, setOrganizationSearch] = React.useState("");
   const [sortBy, setSortBy] =
@@ -47,7 +54,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const { data, isLoading, isError } = useAdminReviewPosts({
     page: pagination.currentPage,
     perPage: pageSize,
-    sortBy,
+    sort: sortToApiSort[sortBy],
     filter: {
       status,
       organizationName: debouncedOrgSearch || undefined,
