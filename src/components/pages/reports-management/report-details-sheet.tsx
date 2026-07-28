@@ -24,6 +24,7 @@ import {
   toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
+import { useAdminReportDetail } from "@/features/admin/reports.services/admin.reports.query";
 
 type ReportDetailsSheetProps = {
   report: ReportItem | null;
@@ -48,10 +49,12 @@ export function ReportDetailsSheet({
   isClosing,
   closingReportId,
 }: ReportDetailsSheetProps) {
+  const { data: detailData } = useAdminReportDetail(open ? report?.id ?? null : null);
+  const activeReport = detailData?.data ?? report;
   const isClaimingThis =
-    !!report && isClaiming && claimingReportId === report.id;
+    !!activeReport && isClaiming && claimingReportId === activeReport.id;
   const isClosingThis =
-    !!report && isClosing && closingReportId === report.id;
+    !!activeReport && isClosing && closingReportId === activeReport.id;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -60,25 +63,25 @@ export function ReportDetailsSheet({
         dir="rtl"
         className="w-[95vw] border-border p-0 sm:max-w-2xl"
       >
-        {report ? (
+        {activeReport ? (
           <>
             <SheetHeader className="border-b border-border pe-12 text-right">
               <div className="mb-2 flex flex-wrap items-center justify-start gap-2">
-                <Badge variant="outline" className={getStatusBadgeClass(report.status)}>
-                  {reportStatusLabels[report.status]}
+                <Badge variant="outline" className={getStatusBadgeClass(activeReport.status)}>
+                  {reportStatusLabels[activeReport.status]}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={getSeverityBadgeClass(report.severity)}
+                  className={getSeverityBadgeClass(activeReport.severity)}
                 >
-                  {reportSeverityLabels[report.severity]}
+                  {reportSeverityLabels[activeReport.severity]}
                 </Badge>
-                <Badge variant="outline">{reportEntityTypeLabels[report.entityType]}</Badge>
-                <Badge variant="outline">{report.id}</Badge>
+                <Badge variant="outline">{reportEntityTypeLabels[activeReport.entityType]}</Badge>
+                <Badge variant="outline">{activeReport.id}</Badge>
               </div>
-              <SheetTitle className="text-right text-lg">{report.title}</SheetTitle>
+              <SheetTitle className="text-right text-lg">{activeReport.title}</SheetTitle>
               <SheetDescription className="text-right">
-                {report.description}
+                {activeReport.description}
               </SheetDescription>
             </SheetHeader>
 
@@ -91,31 +94,31 @@ export function ReportDetailsSheet({
                   <p>
                     الكيان المبلغ عنه:{" "}
                     <span className="font-semibold text-foreground">
-                      {report.entityId}
+                      {activeReport.entityId}
                     </span>
                   </p>
                   <p>
                     المنظمة:{" "}
                     <span className="font-semibold text-foreground">
-                      {toDisplayName(report.organizationName)}
+                      {toDisplayName(activeReport.organizationName)}
                     </span>
                   </p>
                   <p>
                     المبلغ:{" "}
                     <span className="font-semibold text-foreground">
-                      {toDisplayName(report.reporterName)}
+                      {toDisplayName(activeReport.reporterName)}
                     </span>
                   </p>
                   <p>
                     تاريخ الإنشاء:{" "}
                     <span className="font-semibold text-foreground">
-                      {formatUtcDateTime(report.createdAt)}
+                      {formatUtcDateTime(activeReport.createdAt)}
                     </span>
                   </p>
                   <p>
                     المكلّف الحالي:{" "}
                     <span className="font-semibold text-foreground">
-                      {toDisplayName(report?.assignee)}
+                      {toDisplayName(activeReport.assignee)}
                     </span>
                   </p>
                 </div>
@@ -126,7 +129,7 @@ export function ReportDetailsSheet({
                   الأدلة المرفقة
                 </h3>
                 <ul className="space-y-2 text-xs text-muted-foreground">
-                  {(Array.isArray(report.evidence) ? report.evidence : []).map((evidenceItem) => (
+                  {(Array.isArray(activeReport.evidence) ? activeReport.evidence : []).map((evidenceItem) => (
                     <li
                       key={evidenceItem.id}
                       className="rounded-md border border-border bg-muted/30 px-3 py-2"
@@ -151,7 +154,7 @@ export function ReportDetailsSheet({
                   سجل الإجراءات
                 </h3>
                 <ul className="space-y-2">
-                  {(Array.isArray(report.timeline) ? report.timeline : []).map(
+                  {(Array.isArray(activeReport.timeline) ? activeReport.timeline : []).map(
                     (entry, index) => (
                       <li
                         key={entry.id ?? `${entry.action}-${entry.at}-${index}`}
@@ -173,10 +176,10 @@ export function ReportDetailsSheet({
             </div>
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-              {report.status === "new" && (
+              {activeReport.status === "new" && (
                 <Button
                   disabled={isClaimingThis}
-                  onClick={() => onClaim(report.id)}
+                  onClick={() => onClaim(activeReport.id)}
                 >
                   {isClaimingThis && (
                     <Loader2 className="size-4 animate-spin" />
@@ -184,11 +187,11 @@ export function ReportDetailsSheet({
                   استلام البلاغ
                 </Button>
               )}
-              {(report.status === "in_progress" ||
-                report.status === "waiting_response") && (
+              {(activeReport.status === "in_progress" ||
+                activeReport.status === "waiting_response") && (
                 <Button
                   disabled={isClosingThis}
-                  onClick={() => onCloseReport(report.id)}
+                  onClick={() => onCloseReport(activeReport.id)}
                 >
                   {isClosingThis && (
                     <Loader2 className="size-4 animate-spin" />
