@@ -4,6 +4,14 @@ import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,6 +36,7 @@ import {
   useCreateBadge,
   useUpdateBadge,
   useToggleBadgeStatus,
+  useDeleteBadge,
 } from "@/features/admin/badges/admin.badges.query";
 import { adminBadgesServices } from "@/features/admin/badges/admin.badges.services";
 import { adminBadgesKeys } from "@/features/admin/badges/admin.badges.query-keys";
@@ -46,6 +55,7 @@ export function RewardsManagementPage() {
   const [editingBadgeId, setEditingBadgeId] = React.useState<string | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
+  const [deleteBadgeId, setDeleteBadgeId] = React.useState<string | null>(null);
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -77,6 +87,7 @@ export function RewardsManagementPage() {
   const createMutation = useCreateBadge();
   const updateMutation = useUpdateBadge();
   const toggleMutation = useToggleBadgeStatus();
+  const deleteMutation = useDeleteBadge();
 
   const addLoadingRow = React.useCallback((id: string) => {
     setLoadingRowIds((prev) => new Set([...prev, id]));
@@ -273,6 +284,7 @@ export function RewardsManagementPage() {
           loadingRowIds={loadingRowIds}
           onEditReward={openEditSheet}
           onToggleRewardStatus={handleToggleRewardStatus}
+          onDeleteReward={setDeleteBadgeId}
         />
       )}
 
@@ -289,6 +301,29 @@ export function RewardsManagementPage() {
         onPageSizeChange={setPageSize}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
+
+      <Dialog open={Boolean(deleteBadgeId)} onOpenChange={(open) => !open && setDeleteBadgeId(null)}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader className="pe-12 text-right sm:text-right">
+            <DialogTitle>حذف الشارة؟</DialogTitle>
+            <DialogDescription>سيتم حذف الشارة نهائيًا.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-start">
+            <Button type="button" variant="outline" disabled={deleteMutation.isPending} onClick={() => setDeleteBadgeId(null)}>إلغاء</Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (!deleteBadgeId) return;
+                deleteMutation.mutate(deleteBadgeId, { onSuccess: () => setDeleteBadgeId(null) });
+              }}
+            >
+              حذف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <RewardFormSheet
         open={formOpen}

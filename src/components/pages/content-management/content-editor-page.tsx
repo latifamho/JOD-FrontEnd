@@ -44,6 +44,7 @@ const articleFormSchema = z.object({
   title: z.string().min(1, "العنوان مطلوب"),
   slug: z.string().min(1, "الرابط المختصر مطلوب"),
   excerpt: z.string().min(1, "الملخص مطلوب"),
+  content: z.string().min(1, "محتوى المقال مطلوب"),
   authorName: z.string().min(1, "اسم الكاتب مطلوب"),
   status: z.enum(["draft", "published"]),
   images: z.array(z.string()),
@@ -55,6 +56,7 @@ const EMPTY_FORM_VALUES: ArticleFormValues = {
   title: "",
   slug: "",
   excerpt: "",
+  content: "",
   authorName: "فريق جود",
   status: "draft",
   images: [],
@@ -115,6 +117,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
           title: article.title,
           slug: article.slug,
           excerpt: article.excerpt,
+          content: article.content ?? "",
           authorName: article.authorName,
           status: article.status,
           images: article.images ?? [],
@@ -163,6 +166,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
       title: values.title.trim(),
       slug: normalizedSlug,
       excerpt: values.excerpt.trim(),
+      content: values.content.trim(),
       authorName: values.authorName.trim(),
       status: values.status,
       images: values.images.filter(Boolean),
@@ -268,6 +272,20 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="article-content">محتوى المقال</Label>
+            <Textarea
+              id="article-content"
+              disabled={isSubmitting}
+              rows={10}
+              placeholder="اكتب محتوى المقال الكامل"
+              {...register("content")}
+            />
+            {errors.content ? (
+              <p className="text-xs text-destructive">{errors.content.message}</p>
+            ) : null}
+          </div>
+
             <div className="space-y-2">
               <Label htmlFor="article-author">الكاتب</Label>
               <Input

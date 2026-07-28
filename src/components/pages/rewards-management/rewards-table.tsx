@@ -32,6 +32,7 @@ type RewardsTableProps = {
   loadingRowIds?: Set<string>;
   onEditReward: (rewardId: string) => void;
   onToggleRewardStatus: (rewardId: string) => void;
+  onDeleteReward: (rewardId: string) => void;
 };
 
 export function RewardsTable({
@@ -40,6 +41,7 @@ export function RewardsTable({
   loadingRowIds = new Set(),
   onEditReward,
   onToggleRewardStatus,
+  onDeleteReward,
 }: RewardsTableProps) {
   return (
     <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
@@ -167,6 +169,17 @@ export function RewardsTable({
                         )}
                       </Button>
                     </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 shadow-sm"
+                        title="حذف الشارة"
+                        disabled={isRowLoading}
+                        onClick={() => onDeleteReward(row.id)}
+                      >
+                        <AppIcons.Trash className="size-4 text-destructive" />
+                      </Button>
                   </TableCell>
                 </TableRow>
               );

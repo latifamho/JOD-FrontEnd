@@ -5,6 +5,7 @@ export type ArticleItem = {
   title: string;
   slug: string;
   excerpt: string;
+  content?: string | null;
   status: ArticleStatus;
   publishedAt?: string;
   createdAt: string;
