@@ -15,6 +15,7 @@ import {
   useAdminPlatformSettings,
   useUpdatePlatformSettings,
 } from "@/features/admin/platform-settings/admin.platform-settings.query";
+import { applyApiFieldErrorsToForm } from "@/lib/api-errors";
 
 const settingsSchema = z.object({
   siteName: z.string().min(1, "اسم المنصة مطلوب"),
@@ -33,6 +34,7 @@ export function PlatformSettingsPage() {
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -53,11 +55,14 @@ export function PlatformSettingsPage() {
   }, [data, reset]);
 
   const onSubmit = (values: SettingsFormValues) => {
-    updateMutation.mutate({
-      siteName: values.siteName.trim(),
-      allowNewPosts: values.allowNewPosts,
-      requirePostReview: values.requirePostReview,
-    });
+    updateMutation.mutate(
+      {
+        siteName: values.siteName.trim(),
+        allowNewPosts: values.allowNewPosts,
+        requirePostReview: values.requirePostReview,
+      },
+      { onError: (error) => applyApiFieldErrorsToForm(error, setError) },
+    );
   };
 
   return (

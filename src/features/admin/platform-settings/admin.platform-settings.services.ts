@@ -17,7 +17,7 @@ export const adminPlatformSettingsServices = {
   async updatePlatformSettings(
     body: PlatformSettingsUpdateRequest,
   ): Promise<PlatformSettingsResponse> {
-    const response = await api.patch<PlatformSettingsResponse>(ENDPOINTS.PLATFORM_SETTINGS, body)
+    const response = await api.patch<PlatformSettingsResponse>(ENDPOINTS.PLATFORM_SETTINGS, body, { successMessageKey: 'settingsUpdated' })
     return response.data
   },
 }

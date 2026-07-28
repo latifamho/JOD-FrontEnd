@@ -1,43 +1,12 @@
-export interface LoginRequest {
-  email: string
-  password: string
-}
-
-export interface LoginUser {
-  id: string
-  name: string
-  email: string
-}
-
-export interface LoginData {
-  token: string
-  tokenType: 'Bearer'
-  user: LoginUser
-}
-
-export interface LoginResponse {
-  data: LoginData
-  message: string
-}
-
+export interface LoginRequest { email: string; password: string }
+export interface PermissionItem { key: string; name: string; label: string; allowed: boolean }
+export interface PermissionGroup { key: string; label: string; sectionKey: string | null; sectionLabel: string | null; description: string; order: number; depth: number; permissions: PermissionItem[] }
+export interface PermissionModule { key: string; label: string; order: number; groups: PermissionGroup[] }
+export interface UserPermissions { modules: PermissionModule[]; flat: Record<string, boolean>; granted: string[] }
+export interface LoginUser { id: string; name: string; email: string; phone: string | null; userType: string; status: string; organizationId: string | null; postsCount: number | null; reportsCount: number | null; createdAt: string | null; updatedAt: string | null; lastActiveAt: string | null }
+export interface LoginData { token: string; tokenType: 'Bearer'; user: LoginUser; permissions: UserPermissions }
+export interface LoginResponse { data: LoginData; message: string }
 export type UserType = 'admin' | 'general' | 'volunteer' | 'donor' | 'job_seeker'
-
 export type DashboardRole = 'admin' | 'org_owner' | 'org_staff'
-
-export interface MeProfile {
-  id: string
-  name: string
-  email: string
-  phone: string
-  userType: UserType
-  organizationId: string | null
-  organizationName: string | null
-  status: string
-  createdAt: string
-  lastActiveAt: string
-}
-
-export interface MeResponse {
-  data: MeProfile
-  message: string
-}
+export interface MeProfile { id: string; name: string; email: string; phone: string; userType: UserType; organizationId: string | null; organizationName: string | null; status: string; createdAt: string; lastActiveAt: string }
+export interface MeResponse { data: MeProfile; message: string }

@@ -37,22 +37,22 @@ export const adminNotificationsServices = {
   },
 
   async createNotification(body: NotificationCreateRequest): Promise<CreateNotificationResponse> {
-    const response = await api.post<CreateNotificationResponse>(ENDPOINTS.NOTIFICATIONS, body)
+    const response = await api.post<CreateNotificationResponse>(ENDPOINTS.NOTIFICATIONS, body, { successMessageKey: 'sent' })
     return response.data
   },
 
   async updateReadState(notificationId: string, body: NotificationReadStateRequest): Promise<UpdateNotificationReadStateResponse> {
-    const response = await api.patch<UpdateNotificationReadStateResponse>(ENDPOINTS.NOTIFICATION_READ_STATE(notificationId), body)
+    const response = await api.patch<UpdateNotificationReadStateResponse>(ENDPOINTS.NOTIFICATION_READ_STATE(notificationId), body, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
   async resendNotification(notificationId: string): Promise<ResendNotificationResponse> {
-    const response = await api.post<ResendNotificationResponse>(ENDPOINTS.NOTIFICATION_RESEND(notificationId))
+    const response = await api.post<ResendNotificationResponse>(ENDPOINTS.NOTIFICATION_RESEND(notificationId), undefined, { successMessageKey: 'resent' })
     return response.data
   },
 
   async deleteNotification(notificationId: string): Promise<DeleteNotificationResponse> {
-    const response = await api.delete<DeleteNotificationResponse>(ENDPOINTS.NOTIFICATION(notificationId))
+    const response = await api.delete<DeleteNotificationResponse>(ENDPOINTS.NOTIFICATION(notificationId), { successMessageKey: 'deleted' })
     return response.data
   },
 }

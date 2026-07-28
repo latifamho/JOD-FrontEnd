@@ -38,17 +38,17 @@ export const adminReportsServices = {
   },
 
   async claimReport(reportId: string): Promise<ClaimReportResponse> {
-    const response = await api.post<ClaimReportResponse>(ENDPOINTS.CLAIM(reportId))
+    const response = await api.post<ClaimReportResponse>(ENDPOINTS.CLAIM(reportId), undefined, { successMessageKey: 'claimed' })
     return response.data
   },
 
   async waitReport(reportId: string, body: WaitReportRequest): Promise<WaitReportResponse> {
-    const response = await api.post<WaitReportResponse>(ENDPOINTS.REQUEST_INFO(reportId), body)
+    const response = await api.post<WaitReportResponse>(ENDPOINTS.REQUEST_INFO(reportId), body, { successMessageKey: 'infoRequested' })
     return response.data
   },
 
   async closeReport(reportId: string): Promise<CloseReportResponse> {
-    const response = await api.post<CloseReportResponse>(ENDPOINTS.CLOSE(reportId))
+    const response = await api.post<CloseReportResponse>(ENDPOINTS.CLOSE(reportId), undefined, { successMessageKey: 'closed' })
     return response.data
   },
 }

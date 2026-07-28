@@ -33,6 +33,7 @@ import {
 } from "@/features/admin/articles/admin.articles.query";
 import { adminArticlesServices } from "@/features/admin/articles/admin.articles.services";
 import { adminArticlesKeys } from "@/features/admin/articles/admin.articles.query-keys";
+import { applyApiFieldErrorsToForm } from "@/lib/api-errors";
 
 type ContentEditorPageProps = {
   mode: "create" | "edit";
@@ -78,6 +79,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
     handleSubmit,
     reset,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<ArticleFormValues>({
@@ -169,6 +171,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
     if (mode === "create") {
       createMutation.mutate(body, {
         onSuccess: () => router.push(routePaths.adminScope.content),
+        onError: (error) => applyApiFieldErrorsToForm(error, setError),
       });
       return;
     }
@@ -179,6 +182,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
       { articleId, body },
       {
         onSuccess: () => router.push(routePaths.adminScope.content),
+        onError: (error) => applyApiFieldErrorsToForm(error, setError),
       },
     );
   };

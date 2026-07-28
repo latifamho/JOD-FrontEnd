@@ -37,12 +37,12 @@ export const adminPostsServices = {
   },
 
   async approvePost(postId: string, body: ApprovePostRequest): Promise<ApprovePostResponse> {
-    const response = await api.post<ApprovePostResponse>(ENDPOINTS.APPROVE_POST(postId), body)
+    const response = await api.post<ApprovePostResponse>(ENDPOINTS.APPROVE_POST(postId), body, { successMessageKey: 'approved' })
     return response.data
   },
 
   async rejectPost(postId: string, body: RejectPostRequest): Promise<RejectPostResponse> {
-    const response = await api.post<RejectPostResponse>(ENDPOINTS.REJECT_POST(postId), body)
+    const response = await api.post<RejectPostResponse>(ENDPOINTS.REJECT_POST(postId), body, { successMessageKey: 'rejected' })
     return response.data
   },
 }

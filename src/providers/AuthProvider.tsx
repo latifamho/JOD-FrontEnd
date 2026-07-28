@@ -1,10 +1,12 @@
 'use client'
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { clearAuthData, getAuthToken, getUser } from '@/lib/cookies'
-import { clearUnauthorizedHandler, setUnauthorizedHandler } from '@/services/api'
+import { clearUnauthorizedHandler, resetUnauthorizedState, setUnauthorizedHandler } from '@/services/api'
 import type { MeProfile } from '@/features/shared/auth.services/auth.type'
 
 interface AuthContextValue {
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router])
 
   const login = useCallback(() => {
+    resetUnauthorizedState()
     setIsAuthenticated(true)
   }, [])
 

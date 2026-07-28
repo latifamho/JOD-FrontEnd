@@ -37,22 +37,22 @@ export const adminBadgesServices = {
   },
 
   async createBadge(body: BadgeCreateRequest): Promise<CreateBadgeResponse> {
-    const response = await api.post<CreateBadgeResponse>(ENDPOINTS.BADGES, body)
+    const response = await api.post<CreateBadgeResponse>(ENDPOINTS.BADGES, body, { successMessageKey: 'created' })
     return response.data
   },
 
   async updateBadge(badgeId: string, body: BadgeUpdateRequest): Promise<UpdateBadgeResponse> {
-    const response = await api.patch<UpdateBadgeResponse>(ENDPOINTS.BADGE(badgeId), body)
+    const response = await api.patch<UpdateBadgeResponse>(ENDPOINTS.BADGE(badgeId), body, { successMessageKey: 'updated' })
     return response.data
   },
 
   async toggleBadgeStatus(badgeId: string, body: BadgeStatusToggleRequest): Promise<ToggleBadgeStatusResponse> {
-    const response = await api.patch<ToggleBadgeStatusResponse>(ENDPOINTS.BADGE_STATUS(badgeId), body)
+    const response = await api.patch<ToggleBadgeStatusResponse>(ENDPOINTS.BADGE_STATUS(badgeId), body, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
   async deleteBadge(badgeId: string): Promise<DeleteBadgeResponse> {
-    const response = await api.delete<DeleteBadgeResponse>(ENDPOINTS.BADGE(badgeId))
+    const response = await api.delete<DeleteBadgeResponse>(ENDPOINTS.BADGE(badgeId), { successMessageKey: 'deleted' })
     return response.data
   },
 }

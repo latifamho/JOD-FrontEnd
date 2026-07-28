@@ -35,12 +35,12 @@ export const adminReviewCampaignsServices = {
   },
 
   async approveCampaign(campaignId: string, body: ApproveReviewCampaignRequest = {}): Promise<ApproveReviewCampaignResponse> {
-    const response = await api.post<ApproveReviewCampaignResponse>(ENDPOINTS.CAMPAIGN_APPROVE(campaignId), body)
+    const response = await api.post<ApproveReviewCampaignResponse>(ENDPOINTS.CAMPAIGN_APPROVE(campaignId), body, { successMessageKey: 'approved' })
     return response.data
   },
 
   async rejectCampaign(campaignId: string, body: RejectReviewCampaignRequest): Promise<RejectReviewCampaignResponse> {
-    const response = await api.post<RejectReviewCampaignResponse>(ENDPOINTS.CAMPAIGN_REJECT(campaignId), body)
+    const response = await api.post<RejectReviewCampaignResponse>(ENDPOINTS.CAMPAIGN_REJECT(campaignId), body, { successMessageKey: 'rejected' })
     return response.data
   },
 }

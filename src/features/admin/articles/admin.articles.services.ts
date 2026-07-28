@@ -34,17 +34,17 @@ export const adminArticlesServices = {
   },
 
   async createArticle(body: ArticleCreateRequest): Promise<CreateArticleResponse> {
-    const response = await api.post<CreateArticleResponse>(ENDPOINTS.ARTICLES, body)
+    const response = await api.post<CreateArticleResponse>(ENDPOINTS.ARTICLES, body, { successMessageKey: 'created' })
     return response.data
   },
 
   async updateArticle(articleId: string, body: ArticleUpdateRequest): Promise<UpdateArticleResponse> {
-    const response = await api.patch<UpdateArticleResponse>(ENDPOINTS.ARTICLE(articleId), body)
+    const response = await api.patch<UpdateArticleResponse>(ENDPOINTS.ARTICLE(articleId), body, { successMessageKey: 'updated' })
     return response.data
   },
 
   async deleteArticle(articleId: string): Promise<DeleteArticleResponse> {
-    const response = await api.delete<DeleteArticleResponse>(ENDPOINTS.ARTICLE(articleId))
+    const response = await api.delete<DeleteArticleResponse>(ENDPOINTS.ARTICLE(articleId), { successMessageKey: 'deleted' })
     return response.data
   },
 }

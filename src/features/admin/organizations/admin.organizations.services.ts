@@ -40,27 +40,27 @@ export const adminOrganizationsServices = {
   },
 
   async updateOrganization(organizationId: string, body: OrganizationUpdateRequest): Promise<UpdateOrganizationResponse> {
-    const response = await api.patch<UpdateOrganizationResponse>(ENDPOINTS.ORGANIZATION(organizationId), body)
+    const response = await api.patch<UpdateOrganizationResponse>(ENDPOINTS.ORGANIZATION(organizationId), body, { successMessageKey: 'updated' })
     return response.data
   },
 
   async toggleOrganizationStatus(organizationId: string, body: OrganizationStatusToggleRequest): Promise<ToggleOrganizationStatusResponse> {
-    const response = await api.patch<ToggleOrganizationStatusResponse>(ENDPOINTS.ORGANIZATION_STATUS(organizationId), body)
+    const response = await api.patch<ToggleOrganizationStatusResponse>(ENDPOINTS.ORGANIZATION_STATUS(organizationId), body, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
   async toggleOrganizationVerification(organizationId: string, body: OrganizationVerificationToggleRequest): Promise<ToggleOrganizationVerificationResponse> {
-    const response = await api.patch<ToggleOrganizationVerificationResponse>(ENDPOINTS.ORGANIZATION_VERIFICATION(organizationId), body)
+    const response = await api.patch<ToggleOrganizationVerificationResponse>(ENDPOINTS.ORGANIZATION_VERIFICATION(organizationId), body, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
   async acceptOrganization(organizationId: string): Promise<AcceptOrganizationResponse> {
-    const response = await api.post<AcceptOrganizationResponse>(ENDPOINTS.ORGANIZATION_ACCEPT(organizationId))
+    const response = await api.post<AcceptOrganizationResponse>(ENDPOINTS.ORGANIZATION_ACCEPT(organizationId), undefined, { successMessageKey: 'accepted' })
     return response.data
   },
 
   async deleteOrganization(organizationId: string): Promise<DeleteOrganizationResponse> {
-    const response = await api.delete<DeleteOrganizationResponse>(ENDPOINTS.ORGANIZATION(organizationId))
+    const response = await api.delete<DeleteOrganizationResponse>(ENDPOINTS.ORGANIZATION(organizationId), { successMessageKey: 'deleted' })
     return response.data
   },
 }

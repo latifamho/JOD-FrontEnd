@@ -4,16 +4,9 @@ import type { LoginRequest, LoginResponse, MeResponse } from './auth.type'
 
 export const authServices = {
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>(END_POINTS.AUTH.LOGIN, data)
+    const response = await api.post<LoginResponse>(END_POINTS.AUTH.LOGIN, data, { skipSuccessToast: true, skipErrorToast: true })
     return response.data
   },
-
-  async logout(): Promise<void> {
-    await api.post(END_POINTS.AUTH.LOGOUT)
-  },
-
-  async getMe(): Promise<MeResponse> {
-    const response = await api.get<MeResponse>(END_POINTS.ME.PROFILE)
-    return response.data
-  },
+  async logout(): Promise<void> { await api.post(END_POINTS.AUTH.LOGOUT, undefined, { skipSuccessToast: true }) },
+  async getMe(): Promise<MeResponse> { const response = await api.get<MeResponse>(END_POINTS.ME.PROFILE); return response.data },
 }

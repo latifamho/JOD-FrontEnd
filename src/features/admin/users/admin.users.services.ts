@@ -37,17 +37,17 @@ export const adminUsersServices = {
   },
 
   async createUser(body: UserCreateRequest): Promise<CreateUserResponse> {
-    const response = await api.post<CreateUserResponse>(ENDPOINTS.USERS, body)
+    const response = await api.post<CreateUserResponse>(ENDPOINTS.USERS, body, { successMessageKey: 'created' })
     return response.data
   },
 
   async updateUser(userId: string, body: UserUpdateRequest): Promise<UpdateUserResponse> {
-    const response = await api.patch<UpdateUserResponse>(ENDPOINTS.USER(userId), body)
+    const response = await api.patch<UpdateUserResponse>(ENDPOINTS.USER(userId), body, { successMessageKey: 'updated' })
     return response.data
   },
 
   async toggleUserStatus(userId: string, body: UserStatusToggleRequest): Promise<ToggleUserStatusResponse> {
-    const response = await api.patch<ToggleUserStatusResponse>(ENDPOINTS.USER_STATUS(userId), body)
+    const response = await api.patch<ToggleUserStatusResponse>(ENDPOINTS.USER_STATUS(userId), body, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
@@ -55,12 +55,12 @@ export const adminUsersServices = {
     const response = await api.patch<ChangeUserPasswordResponse>(ENDPOINTS.USER_PASSWORD(userId), {
       password: newPassword,
       password_confirmation: newPassword,
-    })
+    }, { successMessageKey: 'passwordUpdated' })
     return response.data
   },
 
   async deleteUser(userId: string): Promise<DeleteUserResponse> {
-    const response = await api.delete<DeleteUserResponse>(ENDPOINTS.USER(userId))
+    const response = await api.delete<DeleteUserResponse>(ENDPOINTS.USER(userId), { successMessageKey: 'deleted' })
     return response.data
   },
 }
