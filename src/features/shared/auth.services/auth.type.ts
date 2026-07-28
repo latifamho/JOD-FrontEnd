@@ -10,3 +10,5 @@ export type UserType = 'admin' | 'general' | 'volunteer' | 'donor' | 'job_seeker
 export type DashboardRole = 'admin' | 'org_owner' | 'org_staff'
 export interface MeProfile { id: string; name: string; email: string; phone: string; userType: UserType; organizationId: string | null; organizationName: string | null; status: string; createdAt: string; lastActiveAt: string }
 export interface MeResponse { data: MeProfile; message: string }
+export interface UpdateProfileRequest { name: string; email: string; phone: string }
+export interface UpdateProfileResponse { data: MeProfile; message?: string }

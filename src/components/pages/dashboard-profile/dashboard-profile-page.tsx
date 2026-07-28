@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,10 @@ import type { DashboardProfileScope } from "@/components/pages/dashboard-profile
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { getPostStatusBadgeClass } from "@/components/pages/organization-posts-management/helpers";
+import { authServices } from "@/features/shared/auth.services/auth.service";
+import { useAuth } from "@/providers/AuthProvider";
+import { setUser } from "@/lib/cookies";
+import { normalizeApiError } from "@/lib/api-errors";
 import {
   organizationPostStatusLabels,
   organizationPostTypeLabels,
@@ -53,9 +58,35 @@ function getProfileInitials(name: string): string {
 
 export function DashboardProfilePage({ scope }: DashboardProfilePageProps) {
   const defaults = dashboardProfileDefaultsByScope[scope];
+  const { user, updateUser } = useAuth();
   const [name, setName] = React.useState(defaults.name);
   const [email, setEmail] = React.useState(defaults.email);
+  const [phone, setPhone] = React.useState("");
+  const [profileError, setProfileError] = React.useState<string | null>(null);
   const isOrganizationScope = scope === "org-owner" || scope === "org-staff";
+
+  React.useEffect(() => {
+    if (scope !== "admin" || !user) return;
+    setName(user.name);
+    setEmail(user.email);
+    setPhone(user.phone ?? "");
+  }, [scope, user]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: () => authServices.updateProfile({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+    }),
+    onSuccess: (response) => {
+      setProfileError(null);
+      setUser(response.data);
+      updateUser(response.data);
+    },
+    onError: (error) => {
+      setProfileError(normalizeApiError(error).message);
+    },
+  });
 
   const profilePosts = React.useMemo(
     () =>
@@ -359,6 +390,34 @@ export function DashboardProfilePage({ scope }: DashboardProfilePageProps) {
               dir="rtl"
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="profile-phone">رقم الهاتف</Label>
+            <Input
+              id="profile-phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="text-right"
+              dir="rtl"
+            />
+          </div>
+        </div>
+        {profileError ? (
+          <p className="text-sm text-destructive">{profileError}</p>
+        ) : null}
+
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            disabled={
+              updateProfileMutation.isPending ||
+              !name.trim() ||
+              !email.trim() ||
+              !phone.trim()
+            }
+            onClick={() => updateProfileMutation.mutate()}
+          >
+            {updateProfileMutation.isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
+          </Button>
         </div>
       </div>
     </section>
