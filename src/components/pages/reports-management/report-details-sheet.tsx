@@ -151,17 +151,23 @@ export function ReportDetailsSheet({
                   سجل الإجراءات
                 </h3>
                 <ul className="space-y-2">
-                  {(Array.isArray(report.timeline) ? report.timeline : []).map((entry) => (
-                    <li
-                      key={entry.id}
-                      className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
-                    >
-                      <p className="font-semibold text-foreground">{entry.action}</p>
-                      <p className="mt-1">المنفذ: {entry.actor}</p>
-                      <p className="mt-1">الوقت: {formatUtcDateTime(entry.at)}</p>
-                      {entry.note && <p className="mt-1">ملاحظة: {entry.note}</p>}
-                    </li>
-                  ))}
+                  {(Array.isArray(report.timeline) ? report.timeline : []).map(
+                    (entry, index) => (
+                      <li
+                        key={entry.id ?? `${entry.action}-${entry.at}-${index}`}
+                        className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+                      >
+                        <p className="font-semibold text-foreground">
+                          {entry.label ?? entry.action}
+                        </p>
+                        <p className="mt-1">
+                          المنفذ: {entry.by ?? entry.actor ?? "-"}
+                        </p>
+                        <p className="mt-1">الوقت: {formatUtcDateTime(entry.at)}</p>
+                        {entry.note && <p className="mt-1">ملاحظة: {entry.note}</p>}
+                      </li>
+                    ),
+                  )}
                 </ul>
               </section>
             </div>

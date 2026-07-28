@@ -14,9 +14,11 @@ export type ReportEntityType =
   | "comment";
 
 export type ReportTimelineEntry = {
-  id: string;
+  id?: string;
   action: string;
-  actor: string;
+  label?: string;
+  by?: string;
+  actor?: string;
   at: string;
   note?: string;
 };

@@ -89,7 +89,7 @@ export function CampaignDetailsDialog({
             <div>
               <p className="text-xs text-muted-foreground">مدير الحملة</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.campaignManagerName)}
+                {displayOrDash(campaign.managerName)}
               </p>
             </div>
             <div>

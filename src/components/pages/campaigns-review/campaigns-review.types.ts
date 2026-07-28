@@ -15,7 +15,7 @@ export type ReviewCampaignItem = {
   title: string;
   summary: string;
   organizationName: string;
-  campaignManagerName: string;
+  managerName: string | null;
   location: string;
   submittedAt: string;
   startDate: string;

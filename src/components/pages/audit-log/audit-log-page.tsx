@@ -14,7 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type AuditLogActionType } from "@/components/pages/audit-log/audit-log.data";
+import {
+  getAuditLogActionType,
+  getAuditLogReference,
+  type AuditLogActionType,
+} from "@/components/pages/audit-log/audit-log.data";
 import { usePagination } from "@/hooks/use-pagination";
 import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -153,33 +157,41 @@ export function AuditLogPage() {
                       </TableCell>
                     </TableRow>
                   ))
-                : rows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="text-right">
-                        {displayOrDash(row.action)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge
-                          variant="secondary"
-                          className={
-                            actionTypeBadgeClassNames[row.type] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        >
-                          {actionTypeLabels[row.type] ?? row.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {displayOrDash(row.user)}
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
-                        {displayOrDash(row.reference)}
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
-                        {formatUtcDateTime(row.at)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                : rows.map((row) => {
+                    const actionType = getAuditLogActionType(row);
+                    return (
+                      <TableRow key={row.id}>
+                        <TableCell className="text-right">
+                          {displayOrDash(row.action)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge
+                            variant="secondary"
+                            className={
+                              actionTypeBadgeClassNames[actionType] ??
+                              "bg-muted text-muted-foreground"
+                            }
+                          >
+                            {actionTypeLabels[actionType]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <p className="text-sm text-foreground">
+                            {displayOrDash(row.user?.name)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {displayOrDash(row.user?.email)}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {displayOrDash(getAuditLogReference(row))}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {formatUtcDateTime(row.at)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
             </TableBody>
           </Table>
         )}

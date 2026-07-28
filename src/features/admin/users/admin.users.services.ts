@@ -53,8 +53,8 @@ export const adminUsersServices = {
 
   async changeUserPassword(userId: string, newPassword: string): Promise<ChangeUserPasswordResponse> {
     const response = await api.patch<ChangeUserPasswordResponse>(ENDPOINTS.USER_PASSWORD(userId), {
-      password: newPassword,
-      password_confirmation: newPassword,
+      newPassword,
+      newPassword_confirmation: newPassword,
     }, { successMessageKey: 'passwordUpdated' })
     return response.data
   },

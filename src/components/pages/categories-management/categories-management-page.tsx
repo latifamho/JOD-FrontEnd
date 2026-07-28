@@ -121,8 +121,8 @@ export function CategoriesManagementPage() {
         const category = response.data;
         setFormInitialValues({
           name: category.name,
+          description: category.description,
           target: category.target,
-          description: "",
           status: category.status,
         });
       } catch {
@@ -140,8 +140,8 @@ export function CategoriesManagementPage() {
     (values: CategoryFormValues) => {
       const body = {
         name: values.name,
+        description: values.description,
         target: values.target,
-        description: "",
         status: values.status,
       };
 

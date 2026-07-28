@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -32,14 +33,18 @@ import {
 
 const categoryFormSchema = z.object({
   name: z.string().min(1, "اسم التصنيف مطلوب"),
+  description: z
+    .string()
+    .min(1, "وصف التصنيف مطلوب")
+    .max(1000, "وصف التصنيف يجب ألا يتجاوز 1000 حرف"),
   target: z.enum(["post", "campaign"]),
   status: z.enum(["active", "inactive"]),
 });
 
 export type CategoryFormValues = {
   name: string;
+  description: string;
   target: CategoryTarget;
-  description?: string;
   status: CategoryStatus;
 };
 
@@ -79,6 +84,7 @@ export function CategoryFormSheet({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
       name: initialValues.name,
+      description: initialValues.description,
       target: initialValues.target,
       status: initialValues.status,
     },
@@ -88,6 +94,7 @@ export function CategoryFormSheet({
     if (open) {
       reset({
         name: initialValues.name,
+        description: initialValues.description,
         target: initialValues.target,
         status: initialValues.status,
       });
@@ -104,8 +111,8 @@ export function CategoryFormSheet({
           onSubmit={handleSubmit((values) => {
             onSubmit({
               name: values.name.trim(),
+              description: values.description.trim(),
               target: values.target,
-              description: "",
               status: values.status,
             });
           })}
@@ -134,6 +141,23 @@ export function CategoryFormSheet({
                   />
                   {errors.name ? (
                     <p className="text-xs text-destructive">{errors.name.message}</p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category-description">وصف التصنيف</Label>
+                  <Textarea
+                    id="category-description"
+                    disabled={isFormLocked}
+                    rows={5}
+                    maxLength={1000}
+                    placeholder="اكتب وصفًا واضحًا للتصنيف"
+                    {...register("description")}
+                  />
+                  {errors.description ? (
+                    <p className="text-xs text-destructive">
+                      {errors.description.message}
+                    </p>
                   ) : null}
                 </div>
 
