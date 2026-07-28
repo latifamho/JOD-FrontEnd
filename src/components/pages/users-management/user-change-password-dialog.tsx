@@ -19,6 +19,7 @@ type UserChangePasswordDialogProps = {
   open: boolean;
   userName: string;
   isSubmitting: boolean;
+  errorMessage?: string | null;
   onOpenChange: (open: boolean) => void;
   onConfirm: (newPassword: string) => void;
 };
@@ -27,6 +28,7 @@ export function UserChangePasswordDialog({
   open,
   userName,
   isSubmitting,
+  errorMessage,
   onOpenChange,
   onConfirm,
 }: UserChangePasswordDialogProps) {
@@ -87,6 +89,10 @@ export function UserChangePasswordDialog({
             </p>
           </div>
         </div>
+
+        {errorMessage ? (
+          <p className="text-xs text-destructive">{errorMessage}</p>
+        ) : null}
 
         <DialogFooter className="gap-2 sm:justify-start">
           <Button

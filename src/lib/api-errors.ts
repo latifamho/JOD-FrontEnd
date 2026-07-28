@@ -26,7 +26,9 @@ const labels: Record<string, string> = {
 };
 
 const aliases: Record<string, string> = {
-  password_confirmation: "passwordConfirmation", author_name: "authorName",
+  password_confirmation: "passwordConfirmation", newPassword: "newPassword", new_password: "newPassword",
+  newPassword_confirmation: "newPasswordConfirmation", new_password_confirmation: "newPasswordConfirmation",
+  author_name: "authorName",
   recipient_scope: "recipientScope", recipient_label: "recipientLabel",
   icon_name: "iconName", is_active: "isActive", site_name: "siteName",
   allow_new_posts: "allowNewPosts", require_post_review: "requirePostReview",

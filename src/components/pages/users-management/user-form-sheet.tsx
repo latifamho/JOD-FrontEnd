@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
@@ -101,6 +101,7 @@ type UserFormSheetProps = {
   isSubmitting: boolean;
   isLoadingDetails?: boolean;
   emailError: string | null;
+  apiFieldErrors?: Partial<Record<keyof UserFormValues, string>>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: UserFormValues) => void;
 };
@@ -112,6 +113,7 @@ export function UserFormSheet({
   isSubmitting,
   isLoadingDetails = false,
   emailError,
+  apiFieldErrors,
   onOpenChange,
   onSubmit,
 }: UserFormSheetProps) {
@@ -124,6 +126,8 @@ export function UserFormSheet({
     handleSubmit,
     control,
     reset,
+    setError,
+    clearErrors,
     formState: { errors, isDirty },
   } = useForm<UserFormValues>({
     resolver: zodResolver(schema),
@@ -142,6 +146,19 @@ export function UserFormSheet({
       passwordConfirmation: initialValues.passwordConfirmation ?? "",
     });
   }, [initialValues, open, reset, mode]);
+
+  React.useEffect(() => {
+    if (!apiFieldErrors) return;
+    Object.entries(apiFieldErrors).forEach(([field, message]) => {
+      if (message) {
+        setError(field as Path<UserFormValues>, { type: "server", message });
+      }
+    });
+  }, [apiFieldErrors, setError]);
+
+  React.useEffect(() => {
+    if (!open) clearErrors();
+  }, [clearErrors, open]);
 
   const showDiscardPrompt = mode === "edit" && isDirty && !isLoadingDetails;
 

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import type { AxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   type UserStatus,
 } from "@/components/pages/users-management/users-management.types";
 import { displayOrDash } from "@/lib/text";
+import { normalizeApiError } from "@/lib/api-errors";
 import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";
 import {
@@ -79,6 +79,9 @@ export function UsersManagementPage() {
     React.useState<UserFormValues>(EMPTY_USER_FORM_VALUES);
   const [editingUserId, setEditingUserId] = React.useState<string | null>(null);
   const [formEmailError, setFormEmailError] = React.useState<string | null>(null);
+  const [formFieldErrors, setFormFieldErrors] = React.useState<
+    Partial<Record<keyof UserFormValues, string>>
+  >({});
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
   // Per-row loading for status toggle only
@@ -99,6 +102,7 @@ export function UsersManagementPage() {
     React.useState<string | null>(null);
   const [changePasswordTargetUserName, setChangePasswordTargetUserName] =
     React.useState("");
+  const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
 
   // Mutations
   const createMutation = useCreateUser();
@@ -134,6 +138,7 @@ export function UsersManagementPage() {
     setEditingUserId(null);
     setFormInitialValues(EMPTY_USER_FORM_VALUES);
     setFormEmailError(null);
+    setFormFieldErrors({});
     setIsLoadingDetails(false);
     setFormOpen(true);
   }, []);
@@ -177,8 +182,11 @@ export function UsersManagementPage() {
   const handleSaveForm = React.useCallback(
     (values: UserFormValues) => {
       const onError = (error: Error) => {
-        const axiosError = error as AxiosError;
-        if (axiosError.response?.status === 409) {
+        const normalized = normalizeApiError<keyof UserFormValues & string>(error, {
+          fieldAliases: { userType: "role", password_confirmation: "passwordConfirmation" },
+        });
+        setFormFieldErrors(normalized.fieldErrors);
+        if (normalized.status === 409 && !normalized.fieldErrors.email) {
           setFormEmailError("البريد الإلكتروني مستخدم مسبقاً.");
         }
       };
@@ -269,6 +277,7 @@ export function UsersManagementPage() {
       const user = users.find((u) => u.id === userId);
       setChangePasswordTargetUserId(userId);
       setChangePasswordTargetUserName(displayOrDash(user?.name));
+      setChangePasswordError(null);
       setChangePasswordDialogOpen(true);
     },
     [users],
@@ -283,6 +292,13 @@ export function UsersManagementPage() {
           onSuccess: () => {
             setChangePasswordDialogOpen(false);
             setChangePasswordTargetUserId(null);
+            setChangePasswordError(null);
+          },
+          onError: (error) => {
+            const normalized = normalizeApiError(error);
+            setChangePasswordError(
+              normalized.fieldErrors.newPassword ?? normalized.message,
+            );
           },
         },
       );
@@ -371,12 +387,14 @@ export function UsersManagementPage() {
         isSubmitting={isFormSubmitting}
         isLoadingDetails={isLoadingDetails}
         emailError={formEmailError}
+        apiFieldErrors={formFieldErrors}
         onOpenChange={(nextOpen) => {
           if (isFormSubmitting || isLoadingDetails) return;
           setFormOpen(nextOpen);
           if (!nextOpen) {
             setEditingUserId(null);
             setFormEmailError(null);
+            setFormFieldErrors({});
             setIsLoadingDetails(false);
           }
         }}
@@ -400,12 +418,14 @@ export function UsersManagementPage() {
         open={changePasswordDialogOpen}
         userName={changePasswordTargetUserName}
         isSubmitting={changePasswordMutation.isPending}
+        errorMessage={changePasswordError}
         onOpenChange={(nextOpen) => {
           if (!changePasswordMutation.isPending) {
             setChangePasswordDialogOpen(nextOpen);
             if (!nextOpen) {
               setChangePasswordTargetUserId(null);
               setChangePasswordTargetUserName("");
+              setChangePasswordError(null);
             }
           }
         }}
