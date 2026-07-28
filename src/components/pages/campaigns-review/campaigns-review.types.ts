@@ -6,9 +6,7 @@ export type ReviewCampaignCategory =
   | "shelter"
   | "food"
   | "emergency"
-  | "environment"
-  | "technology"
-  | "other";
+  | "employment";
 
 export type ReviewCampaignItem = {
   id: string;
@@ -38,9 +36,7 @@ export const reviewCampaignCategoryLabels: Record<
   shelter: "إسكان",
   food: "غذائية",
   emergency: "طوارئ",
-  environment: "بيئية",
-  technology: "تقنية",
-  other: "أخرى",
+  employment: "توظيف",
 };
 
 export const reviewStatusLabels: Record<ModerationStatus, string> = {

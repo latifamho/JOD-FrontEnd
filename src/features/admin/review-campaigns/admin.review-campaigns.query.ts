@@ -17,6 +17,14 @@ export function useAdminReviewCampaigns(params: AdminReviewCampaignsParams) {
   })
 }
 
+export function useAdminReviewCampaignDetail(campaignId: string | null) {
+  return useQuery({
+    queryKey: adminReviewCampaignsKeys.detail(campaignId ?? ''),
+    queryFn: () => adminReviewCampaignsServices.getReviewCampaignById(campaignId!),
+    enabled: Boolean(campaignId),
+  })
+}
+
 export function useApproveReviewCampaign() {
   const queryClient = useQueryClient()
   return useMutation({

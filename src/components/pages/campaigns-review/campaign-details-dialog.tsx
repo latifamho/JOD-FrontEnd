@@ -18,6 +18,7 @@ import {
   reviewCampaignCategoryLabels,
   type ReviewCampaignItem,
 } from "@/components/pages/campaigns-review/campaigns-review.types";
+import { useAdminReviewCampaignDetail } from "@/features/admin/review-campaigns/admin.review-campaigns.query";
 
 type CampaignDetailsDialogProps = {
   open: boolean;
@@ -30,7 +31,11 @@ export function CampaignDetailsDialog({
   onOpenChange,
   campaign,
 }: CampaignDetailsDialogProps) {
-  const progress = getProgress(campaign.goalAmount, campaign.raisedAmount);
+  const { data: detailData, isLoading } = useAdminReviewCampaignDetail(
+    open ? campaign.id : null,
+  );
+  const detail = detailData?.data ?? campaign;
+  const progress = getProgress(detail.goalAmount, detail.raisedAmount);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -40,16 +45,19 @@ export function CampaignDetailsDialog({
         className="w-[95vw] border-border p-0 sm:max-w-2xl"
       >
         <SheetHeader className="border-b border-border pe-12 text-right">
-          <SheetTitle className="text-right text-xl">{campaign.title}</SheetTitle>
+          <SheetTitle className="text-right text-xl">{detail.title}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-4 overflow-y-auto p-4">
+          {isLoading ? (
+            <div className="h-24 animate-pulse rounded-lg bg-muted" />
+          ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <ReviewStatusBadge status={campaign.status} />
+            <ReviewStatusBadge status={detail.status} />
             <Badge variant="outline">
-              {reviewCampaignCategoryLabels[campaign.category]}
+              {reviewCampaignCategoryLabels[detail.category]}
             </Badge>
-            <Badge variant="outline">{campaign.id}</Badge>
+            <Badge variant="outline">{detail.id}</Badge>
           </div>
 
           <div className="rounded-lg border border-border bg-muted/40 p-4">
@@ -67,13 +75,13 @@ export function CampaignDetailsDialog({
               <p>
                 الهدف:{" "}
                 <span className="font-semibold text-foreground">
-                  {formatAmount(campaign.goalAmount)} ر.س
+                  {formatAmount(detail.goalAmount)} د.أ
                 </span>
               </p>
               <p>
                 المحصّل:{" "}
                 <span className="font-semibold text-foreground">
-                  {formatAmount(campaign.raisedAmount)} ر.س
+                  {formatAmount(detail.raisedAmount)} د.أ
                 </span>
               </p>
             </div>
@@ -83,65 +91,65 @@ export function CampaignDetailsDialog({
             <div>
               <p className="text-xs text-muted-foreground">الجهة الناشرة</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.organizationName)}
+                {displayOrDash(detail.organizationName)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">مدير الحملة</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.managerName)}
+                {displayOrDash(detail.managerName)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">المدينة</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.location)}
+                {displayOrDash(detail.location)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">المستفيدون</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.beneficiariesCount)}
+                {displayOrDash(detail.beneficiariesCount)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">تاريخ البداية</p>
               <p className="text-sm font-medium">
-                {formatUtcDate(campaign.startDate)}
+                {formatUtcDate(detail.startDate)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">تاريخ النهاية</p>
               <p className="text-sm font-medium">
-                {formatUtcDate(campaign.endDate)}
+                {formatUtcDate(detail.endDate)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">تاريخ الإرسال للمراجعة</p>
               <p className="text-sm font-medium">
-                {formatUtcDateTime(campaign.submittedAt)}
+                {formatUtcDateTime(detail.submittedAt)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">آخر مراجعة بواسطة</p>
               <p className="text-sm font-medium">
-                {displayOrDash(campaign.reviewedBy)}
+                {displayOrDash(detail.reviewedBy)}
               </p>
             </div>
           </div>
 
           <div className="rounded-lg border border-border p-4">
             <p className="mb-2 text-xs text-muted-foreground">ملخص الحملة</p>
-            <p className="text-sm leading-7 text-foreground">{campaign.summary}</p>
+            <p className="text-sm leading-7 text-foreground">{detail.summary}</p>
           </div>
 
-          {campaign.rejectionReason && (
+          {detail.rejectionReason && (
             <div className="rounded-lg border border-rose-200/70 bg-rose-50/80 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">
               <p className="mb-1 text-xs font-semibold text-rose-700 dark:text-rose-200">
                 سبب الرفض السابق
               </p>
               <p className="text-sm text-rose-700 dark:text-rose-100">
-                {campaign.rejectionReason}
+                {detail.rejectionReason}
               </p>
             </div>
           )}
