@@ -1,38 +1,68 @@
 "use client";
 
+import * as React from "react";
+
 import { AppIcons } from "@/constant/icons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { displayOrDash } from "@/lib/text";
 import {
   useAdminAnalyticsKpis,
   useAdminAnalyticsWeekly,
 } from "@/features/admin/analytics/admin.analytics.query";
 
-const ANALYTICS_RANGE = { range: "30d" } as const;
+type AnalyticsRange = "7d" | "30d" | "90d" | "12m";
+
+const rangeLabels: Record<AnalyticsRange, string> = {
+  "7d": "آخر 7 أيام",
+  "30d": "آخر 30 يومًا",
+  "90d": "آخر 90 يومًا",
+  "12m": "آخر 12 شهرًا",
+};
 
 export function AnalyticsDashboardPage() {
+  const [range, setRange] = React.useState<AnalyticsRange>("30d");
+  const analyticsRange = React.useMemo(() => ({ range }), [range]);
   const {
     data: kpisData,
     isLoading: isKpisLoading,
     error: kpisError,
-  } = useAdminAnalyticsKpis(ANALYTICS_RANGE);
+  } = useAdminAnalyticsKpis(analyticsRange);
   const {
     data: weeklyData,
     isLoading: isWeeklyLoading,
     error: weeklyError,
-  } = useAdminAnalyticsWeekly(ANALYTICS_RANGE);
+  } = useAdminAnalyticsWeekly(analyticsRange);
 
   const kpis = kpisData?.data.kpis ?? [];
   const weeklyRows = weeklyData?.data.rows ?? [];
 
   return (
     <section className="flex flex-col flex-1 gap-6">
-      <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
         <h2 className="text-lg font-semibold text-foreground">
           التحليلات والإحصائيات
         </h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          مؤشرات ورسوم أداء المنصة خلال آخر 30 يوماً
+          مؤشرات ورسوم أداء المنصة حسب الفترة المحددة
         </p>
+        </div>
+        <Select value={range} onValueChange={(value) => setRange(value as AnalyticsRange)}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(rangeLabels) as AnalyticsRange[]).map((value) => (
+              <SelectItem key={value} value={value}>{rangeLabels[value]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {kpisError && (
@@ -70,7 +100,7 @@ export function AnalyticsDashboardPage() {
       <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
         <h3 className="text-sm font-semibold text-foreground">ملخص أسبوعي</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          زيارات وتسجيلات وتبرعات لكل أسبوع
+          منشورات ومستخدمون وحملات جديدة لكل أسبوع
         </p>
 
         {weeklyError && (
@@ -91,9 +121,9 @@ export function AnalyticsDashboardPage() {
               <thead>
                 <tr className="border-b border-border text-start text-xs text-muted-foreground">
                   <th className="pb-2 font-medium">الأسبوع</th>
-                  <th className="pb-2 font-medium">زيارات</th>
+                  <th className="pb-2 font-medium">منشورات</th>
                   <th className="pb-2 font-medium">مستخدمون جدد</th>
-                  <th className="pb-2 font-medium">تبرعات مسجّلة</th>
+                  <th className="pb-2 font-medium">حملات جديدة</th>
                 </tr>
               </thead>
               <tbody>
