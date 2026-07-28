@@ -1,8 +1,0 @@
-[0504/222554.830:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: The system cannot find the file specified. (0x2)
-[0504/222556.342:ERROR:third_party\crashpad\crashpad\client\crashpad_client_win.cc:869] not connected
-[0504/222556.425:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: The system cannot find the file specified. (0x2)
-[0504/222557.225:ERROR:third_party\crashpad\crashpad\client\crashpad_client_win.cc:869] not connected
-[0504/222557.292:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: The system cannot find the file specified. (0x2)
-[0504/222558.996:ERROR:third_party\crashpad\crashpad\client\crashpad_client_win.cc:869] not connected
-[0504/222559.090:ERROR:third_party\crashpad\crashpad\util\win\registration_protocol_win.cc:108] CreateFile: The system cannot find the file specified. (0x2)
-[0504/222559.260:ERROR:third_party\crashpad\crashpad\client\crashpad_client_win.cc:869] not connected
