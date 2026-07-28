@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  organizationStatusLabels,
   organizationVerificationLabels,
+  type OrganizationStatus,
   type OrganizationVerificationStatus,
 } from "@/components/pages/organizations-management/organizations-management.types";
 
@@ -20,6 +23,10 @@ export type OrganizationsSortOption =
   | "created_oldest";
 
 type OrganizationsFiltersProps = {
+  searchFilter: string;
+  onSearchFilterChange: (value: string) => void;
+  statusFilter: "all" | OrganizationStatus;
+  onStatusFilterChange: (value: "all" | OrganizationStatus) => void;
   verificationFilter: "all" | OrganizationVerificationStatus;
   onVerificationFilterChange: (
     value: "all" | OrganizationVerificationStatus,
@@ -34,8 +41,15 @@ type OrganizationsFiltersProps = {
 };
 
 export function OrganizationsFilters({
+  searchFilter,
+  onSearchFilterChange,
+  statusFilter,
+  onStatusFilterChange,
   verificationFilter,
   onVerificationFilterChange,
+  locationFilter,
+  locationOptions,
+  onLocationFilterChange,
   sortBy,
   onSortByChange,
   onResetFilters,
@@ -43,6 +57,32 @@ export function OrganizationsFilters({
 }: OrganizationsFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
+      <Input
+        dir="rtl"
+        disabled={isLoading}
+        value={searchFilter}
+        onChange={(event) => onSearchFilterChange(event.target.value)}
+        placeholder="بحث بالاسم أو البريد أو الهاتف..."
+        className="min-w-[200px] flex-1 text-right text-xs sm:max-w-xs"
+      />
+
+      <Select
+        dir="rtl"
+        disabled={isLoading}
+        value={statusFilter}
+        onValueChange={(value) => onStatusFilterChange(value as "all" | OrganizationStatus)}
+      >
+        <SelectTrigger className="w-full min-w-[150px] flex-1 text-right text-xs sm:max-w-[190px]">
+          <SelectValue placeholder="حالة الحساب" />
+        </SelectTrigger>
+        <SelectContent align="start" position="popper" className="text-right">
+          <SelectItem value="all" className="text-right text-xs">كل الحالات</SelectItem>
+          {Object.entries(organizationStatusLabels).map(([status, label]) => (
+            <SelectItem key={status} value={status} className="text-right text-xs">{label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Select
         dir="rtl"
         disabled={isLoading}
@@ -62,6 +102,23 @@ export function OrganizationsFilters({
             <SelectItem key={status} value={status} className="text-right text-xs">
               {label}
             </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        dir="rtl"
+        disabled={isLoading || locationOptions.length === 0}
+        value={locationFilter}
+        onValueChange={onLocationFilterChange}
+      >
+        <SelectTrigger className="w-full min-w-[140px] flex-1 text-right text-xs sm:max-w-[180px]">
+          <SelectValue placeholder="الموقع" />
+        </SelectTrigger>
+        <SelectContent align="start" position="popper" className="text-right">
+          <SelectItem value="all" className="text-right text-xs">كل المواقع</SelectItem>
+          {locationOptions.map((location) => (
+            <SelectItem key={location} value={location} className="text-right text-xs">{location}</SelectItem>
           ))}
         </SelectContent>
       </Select>

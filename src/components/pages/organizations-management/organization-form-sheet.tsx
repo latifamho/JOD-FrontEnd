@@ -56,6 +56,7 @@ type OrganizationFormSheetProps = {
   open: boolean;
   mode: "create" | "edit";
   initialValues: OrganizationFormValues;
+  isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: OrganizationFormValues) => void;
 };
@@ -78,6 +79,7 @@ export function OrganizationFormSheet({
   open,
   mode,
   initialValues,
+  isSubmitting = false,
   onOpenChange,
   onSubmit,
 }: OrganizationFormSheetProps) {
@@ -131,7 +133,6 @@ export function OrganizationFormSheet({
                 status: formValues.status,
                 verificationStatus: formValues.verificationStatus,
               });
-              onOpenChange(false);
             }}
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
@@ -146,6 +147,7 @@ export function OrganizationFormSheet({
                 <Input
                   id="organization-name"
                   required
+                  disabled={isSubmitting}
                   value={formValues.name}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -163,6 +165,7 @@ export function OrganizationFormSheet({
                   id="organization-email"
                   type="email"
                   required
+                  disabled={isSubmitting}
                   value={formValues.email}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -179,6 +182,7 @@ export function OrganizationFormSheet({
                 <Input
                   id="organization-phone"
                   required
+                  disabled={isSubmitting}
                   value={formValues.phone}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -195,6 +199,7 @@ export function OrganizationFormSheet({
                 <Input
                   id="organization-location"
                   required
+                  disabled={isSubmitting}
                   value={formValues.location}
                   onChange={(event) =>
                     setFormValues((currentValues) => ({
@@ -211,6 +216,7 @@ export function OrganizationFormSheet({
                   <Label>حالة الحساب</Label>
                   <Select
                     dir="rtl"
+                    disabled={isSubmitting}
                     value={formValues.status}
                     onValueChange={(value) =>
                       setFormValues((currentValues) => ({
@@ -246,6 +252,7 @@ export function OrganizationFormSheet({
                   <Label>حالة التوثيق</Label>
                   <Select
                     dir="rtl"
+                    disabled={isSubmitting}
                     value={formValues.verificationStatus}
                     onValueChange={(value) =>
                       setFormValues((currentValues) => ({
@@ -280,10 +287,10 @@ export function OrganizationFormSheet({
             </div>
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-              <Button type="button" variant="outline" onClick={closeSheetSafely}>
+              <Button type="button" variant="outline" disabled={isSubmitting} onClick={closeSheetSafely}>
                 إلغاء
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isSubmitting}>
                 {mode === "create" ? "إضافة" : "حفظ التعديلات"}
               </Button>
             </SheetFooter>

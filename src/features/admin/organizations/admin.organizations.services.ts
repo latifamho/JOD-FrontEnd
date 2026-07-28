@@ -4,6 +4,8 @@ import type {
   AdminOrganizationsParams,
   AdminOrganizationsResponse,
   AdminOrganizationDetailResponse,
+  OrganizationCreateRequest,
+  CreateOrganizationResponse,
   OrganizationUpdateRequest,
   UpdateOrganizationResponse,
   OrganizationStatusToggleRequest,
@@ -36,6 +38,11 @@ export const adminOrganizationsServices = {
 
   async getOrganizationById(organizationId: string): Promise<AdminOrganizationDetailResponse> {
     const response = await api.get<AdminOrganizationDetailResponse>(ENDPOINTS.ORGANIZATION(organizationId))
+    return response.data
+  },
+
+  async createOrganization(body: OrganizationCreateRequest): Promise<CreateOrganizationResponse> {
+    const response = await api.post<CreateOrganizationResponse>(ENDPOINTS.ORGANIZATIONS, body, { successMessageKey: 'created' })
     return response.data
   },
 

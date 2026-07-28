@@ -6,6 +6,7 @@ import { adminOrganizationsServices } from './admin.organizations.services'
 import { adminOrganizationsKeys } from './admin.organizations.query-keys'
 import type {
   AdminOrganizationsParams,
+  OrganizationCreateRequest,
   OrganizationUpdateRequest,
   OrganizationStatusToggleRequest,
   OrganizationVerificationToggleRequest,
@@ -27,6 +28,17 @@ export function useAdminOrganizationDetail(organizationId: string | null) {
   })
 }
 
+export function useCreateOrganization() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: OrganizationCreateRequest) =>
+      adminOrganizationsServices.createOrganization(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
+    },
+  })
+}
+
 export function useUpdateOrganization() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -44,8 +56,9 @@ export function useToggleOrganizationStatus() {
   return useMutation({
     mutationFn: ({ organizationId, body }: { organizationId: string; body: OrganizationStatusToggleRequest }) =>
       adminOrganizationsServices.toggleOrganizationStatus(organizationId, body),
-    onSuccess: () => {
+    onSuccess: (_data, { organizationId }) => {
       queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.detail(organizationId) })
     },
   })
 }
@@ -55,8 +68,9 @@ export function useToggleOrganizationVerification() {
   return useMutation({
     mutationFn: ({ organizationId, body }: { organizationId: string; body: OrganizationVerificationToggleRequest }) =>
       adminOrganizationsServices.toggleOrganizationVerification(organizationId, body),
-    onSuccess: () => {
+    onSuccess: (_data, { organizationId }) => {
       queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.detail(organizationId) })
     },
   })
 }
