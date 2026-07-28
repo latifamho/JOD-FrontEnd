@@ -6,20 +6,55 @@ import type {
   ToastType,
 } from "@/types/toast.types";
 
-const listeners = new Set<(event: ToastEvent) => void>();
-let sequence = 0;
+type ToastListener = (event: ToastEvent) => void;
+
+type ToastStore = {
+  listeners: Set<ToastListener>;
+  pendingEvents: ToastEvent[];
+  sequence: number;
+};
+
+type ToastGlobal = typeof globalThis & {
+  __JOD_TOAST_STORE__?: ToastStore;
+};
+
+function getToastStore(): ToastStore {
+  const target = globalThis as ToastGlobal;
+
+  if (!target.__JOD_TOAST_STORE__) {
+    target.__JOD_TOAST_STORE__ = {
+      listeners: new Set<ToastListener>(),
+      pendingEvents: [],
+      sequence: 0,
+    };
+  }
+
+  return target.__JOD_TOAST_STORE__;
+}
 
 function createToastId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
-  sequence += 1;
-  return `toast-${Date.now()}-${sequence}`;
+  const store = getToastStore();
+  store.sequence += 1;
+  return `toast-${Date.now()}-${store.sequence}`;
 }
 
 function emit(event: ToastEvent): void {
-  listeners.forEach((listener) => listener(event));
+  const store = getToastStore();
+
+  if (store.listeners.size === 0) {
+    store.pendingEvents.push(event);
+    store.pendingEvents = store.pendingEvents.slice(-20);
+    return;
+  }
+
+  store.listeners.forEach((listener) => listener(event));
 }
 
 function show(
@@ -49,9 +84,14 @@ export const toast: ToastApi = {
   clear: (position) => emit({ type: "clear", position }),
 };
 
-export function subscribeToToasts(
-  listener: (event: ToastEvent) => void,
-): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+export function subscribeToToasts(listener: ToastListener): () => void {
+  const store = getToastStore();
+  store.listeners.add(listener);
+
+  const pendingEvents = store.pendingEvents.splice(0);
+  pendingEvents.forEach((event) => listener(event));
+
+  return () => {
+    store.listeners.delete(listener);
+  };
 }

@@ -1,4 +1,5 @@
 export const API_SUCCESS_MESSAGES = {
+  loginSuccess: "تم تسجيل الدخول بنجاح.",
   created: "تمت الإضافة بنجاح.",
   updated: "تم التحديث بنجاح.",
   deleted: "تم الحذف بنجاح.",

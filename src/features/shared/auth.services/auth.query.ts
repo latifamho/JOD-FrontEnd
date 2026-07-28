@@ -3,8 +3,10 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 
+import { API_SUCCESS_MESSAGES } from '@/constant/api-success-messages'
 import { clearAuthData, setAuthToken, setDashboardRole, setUser } from '@/lib/cookies'
 import type { DashboardRoleCookie } from '@/lib/cookies'
+import { toast } from '@/lib/toast'
 import { useAuth } from '@/providers/AuthProvider'
 import { authServices } from './auth.service'
 import type { DashboardRole, LoginRequest, MeProfile } from './auth.type'
@@ -43,6 +45,7 @@ export function useLogin() {
         setDashboardRole(role)
         login()
         updateUser(profile)
+        toast.success(API_SUCCESS_MESSAGES.loginSuccess)
 
         router.push(getDashboardHome(role))
       } catch {

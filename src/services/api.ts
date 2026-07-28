@@ -78,8 +78,9 @@ api.interceptors.response.use(
       }
       return Promise.reject(error)
     }
-    const hasFieldErrors = Object.keys(normalized.fieldErrors).length > 0
-    if (!config?.skipErrorToast && !(status === 422 && hasFieldErrors)) toast.error(normalized.message, { position: config?.toastPosition })
+    if (!config?.skipErrorToast) {
+      toast.error(normalized.message, { position: config?.toastPosition })
+    }
     return Promise.reject(error)
   },
 )

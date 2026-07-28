@@ -120,10 +120,12 @@ export function ToastProvider({
       }
     });
 
+    const activeTimers = timers.current;
+
     return () => {
       unsubscribe();
-      timers.current.forEach((timer) => window.clearTimeout(timer));
-      timers.current.clear();
+      activeTimers.forEach((timer) => window.clearTimeout(timer));
+      activeTimers.clear();
     };
   }, [defaultDuration, defaultPosition, dismiss, maxVisible]);
 
@@ -148,7 +150,7 @@ export function ToastProvider({
             aria-live="polite"
             aria-relevant="additions removals"
             className={cn(
-              "pointer-events-none fixed z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3",
+              "pointer-events-none fixed z-[9999] flex w-[calc(100vw_-_2rem)] max-w-sm flex-col gap-3",
               positionClassNames[position],
             )}
           >
