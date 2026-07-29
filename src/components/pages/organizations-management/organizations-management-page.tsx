@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { PaginationControls } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
@@ -10,11 +9,6 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { Button } from "@/components/ui/button";
 import { OrganizationsTable } from "@/components/pages/organizations-management/organizations-table";
 import { OrganizationDeleteDialog } from "@/components/pages/organizations-management/organization-delete-dialog";
-import {
-  EMPTY_ORGANIZATION_FORM_VALUES,
-  OrganizationFormSheet,
-  type OrganizationFormValues,
-} from "@/components/pages/organizations-management/organization-form-sheet";
 import {
   type OrganizationsSortOption,
   OrganizationsFilters,
@@ -26,8 +20,6 @@ import {
 import { routePaths } from "@/constant/routes";
 import {
   useAdminOrganizations,
-  useCreateOrganization,
-  useUpdateOrganization,
   useToggleOrganizationStatus,
   useToggleOrganizationVerification,
   useDeleteOrganization,
@@ -42,7 +34,6 @@ const sortToApiSort: Record<OrganizationsSortOption, string> = {
 
 export function OrganizationsManagementPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -59,10 +50,6 @@ export function OrganizationsManagementPage() {
   const [deleteTargetOrganizationId, setDeleteTargetOrganizationId] =
     React.useState<string | null>(null);
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
-  const [formInitialValues, setFormInitialValues] = React.useState<OrganizationFormValues>(EMPTY_ORGANIZATION_FORM_VALUES);
-  const [editingOrganizationId, setEditingOrganizationId] = React.useState<string | null>(null);
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -103,8 +90,6 @@ export function OrganizationsManagementPage() {
   const toggleStatusMutation = useToggleOrganizationStatus();
   const toggleVerificationMutation = useToggleOrganizationVerification();
   const deleteMutation = useDeleteOrganization();
-  const createMutation = useCreateOrganization();
-  const updateMutation = useUpdateOrganization();
 
   const addLoadingRow = React.useCallback((id: string) => {
     setLoadingRowIds((prev) => new Set([...prev, id]));
@@ -133,65 +118,6 @@ export function OrganizationsManagementPage() {
     [router],
   );
 
-  const openCreateSheet = React.useCallback(() => {
-    setFormMode("create");
-    setEditingOrganizationId(null);
-    setFormInitialValues(EMPTY_ORGANIZATION_FORM_VALUES);
-    setFormOpen(true);
-  }, []);
-
-  const openEditSheet = React.useCallback(async (organizationId: string) => {
-    const response = await queryClient.fetchQuery({
-      queryKey: ["admin", "organizations", "detail", organizationId],
-      queryFn: () => import("@/features/admin/organizations/admin.organizations.services").then(({ adminOrganizationsServices }) => adminOrganizationsServices.getOrganizationById(organizationId)),
-      staleTime: 0,
-    });
-    const organization = response.data;
-    setFormMode("edit");
-    setEditingOrganizationId(organizationId);
-    setFormInitialValues({
-      name: organization.name,
-      email: organization.email,
-      phone: organization.phone ?? "",
-      location: organization.location ?? "",
-      status: organization.status,
-      verificationStatus: organization.verificationStatus,
-    });
-    setFormOpen(true);
-  }, [queryClient]);
-
-  const handleSaveOrganization = React.useCallback((values: OrganizationFormValues) => {
-    if (formMode === "create") {
-      createMutation.mutate({
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        location: values.location,
-        status: values.status === "rejected" ? "pending" : values.status,
-        verificationStatus:
-          values.verificationStatus === "rejected"
-            ? "pending"
-            : values.verificationStatus,
-      }, { onSuccess: () => setFormOpen(false) });
-      return;
-    }
-    if (!editingOrganizationId) return;
-    updateMutation.mutate({
-      organizationId: editingOrganizationId,
-      body: {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        location: values.location,
-      },
-    }, {
-      onSuccess: () => {
-        setFormOpen(false);
-        setEditingOrganizationId(null);
-      },
-    });
-  }, [createMutation, editingOrganizationId, formMode, updateMutation]);
-
   const handleToggleOrganizationStatus = React.useCallback(
     (organizationId: string) => {
       const org = organizations.find((o) => o.id === organizationId);
@@ -209,7 +135,6 @@ export function OrganizationsManagementPage() {
     [
       organizations,
       toggleStatusMutation,
-      toggleVerificationMutation,
       addLoadingRow,
       removeLoadingRow,
     ],
@@ -234,7 +159,6 @@ export function OrganizationsManagementPage() {
     [
       organizations,
       toggleVerificationMutation,
-      toggleStatusMutation,
       addLoadingRow,
       removeLoadingRow,
     ],
@@ -263,11 +187,10 @@ export function OrganizationsManagementPage() {
             إدارة المنظمات
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            إدارة بيانات المنظمات والتوثيق والحالة عبر الجدول.
+            مراجعة المنظمات وإدارة حالة التفعيل والتوثيق عبر الجدول.
           </p>
         </div>
       </div>
-        <Button type="button" onClick={openCreateSheet}>إضافة منظمة</Button>
 
       <OrganizationsFilters
         searchFilter={searchFilter}
@@ -301,7 +224,6 @@ export function OrganizationsManagementPage() {
         isLoading={showTableLoading}
         loadingRowIds={loadingRowIds}
         onViewOrganization={openOrganizationDetails}
-        onEditOrganization={openEditSheet}
         onToggleOrganizationStatus={handleToggleOrganizationStatus}
         onToggleOrganizationVerification={handleToggleOrganizationVerification}
         onDeleteOrganization={openDeleteDialog}
@@ -319,15 +241,6 @@ export function OrganizationsManagementPage() {
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
-      />
-
-      <OrganizationFormSheet
-        open={formOpen}
-        mode={formMode}
-        initialValues={formInitialValues}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
-        onOpenChange={setFormOpen}
-        onSubmit={handleSaveOrganization}
       />
 
       <OrganizationDeleteDialog

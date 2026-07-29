@@ -4,10 +4,6 @@ import type {
   AdminOrganizationsParams,
   AdminOrganizationsResponse,
   AdminOrganizationDetailResponse,
-  OrganizationCreateRequest,
-  CreateOrganizationResponse,
-  OrganizationUpdateRequest,
-  UpdateOrganizationResponse,
   OrganizationStatusToggleRequest,
   ToggleOrganizationStatusResponse,
   OrganizationVerificationToggleRequest,
@@ -38,16 +34,6 @@ export const adminOrganizationsServices = {
 
   async getOrganizationById(organizationId: string): Promise<AdminOrganizationDetailResponse> {
     const response = await api.get<AdminOrganizationDetailResponse>(ENDPOINTS.ORGANIZATION(organizationId))
-    return response.data
-  },
-
-  async createOrganization(body: OrganizationCreateRequest): Promise<CreateOrganizationResponse> {
-    const response = await api.post<CreateOrganizationResponse>(ENDPOINTS.ORGANIZATIONS, body, { successMessageKey: 'created' })
-    return response.data
-  },
-
-  async updateOrganization(organizationId: string, body: OrganizationUpdateRequest): Promise<UpdateOrganizationResponse> {
-    const response = await api.patch<UpdateOrganizationResponse>(ENDPOINTS.ORGANIZATION(organizationId), body, { successMessageKey: 'updated' })
     return response.data
   },
 

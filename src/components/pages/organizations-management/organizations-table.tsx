@@ -38,7 +38,6 @@ type OrganizationsTableProps = {
   isLoading: boolean;
   loadingRowIds: Set<string>;
   onViewOrganization: (organizationId: string) => void;
-  onEditOrganization: (organizationId: string) => void;
   onToggleOrganizationStatus: (organizationId: string) => void;
   onToggleOrganizationVerification: (organizationId: string) => void;
   onDeleteOrganization: (organizationId: string) => void;
@@ -49,7 +48,6 @@ export function OrganizationsTable({
   isLoading,
   loadingRowIds,
   onViewOrganization,
-  onEditOrganization,
   onToggleOrganizationStatus,
   onToggleOrganizationVerification,
   onDeleteOrganization,
@@ -201,17 +199,6 @@ export function OrganizationsTable({
                         className="shadow-sm"
                       >
                         <AppIcons.eye className="size-4 text-info" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="تعديل المنظمة"
-                        disabled={isRowLoading}
-                        onClick={() => onEditOrganization(organization.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.PencilLine className="size-4 text-info" />
                       </Button>
                       <Button
                         type="button"

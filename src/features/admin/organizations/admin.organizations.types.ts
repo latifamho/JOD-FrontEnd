@@ -19,23 +19,6 @@ export interface AdminOrganizationsParams {
   filter?: AdminOrganizationsFilter
 }
 
-export interface OrganizationCreateRequest {
-  name: string
-  email: string
-  phone?: string
-  location?: string
-  status?: Exclude<OrganizationStatus, 'rejected'>
-  verificationStatus?: Exclude<OrganizationVerificationStatus, 'rejected'>
-}
-
-export interface OrganizationUpdateRequest {
-  name?: string
-  email?: string
-  phone?: string
-  location?: string
-  description?: string
-}
-
 export interface OrganizationStatusToggleRequest {
   status: OrganizationStatus
 }
@@ -46,8 +29,6 @@ export interface OrganizationVerificationToggleRequest {
 
 export type AdminOrganizationsResponse = ApiListResponse<AdminOrganizationItem>
 export type AdminOrganizationDetailResponse = ApiSingleResponse<AdminOrganizationItem>
-export type CreateOrganizationResponse = ApiMutationResponse<AdminOrganizationItem>
-export type UpdateOrganizationResponse = ApiMutationResponse<AdminOrganizationItem>
 export type ToggleOrganizationStatusResponse = ApiMutationResponse
 export type ToggleOrganizationVerificationResponse = ApiMutationResponse
 export type AcceptOrganizationResponse = ApiMutationResponse

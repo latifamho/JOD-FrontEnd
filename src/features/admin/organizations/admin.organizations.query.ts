@@ -6,8 +6,6 @@ import { adminOrganizationsServices } from './admin.organizations.services'
 import { adminOrganizationsKeys } from './admin.organizations.query-keys'
 import type {
   AdminOrganizationsParams,
-  OrganizationCreateRequest,
-  OrganizationUpdateRequest,
   OrganizationStatusToggleRequest,
   OrganizationVerificationToggleRequest,
 } from './admin.organizations.types'
@@ -25,29 +23,6 @@ export function useAdminOrganizationDetail(organizationId: string | null) {
     queryFn: () => adminOrganizationsServices.getOrganizationById(organizationId!),
     enabled: !!organizationId && organizationId !== 'verification',
     retry: 1,
-  })
-}
-
-export function useCreateOrganization() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (body: OrganizationCreateRequest) =>
-      adminOrganizationsServices.createOrganization(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
-    },
-  })
-}
-
-export function useUpdateOrganization() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ organizationId, body }: { organizationId: string; body: OrganizationUpdateRequest }) =>
-      adminOrganizationsServices.updateOrganization(organizationId, body),
-    onSuccess: (_data, { organizationId }) => {
-      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.detail(organizationId) })
-    },
   })
 }
 
