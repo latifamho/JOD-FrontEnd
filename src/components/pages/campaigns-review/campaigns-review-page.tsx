@@ -14,12 +14,14 @@ import {
 } from "@/components/pages/campaigns-review/review-toolbar";
 import {
   reviewStatusLabels,
+  type ReviewCampaignCategory,
 } from "@/components/pages/campaigns-review/campaigns-review.types";
 import {
   useAdminReviewCampaigns,
   useApproveReviewCampaign,
   useRejectReviewCampaign,
 } from "@/features/admin/review-campaigns/admin.review-campaigns.query";
+import { useAdminOrganizations } from "@/features/admin/organizations/admin.organizations.query";
 
 type CampaignsReviewPageProps = {
   status: ModerationStatus;
@@ -34,6 +36,8 @@ const sortToApiSort: Record<ReviewSortOption, string> = {
 
 export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
   const [sortBy, setSortBy] = React.useState<ReviewSortOption>("created_at_newest");
+  const [organizationFilter, setOrganizationFilter] = React.useState("all");
+  const [categoryFilter, setCategoryFilter] = React.useState<"all" | ReviewCampaignCategory>("all");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
 
@@ -44,7 +48,17 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
-    filter: { status },
+    filter: {
+      status,
+      organizationId: organizationFilter !== "all" ? organizationFilter : undefined,
+      category: categoryFilter !== "all" ? categoryFilter : undefined,
+    },
+  });
+
+  const { data: organizationsData } = useAdminOrganizations({
+    page: 1,
+    perPage: 100,
+    sort: "name",
   });
 
   React.useEffect(() => {
@@ -55,14 +69,17 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, sortBy, status, setCurrentPage]);
+  }, [pageSize, sortBy, status, organizationFilter, categoryFilter, setCurrentPage]);
 
   const campaigns = data?.data ?? [];
 
-  const organizationOptions = React.useMemo(() => {
-    const unique = Array.from(new Set(campaigns.map((c) => c.organizationName)));
-    return unique.sort((a, b) => a.localeCompare(b, "ar", { sensitivity: "base" }));
-  }, [campaigns]);
+  const organizationOptions = React.useMemo(
+    () =>
+      (organizationsData?.data ?? [])
+        .map((organization) => ({ id: organization.id, name: organization.name }))
+        .sort((a, b) => a.name.localeCompare(b.name, "ar", { sensitivity: "base" })),
+    [organizationsData?.data],
+  );
 
   const approveMutation = useApproveReviewCampaign();
   const rejectMutation = useRejectReviewCampaign();
@@ -87,9 +104,11 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
         status={status}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        organizationFilter="all"
+        organizationFilter={organizationFilter}
         organizations={organizationOptions}
-        onOrganizationFilterChange={() => undefined}
+        onOrganizationFilterChange={setOrganizationFilter}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
         totalResults={apiTotal}
       />
 

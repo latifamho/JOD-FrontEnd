@@ -19,10 +19,12 @@ Excluded by request:
 - API contract corrections for users, categories, audit logs, campaigns, and report timelines
 - User form validation feedback
 - Admin profile API integration
-- Organization create/edit/filter/status/verification flows
+- Organization filtering, status, verification, acceptance, details, and deletion flows; organization add/edit is intentionally removed
 - Post moderation sorting and full content response
 - Campaign detail loading, categories, and JOD currency display
-- Report detail loading
-- Article full content editing
+- Report detail loading, request-information workflow, actionable evidence links, and close notes
+- Article full content editing with unsupported image inputs removed
 - Badge deletion
-- Analytics range selection
+- Post type filtering and campaign organization/category filtering
+- Category target/status filters and audit-log actor/action/date filters
+- Analytics range selection and weekly activity visualization

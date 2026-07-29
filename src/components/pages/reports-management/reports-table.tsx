@@ -37,7 +37,7 @@ import {
 type ReportsTableProps = {
   reports: ReportItem[];
   onClaim: (reportId: string) => void;
-  onCloseReport: (reportId: string) => void;
+  onCloseReport: (reportId: string, note: string) => Promise<void>;
   isClaiming: boolean;
   claimingReportId?: string;
   isClosing: boolean;
@@ -106,7 +106,7 @@ export function ReportsTable({
 type ReportRowProps = {
   report: ReportItem;
   onClaim: (reportId: string) => void;
-  onCloseReport: (reportId: string) => void;
+  onCloseReport: (reportId: string, note: string) => Promise<void>;
   isClaiming: boolean;
   claimingReportId?: string;
   isClosing: boolean;
@@ -124,7 +124,6 @@ function ReportRow({
 }: ReportRowProps) {
   const [detailsOpen, setDetailsOpen] = React.useState(false);
   const isClaimingThis = isClaiming && claimingReportId === report.id;
-  const isClosingThis = isClosing && closingReportId === report.id;
 
   return (
     <>
@@ -208,29 +207,6 @@ function ReportRow({
               </Tooltip>
             )}
 
-            {(report.status === "in_progress" ||
-              report.status === "waiting_response") && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="size-8"
-                    disabled={isClosingThis}
-                    onClick={() => onCloseReport(report.id)}
-                  >
-                    {isClosingThis ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <AppIcons.posts className="size-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  إغلاق
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
         </TableCell>
       </TableRow>

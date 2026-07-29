@@ -25,8 +25,16 @@ export type AdminReportsResponse = ApiListResponse<ReportItem>
 
 export type AdminReportDetailResponse = ApiSingleResponse<ReportItem>
 
+export interface ClaimReportRequest {
+  assigneeId?: string
+}
+
 export interface WaitReportRequest {
   note: string
+}
+
+export interface CloseReportRequest {
+  note?: string
 }
 
 export type ClaimReportResponse = ApiMutationResponse

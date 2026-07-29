@@ -4,7 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { adminReportsServices } from './admin.reports.services'
 import { adminReportsKeys } from './admin.reports.query-keys'
-import type { AdminReportsParams, WaitReportRequest } from './admin.reports.types'
+import type {
+  AdminReportsParams,
+  ClaimReportRequest,
+  CloseReportRequest,
+  WaitReportRequest,
+} from './admin.reports.types'
 
 export function useAdminReports(params: AdminReportsParams) {
   return useQuery({
@@ -24,8 +29,9 @@ export function useAdminReportDetail(reportId: string | null) {
 export function useClaimReport() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (reportId: string) => adminReportsServices.claimReport(reportId),
-    onSuccess: (_data, reportId) => {
+    mutationFn: ({ reportId, body = {} }: { reportId: string; body?: ClaimReportRequest }) =>
+      adminReportsServices.claimReport(reportId, body),
+    onSuccess: (_data, { reportId }) => {
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.lists() })
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.detail(reportId) })
     },
@@ -47,8 +53,9 @@ export function useWaitReport() {
 export function useCloseReport() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (reportId: string) => adminReportsServices.closeReport(reportId),
-    onSuccess: (_data, reportId) => {
+    mutationFn: ({ reportId, body = {} }: { reportId: string; body?: CloseReportRequest }) =>
+      adminReportsServices.closeReport(reportId, body),
+    onSuccess: (_data, { reportId }) => {
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.lists() })
       queryClient.invalidateQueries({ queryKey: adminReportsKeys.detail(reportId) })
     },

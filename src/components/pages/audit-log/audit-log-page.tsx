@@ -5,6 +5,7 @@ import * as React from "react";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   Table,
@@ -49,6 +50,10 @@ function SkeletonPulse({ className }: { className: string }) {
 export function AuditLogPage() {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
+  const [actorUserId, setActorUserId] = React.useState("");
+  const [actionFilter, setActionFilter] = React.useState("");
+  const [fromDate, setFromDate] = React.useState("");
+  const [toDate, setToDate] = React.useState("");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -57,6 +62,12 @@ export function AuditLogPage() {
     page: pagination.currentPage,
     perPage: pageSize,
     sort: "-at",
+    filter: {
+      actorUserId: actorUserId.trim() || undefined,
+      action: actionFilter.trim() || undefined,
+      from: fromDate || undefined,
+      to: toDate || undefined,
+    },
   });
 
   React.useEffect(() => {
@@ -67,7 +78,7 @@ export function AuditLogPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, setCurrentPage]);
+  }, [pageSize, actorUserId, actionFilter, fromDate, toDate, setCurrentPage]);
 
   const rows = data?.data ?? [];
   const latestTimestamp = rows[0]?.at;
@@ -93,6 +104,21 @@ export function AuditLogPage() {
             {formatUtcDateTimeOrDash(latestTimestamp)}
           </p>
         </div>
+      </div>
+
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5">
+        <Input value={actorUserId} onChange={(event) => setActorUserId(event.target.value)} placeholder="معرّف المستخدم" className="text-right text-xs" />
+        <Input value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} placeholder="الإجراء" className="text-right text-xs" />
+        <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="text-right text-xs" />
+        <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} className="text-right text-xs" />
+        <Button type="button" variant="outline" onClick={() => {
+          setActorUserId("");
+          setActionFilter("");
+          setFromDate("");
+          setToDate("");
+        }}>
+          إعادة تعيين
+        </Button>
       </div>
 
       {isError && (

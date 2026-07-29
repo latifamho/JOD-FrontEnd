@@ -41,6 +41,14 @@ export function AnalyticsDashboardPage() {
 
   const kpis = kpisData?.data.kpis ?? [];
   const weeklyRows = weeklyData?.data.rows ?? [];
+  const weeklyMaximum = React.useMemo(
+    () =>
+      Math.max(
+        1,
+        ...weeklyRows.flatMap((row) => [row.visits, row.newUsers, row.donations]),
+      ),
+    [weeklyRows],
+  );
 
   return (
     <section className="flex flex-col flex-1 gap-6">
@@ -152,16 +160,48 @@ export function AnalyticsDashboardPage() {
         </div>
       </div>
 
-      <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-6 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <AppIcons.analytics className="size-7" />
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">اتجاه النشاط</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              مقارنة أسبوعية بين المنشورات والمستخدمين والحملات الجديدة
+            </p>
+          </div>
+          <AppIcons.analytics className="size-5 text-primary" />
         </div>
-        <p className="mt-4 text-sm font-medium text-foreground">
-          الرسوم البيانية التفاعلية قيد الإعداد
-        </p>
-        <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-          ستضاف لاحقاً رسوم زمنية للمنشورات والحملات والبلاغات حسب الفترة.
-        </p>
+        <div className="mt-5 space-y-4">
+          {weeklyRows.map((row) => (
+            <div key={`chart-${row.weekLabel}`} className="space-y-2">
+              <p className="text-xs font-medium text-foreground">{row.weekLabel}</p>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {[
+                  { label: "منشورات", value: row.visits },
+                  { label: "مستخدمون", value: row.newUsers },
+                  { label: "حملات", value: row.donations },
+                ].map((metric) => (
+                  <div key={metric.label} className="space-y-1">
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{metric.label}</span>
+                      <span>{metric.value}</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${Math.max(4, (metric.value / weeklyMaximum) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!isWeeklyLoading && weeklyRows.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              لا توجد بيانات كافية للفترة المحددة.
+            </p>
+          ) : null}
+        </div>
       </div>
     </section>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +26,19 @@ import {
   toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
-import { useAdminReportDetail } from "@/features/admin/reports.services/admin.reports.query";
+import {
+  useAdminReportDetail,
+  useWaitReport,
+} from "@/features/admin/reports.services/admin.reports.query";
+import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
+import { CloseReportDialog } from "@/components/pages/reports-management/close-report-dialog";
 
 type ReportDetailsSheetProps = {
   report: ReportItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClaim: (reportId: string) => void;
-  onCloseReport: (reportId: string) => void;
+  onCloseReport: (reportId: string, note: string) => Promise<void>;
   isClaiming: boolean;
   claimingReportId?: string;
   isClosing: boolean;
@@ -49,8 +56,11 @@ export function ReportDetailsSheet({
   isClosing,
   closingReportId,
 }: ReportDetailsSheetProps) {
+  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = React.useState(false);
   const { data: detailData } = useAdminReportDetail(open ? report?.id ?? null : null);
   const activeReport = detailData?.data ?? report;
+  const waitMutation = useWaitReport();
   const isClaimingThis =
     !!activeReport && isClaiming && claimingReportId === activeReport.id;
   const isClosingThis =
@@ -143,7 +153,18 @@ export function ReportDetailsSheet({
                           {evidenceItem.type}
                         </span>
                       </p>
-                      <p className="mt-1 break-all">{evidenceItem.value}</p>
+                      {/^https?:\/\//i.test(evidenceItem.value) ? (
+                        <a
+                          href={evidenceItem.value}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1 block break-all text-primary underline-offset-4 hover:underline"
+                        >
+                          فتح الدليل
+                        </a>
+                      ) : (
+                        <p className="mt-1 break-all">{evidenceItem.value}</p>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -187,11 +208,21 @@ export function ReportDetailsSheet({
                   استلام البلاغ
                 </Button>
               )}
+              {activeReport.status === "in_progress" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={waitMutation.isPending}
+                  onClick={() => setRequestInfoOpen(true)}
+                >
+                  طلب معلومات إضافية
+                </Button>
+              )}
               {(activeReport.status === "in_progress" ||
                 activeReport.status === "waiting_response") && (
                 <Button
                   disabled={isClosingThis}
-                  onClick={() => onCloseReport(activeReport.id)}
+                  onClick={() => setCloseDialogOpen(true)}
                 >
                   {isClosingThis && (
                     <Loader2 className="size-4 animate-spin" />
@@ -200,6 +231,23 @@ export function ReportDetailsSheet({
                 </Button>
               )}
             </SheetFooter>
+            <RequestInfoDialog
+              open={requestInfoOpen}
+              onOpenChange={setRequestInfoOpen}
+              reportTitle={activeReport.title}
+              onConfirm={async (note) => {
+                await waitMutation.mutateAsync({
+                  reportId: activeReport.id,
+                  body: { note },
+                });
+              }}
+            />
+            <CloseReportDialog
+              open={closeDialogOpen}
+              onOpenChange={setCloseDialogOpen}
+              reportTitle={activeReport.title}
+              onConfirm={(note) => onCloseReport(activeReport.id, note)}
+            />
           </>
         ) : null}
       </SheetContent>

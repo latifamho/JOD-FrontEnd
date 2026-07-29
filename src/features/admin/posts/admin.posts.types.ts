@@ -1,6 +1,6 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type { ModerationStatus } from '@/components/shared'
-import type { ReviewPostItem } from '@/components/pages/posts-review/posts-review.types'
+import type { ReviewPostItem, ReviewPostType } from '@/components/pages/posts-review/posts-review.types'
 
 export type ReviewSortOption =
   | 'title_asc'
@@ -11,6 +11,7 @@ export type ReviewSortOption =
 export interface AdminReviewPostsFilter {
   status?: ModerationStatus
   organizationName?: string
+  type?: ReviewPostType
 }
 
 export interface AdminReviewPostsParams {

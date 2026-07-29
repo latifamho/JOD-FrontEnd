@@ -9,7 +9,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { ModerationStatus } from "@/components/shared";
-import { reviewStatusLabels } from "@/components/pages/posts-review/posts-review.types";
+import {
+  postTypeLabels,
+  reviewStatusLabels,
+  type ReviewPostType,
+} from "@/components/pages/posts-review/posts-review.types";
 
 export type { ReviewSortOption } from "@/features/admin/posts/admin.posts.types";
 import type { ReviewSortOption } from "@/features/admin/posts/admin.posts.types";
@@ -20,6 +24,8 @@ type ReviewToolbarProps = {
   onSortByChange: (value: ReviewSortOption) => void;
   organizationSearch: string;
   onOrganizationSearchChange: (value: string) => void;
+  typeFilter: "all" | ReviewPostType;
+  onTypeFilterChange: (value: "all" | ReviewPostType) => void;
   totalResults: number;
 };
 
@@ -29,6 +35,8 @@ export function ReviewToolbar({
   onSortByChange,
   organizationSearch,
   onOrganizationSearchChange,
+  typeFilter,
+  onTypeFilterChange,
   totalResults,
 }: ReviewToolbarProps) {
   return (
@@ -50,6 +58,26 @@ export function ReviewToolbar({
             placeholder="البحث بالمنظمة..."
             className="w-44 text-right text-xs placeholder:text-xs"
           />
+
+          <Select
+            dir="rtl"
+            value={typeFilter}
+            onValueChange={(value) =>
+              onTypeFilterChange(value as "all" | ReviewPostType)
+            }
+          >
+            <SelectTrigger className="w-44 text-right text-xs">
+              <SelectValue placeholder="نوع المنشور" />
+            </SelectTrigger>
+            <SelectContent align="start" position="popper" className="text-right">
+              <SelectItem value="all" className="text-right">كل الأنواع</SelectItem>
+              {(Object.keys(postTypeLabels) as ReviewPostType[]).map((type) => (
+                <SelectItem key={type} value={type} className="text-right">
+                  {postTypeLabels[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Select
             dir="rtl"

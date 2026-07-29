@@ -20,7 +20,6 @@ export interface ArticleCreateRequest {
   content: string
   authorName: string
   status: ArticleStatus
-  images?: string[]
 }
 
 export interface ArticleUpdateRequest {
@@ -30,7 +29,6 @@ export interface ArticleUpdateRequest {
   content?: string
   authorName?: string
   status?: ArticleStatus
-  images?: string[]
 }
 
 export type AdminArticlesResponse = ApiListResponse<ArticleItem>

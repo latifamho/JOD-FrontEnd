@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
-import { type CategoryStatus } from "@/components/pages/categories-management/categories-management.types";
+import {
+  type CategoryStatus,
+  type CategoryTarget,
+} from "@/components/pages/categories-management/categories-management.types";
 import {
   CategoryFormSheet,
   EMPTY_CATEGORY_FORM_VALUES,
@@ -34,6 +37,8 @@ export function CategoriesManagementPage() {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const [searchFilter, setSearchFilter] = React.useState("");
+  const [targetFilter, setTargetFilter] = React.useState<"all" | CategoryTarget>("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | CategoryStatus>("all");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -44,6 +49,8 @@ export function CategoriesManagementPage() {
     sort: "-createdAt",
     filter: {
       search: searchFilter.trim() || undefined,
+      target: targetFilter !== "all" ? targetFilter : undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
     },
   });
 
@@ -55,7 +62,7 @@ export function CategoriesManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, searchFilter, setCurrentPage]);
+  }, [pageSize, searchFilter, targetFilter, statusFilter, setCurrentPage]);
 
   const categories = data?.data ?? [];
 
@@ -94,6 +101,12 @@ export function CategoriesManagementPage() {
       next.delete(id);
       return next;
     });
+  }, []);
+
+  const resetFilters = React.useCallback(() => {
+    setSearchFilter("");
+    setTargetFilter("all");
+    setStatusFilter("all");
   }, []);
 
   const openCreateSheet = React.useCallback(() => {
@@ -219,7 +232,12 @@ export function CategoriesManagementPage() {
 
       <CategoriesFilters
         searchFilter={searchFilter}
+        targetFilter={targetFilter}
+        statusFilter={statusFilter}
         onSearchFilterChange={setSearchFilter}
+        onTargetFilterChange={setTargetFilter}
+        onStatusFilterChange={setStatusFilter}
+        onResetFilters={resetFilters}
       />
 
       {isError && (

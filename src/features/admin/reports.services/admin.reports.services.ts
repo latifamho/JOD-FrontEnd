@@ -4,7 +4,9 @@ import type {
   AdminReportDetailResponse,
   AdminReportsParams,
   AdminReportsResponse,
+  ClaimReportRequest,
   ClaimReportResponse,
+  CloseReportRequest,
   CloseReportResponse,
   WaitReportRequest,
   WaitReportResponse,
@@ -37,8 +39,8 @@ export const adminReportsServices = {
     return response.data
   },
 
-  async claimReport(reportId: string): Promise<ClaimReportResponse> {
-    const response = await api.post<ClaimReportResponse>(ENDPOINTS.CLAIM(reportId), undefined, { successMessageKey: 'claimed' })
+  async claimReport(reportId: string, body: ClaimReportRequest = {}): Promise<ClaimReportResponse> {
+    const response = await api.post<ClaimReportResponse>(ENDPOINTS.CLAIM(reportId), body, { successMessageKey: 'claimed' })
     return response.data
   },
 
@@ -47,8 +49,8 @@ export const adminReportsServices = {
     return response.data
   },
 
-  async closeReport(reportId: string): Promise<CloseReportResponse> {
-    const response = await api.post<CloseReportResponse>(ENDPOINTS.CLOSE(reportId), undefined, { successMessageKey: 'closed' })
+  async closeReport(reportId: string, body: CloseReportRequest = {}): Promise<CloseReportResponse> {
+    const response = await api.post<CloseReportResponse>(ENDPOINTS.CLOSE(reportId), body, { successMessageKey: 'closed' })
     return response.data
   },
 }

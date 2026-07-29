@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/select";
 import type { ModerationStatus } from "@/components/shared";
 import { normalizeText } from "@/lib/text";
-import { reviewStatusLabels } from "@/components/pages/campaigns-review/campaigns-review.types";
+import {
+  reviewCampaignCategoryLabels,
+  reviewStatusLabels,
+  type ReviewCampaignCategory,
+} from "@/components/pages/campaigns-review/campaigns-review.types";
 
 export type ReviewSortOption =
   | "title_asc"
@@ -25,8 +29,10 @@ type CampaignReviewToolbarProps = {
   sortBy: ReviewSortOption;
   onSortByChange: (value: ReviewSortOption) => void;
   organizationFilter: string;
-  organizations: string[];
+  organizations: Array<{ id: string; name: string }>;
   onOrganizationFilterChange: (value: string) => void;
+  categoryFilter: "all" | ReviewCampaignCategory;
+  onCategoryFilterChange: (value: "all" | ReviewCampaignCategory) => void;
   totalResults: number;
 };
 
@@ -37,6 +43,8 @@ export function CampaignReviewToolbar({
   organizationFilter,
   organizations,
   onOrganizationFilterChange,
+  categoryFilter,
+  onCategoryFilterChange,
   totalResults,
 }: CampaignReviewToolbarProps) {
   const [organizationSearch, setOrganizationSearch] = React.useState("");
@@ -46,8 +54,8 @@ export function CampaignReviewToolbar({
     if (!query) {
       return organizations;
     }
-    return organizations.filter((organizationName) =>
-      normalizeText(organizationName).includes(query),
+    return organizations.filter((organization) =>
+      normalizeText(organization.name).includes(query),
     );
   }, [organizationSearch, organizations]);
 
@@ -93,6 +101,26 @@ export function CampaignReviewToolbar({
 
           <Select
             dir="rtl"
+            value={categoryFilter}
+            onValueChange={(value) =>
+              onCategoryFilterChange(value as "all" | ReviewCampaignCategory)
+            }
+          >
+            <SelectTrigger className="w-full text-right text-xs">
+              <SelectValue placeholder="التصنيف" />
+            </SelectTrigger>
+            <SelectContent align="start" position="popper" className="text-right">
+              <SelectItem value="all" className="text-right">كل التصنيفات</SelectItem>
+              {(Object.keys(reviewCampaignCategoryLabels) as ReviewCampaignCategory[]).map((category) => (
+                <SelectItem key={category} value={category} className="text-right text-xs">
+                  {reviewCampaignCategoryLabels[category]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            dir="rtl"
             value={organizationFilter}
             onOpenChange={(open) => {
               if (!open) {
@@ -125,13 +153,13 @@ export function CampaignReviewToolbar({
                 كل المنظمات
               </SelectItem>
 
-              {filteredOrganizations.map((organizationName) => (
+              {filteredOrganizations.map((organization) => (
                 <SelectItem
-                  key={organizationName}
-                  value={organizationName}
+                  key={organization.id}
+                  value={organization.id}
                   className="text-right text-xs"
                 >
-                  {organizationName}
+                  {organization.name}
                 </SelectItem>
               ))}
 

@@ -72,13 +72,13 @@ export function ReviewCampaignCard({
             <p>
               الهدف:{" "}
               <span className="font-semibold text-foreground">
-                {formatAmount(campaign.goalAmount)} ر.س
+                {formatAmount(campaign.goalAmount)} د.أ
               </span>
             </p>
             <p>
               المحصّل:{" "}
               <span className="font-semibold text-foreground">
-                {formatAmount(campaign.raisedAmount)} ر.س
+                {formatAmount(campaign.raisedAmount)} د.أ
               </span>
             </p>
           </div>

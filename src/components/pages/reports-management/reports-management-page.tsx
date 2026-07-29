@@ -68,14 +68,14 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
 
   const handleClaim = React.useCallback(
     (reportId: string) => {
-      claimMutation.mutate(reportId);
+      claimMutation.mutate({ reportId });
     },
     [claimMutation],
   );
 
   const handleCloseReport = React.useCallback(
-    (reportId: string) => {
-      closeMutation.mutate(reportId);
+    async (reportId: string, note: string) => {
+      await closeMutation.mutateAsync({ reportId, body: note ? { note } : {} });
     },
     [closeMutation],
   );
@@ -130,9 +130,9 @@ export function ReportsManagementPage({ status }: ReportsManagementPageProps) {
           onClaim={handleClaim}
           onCloseReport={handleCloseReport}
           isClaiming={claimMutation.isPending}
-          claimingReportId={claimMutation.variables}
+          claimingReportId={claimMutation.variables?.reportId}
           isClosing={closeMutation.isPending}
-          closingReportId={closeMutation.variables}
+          closingReportId={closeMutation.variables?.reportId}
         />
       )}
 

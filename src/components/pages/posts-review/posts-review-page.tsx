@@ -10,6 +10,7 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   reviewStatusLabels,
   type ReviewPostItem,
+  type ReviewPostType,
 } from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
 import { ReviewPostsTable } from "@/components/pages/posts-review/review-posts-table";
@@ -36,6 +37,7 @@ const sortToApiSort: Record<ReviewSortOption, string> = {
 
 export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [organizationSearch, setOrganizationSearch] = React.useState("");
+  const [typeFilter, setTypeFilter] = React.useState<"all" | ReviewPostType>("all");
   const [sortBy, setSortBy] =
     React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
@@ -58,6 +60,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
     filter: {
       status,
       organizationName: debouncedOrgSearch || undefined,
+      type: typeFilter !== "all" ? typeFilter : undefined,
     },
   });
 
@@ -69,7 +72,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [status, debouncedOrgSearch, sortBy, pageSize, setCurrentPage]);
+  }, [status, debouncedOrgSearch, typeFilter, sortBy, pageSize, setCurrentPage]);
 
   const approveMutation = useApprovePost();
   const rejectMutation = useRejectPost();
@@ -98,6 +101,8 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
         onSortByChange={setSortBy}
         organizationSearch={organizationSearch}
         onOrganizationSearchChange={setOrganizationSearch}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
         totalResults={apiTotal}
       />
 

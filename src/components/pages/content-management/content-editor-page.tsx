@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { EmptyState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,6 @@ const articleFormSchema = z.object({
   content: z.string().min(1, "محتوى المقال مطلوب"),
   authorName: z.string().min(1, "اسم الكاتب مطلوب"),
   status: z.enum(["draft", "published"]),
-  images: z.array(z.string()),
 });
 
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
@@ -59,7 +58,6 @@ const EMPTY_FORM_VALUES: ArticleFormValues = {
   content: "",
   authorName: "فريق جود",
   status: "draft",
-  images: [],
 };
 
 export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
@@ -69,7 +67,6 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
   const [isReady, setIsReady] = React.useState(mode === "create");
   const [hasNotFoundArticle, setHasNotFoundArticle] = React.useState(false);
   const [isSlugDirty, setIsSlugDirty] = React.useState(false);
-  const [imageDraft, setImageDraft] = React.useState("");
 
   const createMutation = useCreateArticle();
   const updateMutation = useUpdateArticle();
@@ -82,14 +79,12 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
     reset,
     setValue,
     setError,
-    watch,
     formState: { errors },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
     defaultValues: EMPTY_FORM_VALUES,
   });
 
-  const images = watch("images");
 
   React.useEffect(() => {
     if (mode === "create") {
@@ -120,7 +115,6 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
           content: article.content ?? "",
           authorName: article.authorName,
           status: article.status,
-          images: article.images ?? [],
         });
         setIsSlugDirty(true);
         setHasNotFoundArticle(false);
@@ -169,7 +163,6 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
       content: values.content.trim(),
       authorName: values.authorName.trim(),
       status: values.status,
-      images: values.images.filter(Boolean),
     };
 
     if (mode === "create") {
@@ -191,12 +184,6 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
     );
   };
 
-  const addImage = () => {
-    const next = imageDraft.trim();
-    if (!next) return;
-    setValue("images", [...images, next], { shouldDirty: true });
-    setImageDraft("");
-  };
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -337,62 +324,6 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="article-image">صور المقال</Label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                id="article-image"
-                disabled={isSubmitting}
-                value={imageDraft}
-                onChange={(e) => setImageDraft(e.target.value)}
-                placeholder="أضف رابط صورة ثم اضغط إضافة"
-                className="text-left"
-                dir="ltr"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSubmitting || !imageDraft.trim()}
-                onClick={addImage}
-              >
-                إضافة صورة
-              </Button>
-            </div>
-            {images.length > 0 ? (
-              <ul className="space-y-2">
-                {images.map((imageUrl, index) => (
-                  <li
-                    key={`${imageUrl}-${index}`}
-                    className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs"
-                  >
-                    <span className="flex-1 break-all text-muted-foreground">
-                      {imageUrl}
-                    </span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
-                      disabled={isSubmitting}
-                      onClick={() =>
-                        setValue(
-                          "images",
-                          images.filter((_, i) => i !== index),
-                          { shouldDirty: true },
-                        )
-                      }
-                    >
-                      <X className="size-3.5" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-[11px] text-muted-foreground">
-                يمكنك إضافة صورة واحدة أو أكثر عبر روابط الصور.
-              </p>
-            )}
-          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-start gap-2">
