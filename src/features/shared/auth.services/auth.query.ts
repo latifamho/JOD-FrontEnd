@@ -9,14 +9,11 @@ import type { DashboardRoleCookie } from '@/lib/cookies'
 import { toast } from '@/lib/toast'
 import { useAuth } from '@/providers/AuthProvider'
 import { authServices } from './auth.service'
-import type { DashboardRole, LoginRequest, MeProfile } from './auth.type'
+import type { DashboardRole, LoginRequest } from './auth.type'
 
-function resolveDashboardRole(profile: MeProfile): DashboardRoleCookie {
-  if (profile.userType === 'admin') return 'admin'
-  // Both org_owner and org_staff have userType 'general' with an organizationId.
-  // Defaulting to org_owner; staff access is enforced inside the dashboard via permissions.
-  if (profile.userType === 'general' && profile.organizationId) return 'org_owner'
-  return 'org_staff'
+function normalizeDashboardRole(role: DashboardRole | null): DashboardRoleCookie | null {
+  if (role === 'admin' || role === 'org_owner' || role === 'org_staff') return role
+  return null
 }
 
 function getDashboardHome(role: DashboardRole): string {
@@ -37,10 +34,15 @@ export function useLogin() {
       setAuthToken(token)
 
       try {
-        const meResponse = await authServices.getMe()
-        const profile = meResponse.data
+        const contextResponse = await authServices.getDashboardContext()
+        const { profile } = contextResponse.data
+        const role = normalizeDashboardRole(profile.dashboardRole)
 
-        const role = resolveDashboardRole(profile)
+        if (!role) {
+          clearAuthData()
+          throw new Error('The authenticated account does not have dashboard access.')
+        }
+
         setUser(profile)
         setDashboardRole(role)
         login()

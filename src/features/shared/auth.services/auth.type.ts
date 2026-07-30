@@ -10,5 +10,17 @@ export type UserType = 'admin' | 'general' | 'volunteer' | 'donor' | 'job_seeker
 export type DashboardRole = 'admin' | 'org_owner' | 'org_staff'
 export interface MeProfile { id: string; name: string; email: string; phone: string; userType: UserType; organizationId: string | null; organizationName: string | null; status: string; createdAt: string; lastActiveAt: string }
 export interface MeResponse { data: MeProfile; message: string }
+export interface DashboardContextProfile extends MeProfile { dashboardRole: DashboardRole | null }
+export interface DashboardOrganization { id: string; name: string; status: string; verificationStatus: string }
+export interface DashboardStaffRole { id: string; name: string; description: string | null; isActive: boolean; isSystem: boolean; membershipStatus: string }
+export interface DashboardCounters { unreadNotifications: number; pendingReviews: number; openReports: number }
+export interface DashboardContextData {
+  profile: DashboardContextProfile
+  organization: DashboardOrganization | null
+  staffRole: DashboardStaffRole | null
+  permissions: UserPermissions
+  counters: DashboardCounters
+}
+export interface DashboardContextResponse { data: DashboardContextData }
 export interface UpdateProfileRequest { name: string; email: string; phone: string }
 export interface UpdateProfileResponse { data: MeProfile; message?: string }
