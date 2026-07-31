@@ -23,6 +23,7 @@ import {
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useAuth } from "@/providers/AuthProvider";
 import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
 import {
   useOrgDonors,
@@ -51,6 +52,12 @@ const sortToApiSort: Record<DonorSortOption, string> = {
 export function DonorsManagementPage({
   view = "donors",
 }: DonorsManagementPageProps) {
+  const { can } = useAuth();
+  const permissionPrefix = view === "donors" ? "org.donors" : "org.applicants";
+  const canView = can(`${permissionPrefix}.view`);
+  const canCreate = can(`${permissionPrefix}.create`);
+  const canEdit = can(`${permissionPrefix}.update`);
+  const canDelete = can(`${permissionPrefix}.delete`);
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<DonorSortOption>("date_newest");
@@ -89,13 +96,13 @@ export function DonorsManagementPage({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
-  });
+  }, view === "donors" && canView);
 
   const applicantsQuery = useOrgApplicants({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
-  });
+  }, view === "applicants" && canView);
 
   const activeQuery = view === "donors" ? donorsQuery : applicantsQuery;
 
@@ -262,12 +269,14 @@ export function DonorsManagementPage({
           <p className="mt-1 text-xs text-muted-foreground">{pageDescription}</p>
         </div>
 
+        {canCreate ? (
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={openCreate}>
             {view === "applicants" ? "إضافة متقدم" : "إضافة متبرع"}
             <AppIcons.UserPlus className="size-4" />
           </Button>
         </div>
+        ) : null}
       </div>
 
       <div className="flex justify-end">
@@ -321,8 +330,8 @@ export function DonorsManagementPage({
         <DonorsTable
           rows={rows}
           view={view}
-          onEditRow={(row) => openEdit(row)}
-          onDeleteRow={(row) => openDelete(row)}
+          onEditRow={canEdit ? (row) => openEdit(row) : undefined}
+          onDeleteRow={canDelete ? (row) => openDelete(row) : undefined}
         />
       )}
 

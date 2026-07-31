@@ -13,10 +13,11 @@ import type {
   ApplicantUpdateRequest,
 } from './org.donors.types'
 
-export function useOrgDonors(params: OrgDonorsParams) {
+export function useOrgDonors(params: OrgDonorsParams, enabled = true) {
   return useQuery({
     queryKey: orgDonorsKeys.list(params),
     queryFn: () => orgDonorsServices.getDonors(params),
+    enabled,
   })
 }
 
@@ -51,10 +52,11 @@ export function useDeleteOrgDonor() {
   })
 }
 
-export function useOrgApplicants(params: OrgApplicantsParams) {
+export function useOrgApplicants(params: OrgApplicantsParams, enabled = true) {
   return useQuery({
     queryKey: orgApplicantsKeys.list(params),
     queryFn: () => orgDonorsServices.getApplicants(params),
+    enabled,
   })
 }
 
