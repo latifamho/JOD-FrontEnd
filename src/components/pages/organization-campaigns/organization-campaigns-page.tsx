@@ -8,6 +8,7 @@ import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { displayOrDash } from "@/lib/text";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   CampaignFormSheet,
   EMPTY_CAMPAIGN_FORM_VALUES,
@@ -51,6 +52,11 @@ const sortToApiSort: Record<CampaignSortOption, string> = {
 export function OrganizationCampaignsPage({
   status,
 }: OrganizationCampaignsPageProps) {
+  const { can } = useAuth();
+  const canCreate = can("org.campaigns.create");
+  const canEdit = can("org.campaigns.update");
+  const canClose = can("org.campaigns.close");
+  const canDelete = can("org.campaigns.delete");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
 
@@ -243,13 +249,14 @@ export function OrganizationCampaignsPage({
             النتائج الحالية: {apiTotal} حملة
           </p>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={openCreateSheet}>
-            إضافة حملة جديدة
-            <AppIcons.campaigns className="size-4" />
-          </Button>
-        </div>
+        {canCreate ? (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={openCreateSheet}>
+              إضافة حملة جديدة
+              <AppIcons.campaigns className="size-4" />
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <OrganizationCampaignsFilters
@@ -285,6 +292,9 @@ export function OrganizationCampaignsPage({
           onEditCampaign={openEditSheet}
           onCloseCampaign={openCloseDialog}
           onDeleteCampaign={openDeleteDialog}
+          canEdit={canEdit}
+          canClose={canClose}
+          canDelete={canDelete}
         />
       )}
 

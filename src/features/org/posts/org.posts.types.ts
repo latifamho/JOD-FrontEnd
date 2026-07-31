@@ -41,5 +41,5 @@ export type OrgPostsResponse = ApiListResponse<OrganizationPostItem>
 export type OrgPostDetailResponse = ApiSingleResponse<OrganizationPostItem>
 export type CreatePostResponse = ApiMutationResponse<OrganizationPostItem>
 export type UpdatePostResponse = ApiMutationResponse<OrganizationPostItem>
-export type PostStateResponse = ApiMutationResponse
+export type PostStateResponse = ApiMutationResponse<OrganizationPostItem>
 export type DeletePostResponse = ApiMutationResponse

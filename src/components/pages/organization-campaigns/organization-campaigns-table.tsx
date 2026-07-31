@@ -36,6 +36,9 @@ type OrganizationCampaignsTableProps = {
   onEditCampaign: (campaignId: string) => void;
   onCloseCampaign: (campaignId: string) => void;
   onDeleteCampaign: (campaignId: string) => void;
+  canEdit: boolean;
+  canClose: boolean;
+  canDelete: boolean;
 };
 
 export function OrganizationCampaignsTable({
@@ -43,6 +46,9 @@ export function OrganizationCampaignsTable({
   onEditCampaign,
   onCloseCampaign,
   onDeleteCampaign,
+  canEdit,
+  canClose,
+  canDelete,
 }: OrganizationCampaignsTableProps) {
   return (
     <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
@@ -183,6 +189,7 @@ export function OrganizationCampaignsTable({
                           <AppIcons.eye className="size-4 text-info" />
                         </Link>
                       </Button>
+                      {canEdit ? (
 
                       <Button
                         type="button"
@@ -195,6 +202,8 @@ export function OrganizationCampaignsTable({
                       >
                         <AppIcons.PencilLine className="size-4 text-info" />
                       </Button>
+                      ) : null}
+                      {canClose ? (
 
                       <Button
                         type="button"
@@ -207,6 +216,8 @@ export function OrganizationCampaignsTable({
                       >
                         <AppIcons.archive className="size-4 text-warning" />
                       </Button>
+                      ) : null}
+                      {canDelete ? (
 
                       <Button
                         type="button"
@@ -218,6 +229,7 @@ export function OrganizationCampaignsTable({
                       >
                         <AppIcons.Trash className="size-4 text-destructive" />
                       </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>

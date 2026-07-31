@@ -36,6 +36,11 @@ type PostsTableProps = {
   onEditPost: (postId: string) => void;
   onWorkflowAction: (postId: string, action: WorkflowAction) => void;
   onDeletePost: (postId: string) => void;
+  canEdit: boolean;
+  canPublish: boolean;
+  canArchive: boolean;
+  canRestore: boolean;
+  canDelete: boolean;
 };
 
 function WorkflowActionButton({
@@ -97,6 +102,11 @@ export function PostsTable({
   onEditPost,
   onWorkflowAction,
   onDeletePost,
+  canEdit,
+  canPublish,
+  canArchive,
+  canRestore,
+  canDelete,
 }: PostsTableProps) {
   return (
     <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
@@ -208,6 +218,7 @@ export function PostsTable({
                     >
                       <AppIcons.eye className="size-4 text-info" />
                     </Button>
+                    {canEdit ? (
                     <Button
                       type="button"
                       size="icon"
@@ -218,6 +229,8 @@ export function PostsTable({
                     >
                       <AppIcons.PencilLine className="size-4 text-info" />
                     </Button>
+                    ) : null}
+                    {(normalizedStatus === "draft" ? canPublish : normalizedStatus === "published" ? canArchive : canRestore) ? (
                     <WorkflowActionButton
                       status={normalizedStatus}
                       onClick={() =>
@@ -227,6 +240,8 @@ export function PostsTable({
                         )
                       }
                     />
+                    ) : null}
+                    {canDelete ? (
                     <Button
                       type="button"
                       size="icon"
@@ -237,6 +252,7 @@ export function PostsTable({
                     >
                       <AppIcons.Trash className="size-4 text-destructive" />
                     </Button>
+                    ) : null}
                   </div>
                 </TableCell>
                 </TableRow>

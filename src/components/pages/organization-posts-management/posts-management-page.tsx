@@ -9,6 +9,7 @@ import { EmptyState, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   isCampaignRelatedPostType,
   normalizePostStatus,
@@ -66,6 +67,13 @@ export function OrganizationPostsManagementPage({
 function OrganizationPostsManagementPageContent({
   status,
 }: OrganizationPostsManagementPageProps) {
+  const { can } = useAuth();
+  const canCreate = can("org.posts.create");
+  const canEdit = can("org.posts.update");
+  const canPublish = can("org.posts.publish");
+  const canArchive = can("org.posts.archive");
+  const canRestore = can("org.posts.restore");
+  const canDelete = can("org.posts.delete");
   const searchParams = useSearchParams();
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
@@ -284,13 +292,14 @@ function OrganizationPostsManagementPageContent({
             {apiTotal}
           </p>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={openCreateSheet}>
-            إضافة بوست جديد
-            <AppIcons.posts className="size-4" />
-          </Button>
-        </div>
+        {canCreate ? (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={openCreateSheet}>
+              إضافة منشور جديد
+              <AppIcons.posts className="size-4" />
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <PostsFilters
@@ -324,6 +333,11 @@ function OrganizationPostsManagementPageContent({
           onEditPost={openEditSheet}
           onWorkflowAction={handleWorkflowAction}
           onDeletePost={openDeleteDialog}
+          canEdit={canEdit}
+          canPublish={canPublish}
+          canArchive={canArchive}
+          canRestore={canRestore}
+          canDelete={canDelete}
         />
       )}
 

@@ -50,5 +50,5 @@ export type OrgCampaignsResponse = ApiListResponse<OrganizationCampaignItem>
 export type OrgCampaignDetailResponse = ApiSingleResponse<OrganizationCampaignItem>
 export type CreateCampaignResponse = ApiMutationResponse<OrganizationCampaignItem>
 export type UpdateCampaignResponse = ApiMutationResponse<OrganizationCampaignItem>
-export type CloseCampaignResponse = ApiMutationResponse
+export type CloseCampaignResponse = ApiMutationResponse<OrganizationCampaignItem>
 export type DeleteCampaignResponse = ApiMutationResponse

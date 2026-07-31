@@ -15,9 +15,7 @@ import type {
 const ENDPOINTS = {
   POSTS: '/org/posts',
   POST: (id: string) => `/org/posts/${id}`,
-  POST_PUBLISH: (id: string) => `/org/posts/${id}/publish`,
-  POST_ARCHIVE: (id: string) => `/org/posts/${id}/archive`,
-  POST_RESTORE: (id: string) => `/org/posts/${id}/restore`,
+  POST_STATUS: (id: string) => `/org/posts/${id}/status`,
 } as const
 
 function buildParams(params: OrgPostsParams): Record<string, unknown> {
@@ -48,17 +46,17 @@ export const orgPostsServices = {
   },
 
   async publishPost(postId: string): Promise<PostStateResponse> {
-    const response = await api.post<PostStateResponse>(ENDPOINTS.POST_PUBLISH(postId))
+    const response = await api.patch<PostStateResponse>(ENDPOINTS.POST_STATUS(postId), { status: 'published' })
     return response.data
   },
 
   async archivePost(postId: string): Promise<PostStateResponse> {
-    const response = await api.post<PostStateResponse>(ENDPOINTS.POST_ARCHIVE(postId))
+    const response = await api.patch<PostStateResponse>(ENDPOINTS.POST_STATUS(postId), { status: 'archived' })
     return response.data
   },
 
   async restorePost(postId: string): Promise<PostStateResponse> {
-    const response = await api.post<PostStateResponse>(ENDPOINTS.POST_RESTORE(postId))
+    const response = await api.patch<PostStateResponse>(ENDPOINTS.POST_STATUS(postId), { status: 'draft' })
     return response.data
   },
 
