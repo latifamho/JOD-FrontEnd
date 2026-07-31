@@ -1,5 +1,5 @@
-import { DashboardSettingsPage } from "@/components/pages/dashboard-settings";
+﻿import { OrganizationSettingsPage } from '@/components/pages/organization-settings'
 
 export default function OrgStaffSettingsPage() {
-  return <DashboardSettingsPage scope="org-staff" />;
+  return <OrganizationSettingsPage />
 }
