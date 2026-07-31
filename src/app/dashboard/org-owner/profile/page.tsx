@@ -1,5 +1,5 @@
-import { DashboardProfilePage } from "@/components/pages/dashboard-profile";
+﻿import { OrganizationProfilePage } from '@/components/pages/organization-profile'
 
 export default function OrgOwnerProfilePage() {
-  return <DashboardProfilePage scope="org-owner" />;
+  return <OrganizationProfilePage />
 }

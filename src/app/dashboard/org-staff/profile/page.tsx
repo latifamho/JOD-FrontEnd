@@ -1,5 +1,5 @@
-import { DashboardProfilePage } from "@/components/pages/dashboard-profile";
+﻿import { StaffProfilePage } from '@/components/pages/organization-profile'
 
 export default function OrgStaffProfilePage() {
-  return <DashboardProfilePage scope="org-staff" />;
+  return <StaffProfilePage />
 }
