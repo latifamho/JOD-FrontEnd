@@ -1,30 +1,24 @@
-import { api } from '@/services/api'
+﻿import { api } from '@/services/api'
 import { buildListParams } from '@/lib/build-list-params'
-import type {
-  OrgReportsParams,
-  OrgReportsResponse,
-  OrgReportDetailResponse,
-} from './org.reports.types'
+import type { OrgReportsParams, OrgReportsResponse, OrgReportDetailResponse, UpdateOrgReportStatusRequest, UpdateOrgReportStatusResponse } from './org.reports.types'
 
 const ENDPOINTS = {
   REPORTS: '/org/reports',
   REPORT: (id: string) => `/org/reports/${id}`,
+  STATUS: (id: string) => `/org/reports/${id}/status`,
 } as const
-
-function buildParams(params: OrgReportsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
 
 export const orgReportsServices = {
   async getReports(params: OrgReportsParams): Promise<OrgReportsResponse> {
-    const response = await api.get<OrgReportsResponse>(ENDPOINTS.REPORTS, {
-      params: buildParams(params),
-    })
+    const response = await api.get<OrgReportsResponse>(ENDPOINTS.REPORTS, { params: buildListParams(params) })
     return response.data
   },
-
   async getReportById(reportId: string): Promise<OrgReportDetailResponse> {
     const response = await api.get<OrgReportDetailResponse>(ENDPOINTS.REPORT(reportId))
+    return response.data
+  },
+  async updateStatus(reportId: string, body: UpdateOrgReportStatusRequest): Promise<UpdateOrgReportStatusResponse> {
+    const response = await api.patch<UpdateOrgReportStatusResponse>(ENDPOINTS.STATUS(reportId), body)
     return response.data
   },
 }

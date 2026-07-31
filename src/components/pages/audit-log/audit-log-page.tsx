@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 
@@ -23,14 +23,14 @@ import {
 import { usePagination } from "@/hooks/use-pagination";
 import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
-import { useAdminAuditLogs } from "@/features/admin/audit-logs/admin.audit-logs.query";
+import { useOrgAuditLogs } from "@/features/org/audit-logs/org.audit-logs.query";
 
 const actionTypeLabels: Record<AuditLogActionType, string> = {
-  authentication: "مصادقة",
-  moderation: "مراجعة",
-  verification: "توثيق",
-  security: "أمان",
-  content: "محتوى",
+  authentication: "Ù…ØµØ§Ø¯Ù‚Ø©",
+  moderation: "Ù…Ø±Ø§Ø¬Ø¹Ø©",
+  verification: "ØªÙˆØ«ÙŠÙ‚",
+  security: "Ø£Ù…Ø§Ù†",
+  content: "Ù…Ø­ØªÙˆÙ‰",
 };
 
 const actionTypeBadgeClassNames: Record<AuditLogActionType, string> = {
@@ -58,7 +58,7 @@ export function AuditLogPage() {
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isLoading, isFetching, isError, refetch } = useAdminAuditLogs({
+  const { data, isLoading, isFetching, isError, refetch } = useOrgAuditLogs({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: "-at",
@@ -87,19 +87,19 @@ export function AuditLogPage() {
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div>
-        <h2 className="text-base font-semibold text-foreground">سجل النشاط</h2>
+        <h2 className="text-base font-semibold text-foreground">Ø³Ø¬Ù„ Ø§Ù„Ù†Ø´Ø§Ø·</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          تتبع عمليات الأدمن والفِرق بترتيب زمني واضح.
+          ØªØªØ¨Ø¹ Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø£Ø¯Ù…Ù† ÙˆØ§Ù„ÙÙØ±Ù‚ Ø¨ØªØ±ØªÙŠØ¨ Ø²Ù…Ù†ÙŠ ÙˆØ§Ø¶Ø­.
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">إجمالي الأحداث</p>
+          <p className="text-xs text-muted-foreground">Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø­Ø¯Ø§Ø«</p>
           <p className="mt-1 text-xl font-semibold text-foreground">{apiTotal}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">أحدث تحديث</p>
+          <p className="text-xs text-muted-foreground">Ø£Ø­Ø¯Ø« ØªØ­Ø¯ÙŠØ«</p>
           <p className="mt-1 text-sm font-medium text-foreground">
             {formatUtcDateTimeOrDash(latestTimestamp)}
           </p>
@@ -107,8 +107,8 @@ export function AuditLogPage() {
       </div>
 
       <div className="grid gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5">
-        <Input value={actorUserId} onChange={(event) => setActorUserId(event.target.value)} placeholder="معرّف المستخدم" className="text-right text-xs" />
-        <Input value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} placeholder="الإجراء" className="text-right text-xs" />
+        <Input value={actorUserId} onChange={(event) => setActorUserId(event.target.value)} placeholder="Ù…Ø¹Ø±Ù‘Ù Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…" className="text-right text-xs" />
+        <Input value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} placeholder="Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡" className="text-right text-xs" />
         <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="text-right text-xs" />
         <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} className="text-right text-xs" />
         <Button type="button" variant="outline" onClick={() => {
@@ -117,17 +117,17 @@ export function AuditLogPage() {
           setFromDate("");
           setToDate("");
         }}>
-          إعادة تعيين
+          Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ†
         </Button>
       </div>
 
       {isError && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
           <p className="flex-1 text-sm text-destructive">
-            تعذّر تحميل السجل. حاول مرة أخرى.
+            ØªØ¹Ø°Ù‘Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø³Ø¬Ù„. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.
           </p>
           <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
-            إعادة المحاولة
+            Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©
           </Button>
         </div>
       )}
@@ -137,8 +137,8 @@ export function AuditLogPage() {
           <div className="p-4">
             <EmptyState
               icon="auditLog"
-              title="لا توجد سجلات نشاط"
-              description="لا يوجد أي نشاط مسجل حالياً."
+              title="Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ù†Ø´Ø§Ø·"
+              description="Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø£ÙŠ Ù†Ø´Ø§Ø· Ù…Ø³Ø¬Ù„ Ø­Ø§Ù„ÙŠØ§Ù‹."
             />
           </div>
         ) : (
@@ -146,19 +146,19 @@ export function AuditLogPage() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-right font-semibold text-muted-foreground">
-                  الإجراء
+                  Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡
                 </TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">
-                  النوع
+                  Ø§Ù„Ù†ÙˆØ¹
                 </TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">
-                  المستخدم
+                  Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…
                 </TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">
-                  المرجع
+                  Ø§Ù„Ù…Ø±Ø¬Ø¹
                 </TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">
-                  التاريخ
+                  Ø§Ù„ØªØ§Ø±ÙŠØ®
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -239,3 +239,4 @@ export function AuditLogPage() {
     </section>
   );
 }
+
