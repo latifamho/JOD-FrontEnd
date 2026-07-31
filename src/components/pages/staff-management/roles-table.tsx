@@ -13,11 +13,7 @@ import {
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
-import {
-  staffRoleLabels,
-  type StaffRole,
-  type StaffRoleItem,
-} from "@/components/pages/staff-management/static-data";
+import type { StaffRoleItem } from "@/features/org/staff/org.staff.types";
 
 export type StaffRoleRow = StaffRoleItem & {
   membersCount: number;
@@ -79,7 +75,7 @@ export function RolesTable({
             return (
               <TableRow key={row.id}>
                 <TableCell className="text-right">
-                  <Badge variant="outline">{staffRoleLabels[row.role]}</Badge>
+                  <Badge variant="outline">{row.role}</Badge>
                 </TableCell>
                 <TableCell className="max-w-[280px] text-right text-xs text-muted-foreground">
                   {displayOrDash(row.description)}
@@ -91,7 +87,7 @@ export function RolesTable({
                   {row.membersCount} موظف
                 </TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground">
-                  {formatUtcDate(row.updatedAt)}
+                  {row.updatedAt ? formatUtcDate(row.updatedAt) : "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant={statusVariant(row.isActive)}>
@@ -132,4 +128,3 @@ export function RolesTable({
   );
 }
 
-export type { StaffRole, StaffRoleItem };

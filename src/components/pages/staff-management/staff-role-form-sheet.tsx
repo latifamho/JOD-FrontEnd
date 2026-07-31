@@ -1,288 +1,47 @@
-"use client";
+'use client'
 
-import * as React from "react";
+import * as React from 'react'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
+import type { OrgPermissionCatalogItem } from '@/features/org/staff/org.staff.types'
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  staffPermissionCatalog,
-  staffRoleLabels,
-  type StaffPermissionOption,
-  type StaffRole,
-} from "@/components/pages/staff-management/static-data";
-import { Textarea } from "@/components/ui/textarea";
+export type StaffRoleFormValues = { name: string; description: string; permissions: string[]; isActive: boolean }
+export const EMPTY_STAFF_ROLE_FORM_VALUES: StaffRoleFormValues = { name: '', description: '', permissions: [], isActive: true }
 
-export type StaffRoleFormValues = {
-  role: StaffRole;
-  description: string;
-  permissions: string[];
-  isActive: boolean;
-};
-
-export const EMPTY_STAFF_ROLE_FORM_VALUES: StaffRoleFormValues = {
-  role: "viewer",
-  description: "",
-  permissions: [],
-  isActive: true,
-};
-
-type StaffRoleFormSheetProps = {
-  open: boolean;
-  mode: "create" | "edit";
-  initialValues: StaffRoleFormValues;
-  roleOptions: StaffRole[];
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (values: StaffRoleFormValues) => void;
-};
-
-function normalizePermissions(permissions: string[]): string[] {
-  return Array.from(new Set(permissions.map((permission) => permission.trim()))).filter(
-    (permission) => permission.length > 0,
-  );
+type Props = {
+  open: boolean
+  mode: 'create' | 'edit'
+  initialValues: StaffRoleFormValues
+  permissionOptions: OrgPermissionCatalogItem[]
+  onOpenChange: (open: boolean) => void
+  onSubmit: (values: StaffRoleFormValues) => void
 }
 
-function comparePermissions(first: StaffPermissionOption, second: StaffPermissionOption): number {
-  return first.label.localeCompare(second.label, "ar", { sensitivity: "base" });
-}
-
-export function StaffRoleFormSheet({
-  open,
-  mode,
-  initialValues,
-  roleOptions,
-  onOpenChange,
-  onSubmit,
-}: StaffRoleFormSheetProps) {
-  const [formValues, setFormValues] =
-    React.useState<StaffRoleFormValues>(initialValues);
-  const [selectedPermissions, setSelectedPermissions] = React.useState<string[]>(
-    normalizePermissions(initialValues.permissions),
-  );
-
-  React.useEffect(() => {
-    if (open) {
-      setFormValues(initialValues);
-      setSelectedPermissions(normalizePermissions(initialValues.permissions));
-    }
-  }, [initialValues, open]);
-
-  const resolvedRoleOptions = React.useMemo(() => {
-    if (roleOptions.includes(formValues.role)) {
-      return roleOptions;
-    }
-
-    return [formValues.role, ...roleOptions];
-  }, [formValues.role, roleOptions]);
-
-  const permissionsTableRows = React.useMemo(() => {
-    const knownPermissions = new Map(
-      staffPermissionCatalog.map((permissionOption) => [
-        permissionOption.label,
-        permissionOption,
-      ]),
-    );
-
-    const extraPermissions = selectedPermissions
-      .filter((permissionLabel) => !knownPermissions.has(permissionLabel))
-      .map((permissionLabel, index) => ({
-        id: `permission-custom-${index}`,
-        label: permissionLabel,
-        description: "صلاحية مضافة مسبقاً.",
-      }));
-
-    return [...staffPermissionCatalog, ...extraPermissions].sort(comparePermissions);
-  }, [selectedPermissions]);
-
-  const togglePermission = React.useCallback((permissionLabel: string, checked: boolean) => {
-    setSelectedPermissions((currentPermissions) => {
-      if (checked) {
-        return normalizePermissions([...currentPermissions, permissionLabel]);
-      }
-
-      return currentPermissions.filter((permission) => permission !== permissionLabel);
-    });
-  }, []);
+export function StaffRoleFormSheet({ open, mode, initialValues, permissionOptions, onOpenChange, onSubmit }: Props) {
+  const [values, setValues] = React.useState(initialValues)
+  React.useEffect(() => { if (open) setValues(initialValues) }, [initialValues, open])
+  const toggle = (id: string, checked: boolean) => setValues((current) => ({ ...current, permissions: checked ? Array.from(new Set([...current.permissions, id])) : current.permissions.filter((permission) => permission !== id) }))
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        dir="rtl"
-        className="w-[95vw] border-border p-0 sm:max-w-2xl"
-      >
-        <form
-          className="flex h-full flex-col"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit({
-              role: formValues.role,
-              description: formValues.description.trim(),
-              permissions: selectedPermissions,
-              isActive: formValues.isActive,
-            });
-            onOpenChange(false);
-          }}
-        >
-          <SheetHeader className="border-b border-border pe-12 text-right">
-            <SheetTitle className="text-right text-lg">
-              {mode === "create" ? "إضافة دور جديد" : "تعديل الدور"}
-            </SheetTitle>
-          </SheetHeader>
-
+      <SheetContent side="right" dir="rtl" className="w-[95vw] border-border p-0 sm:max-w-2xl">
+        <form className="flex h-full flex-col" onSubmit={(event) => { event.preventDefault(); onSubmit({ ...values, name: values.name.trim(), description: values.description.trim() }) }}>
+          <SheetHeader className="border-b border-border pe-12 text-right"><SheetTitle>{mode === 'create' ? '????? ???' : '????? ?????'}</SheetTitle></SheetHeader>
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            <div className="space-y-2">
-              <Label>الدور</Label>
-              <Select
-                dir="rtl"
-                value={formValues.role}
-                disabled={mode === "edit"}
-                onValueChange={(value) =>
-                  setFormValues((currentValues) => ({
-                    ...currentValues,
-                    role: value as StaffRole,
-                  }))
-                }
-              >
-                <SelectTrigger className="w-full text-right">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="start" position="popper" className="text-right">
-                  {resolvedRoleOptions.map((role) => (
-                    <SelectItem key={role} value={role} className="text-right text-xs">
-                      {staffRoleLabels[role]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>الحالة</Label>
-              <Select
-                dir="rtl"
-                value={formValues.isActive ? "active" : "inactive"}
-                onValueChange={(value) =>
-                  setFormValues((currentValues) => ({
-                    ...currentValues,
-                    isActive: value === "active",
-                  }))
-                }
-              >
-                <SelectTrigger className="w-full text-right">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="start" position="popper" className="text-right">
-                  <SelectItem value="active" className="text-right text-xs">
-                    مفعّل
-                  </SelectItem>
-                  <SelectItem value="inactive" className="text-right text-xs">
-                    موقّف
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="staff-role-description">وصف الدور</Label>
-              <Textarea
-                id="staff-role-description"
-                required
-                value={formValues.description}
-                onChange={(event) =>
-                  setFormValues((currentValues) => ({
-                    ...currentValues,
-                    description: event.target.value,
-                  }))
-                }
-                placeholder="اكتب وصفاً مختصراً لهذا الدور"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label>الصلاحيات</Label>
-                <span className="text-xs text-muted-foreground">
-                  المحدد: {selectedPermissions.length}
-                </span>
-              </div>
-
-              <div className="rounded-md border border-border">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-20 text-right font-semibold text-muted-foreground">
-                        تحديد
-                      </TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">
-                        الصلاحية
-                      </TableHead>
-                      <TableHead className="text-right font-semibold text-muted-foreground">
-                        الوصف
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {permissionsTableRows.map((permissionOption) => {
-                      const checked = selectedPermissions.includes(permissionOption.label);
-
-                      return (
-                        <TableRow key={permissionOption.id}>
-                          <TableCell className="text-right">
-                            <Checkbox
-                              checked={checked}
-                              onCheckedChange={(value) =>
-                                togglePermission(permissionOption.label, value === true)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-right text-sm font-medium">
-                            {permissionOption.label}
-                          </TableCell>
-                          <TableCell className="text-right text-xs text-muted-foreground">
-                            {permissionOption.description}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <div className="space-y-2"><Label htmlFor="role-name">??? ?????</Label><Input id="role-name" required disabled={mode === 'edit'} value={values.name} onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>??????</Label><Select value={values.isActive ? 'active' : 'inactive'} onValueChange={(value) => setValues((v) => ({ ...v, isActive: value === 'active' }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">?????</SelectItem><SelectItem value="inactive">?????</SelectItem></SelectContent></Select></div>
+            <div className="space-y-2"><Label htmlFor="role-description">?????</Label><Textarea id="role-description" value={values.description} onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))} /></div>
+            <div className="rounded-md border"><Table><TableHeader><TableRow><TableHead className="w-16">??????</TableHead><TableHead>????????</TableHead><TableHead>?????</TableHead></TableRow></TableHeader><TableBody>{permissionOptions.map((option) => <TableRow key={option.id}><TableCell><Checkbox checked={values.permissions.includes(option.id)} onCheckedChange={(checked) => toggle(option.id, checked === true)} /></TableCell><TableCell>{option.label}</TableCell><TableCell className="text-xs text-muted-foreground">{option.description}</TableCell></TableRow>)}</TableBody></Table></div>
           </div>
-
-          <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              إلغاء
-            </Button>
-            <Button type="submit">
-              {mode === "create" ? "إضافة الدور" : "حفظ التعديلات"}
-            </Button>
-          </SheetFooter>
+          <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>?????</Button><Button type="submit">???</Button></SheetFooter>
         </form>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

@@ -23,8 +23,8 @@ import type {
 const ENDPOINTS = {
   STAFF: '/org/staff',
   STAFF_MEMBER: (id: string) => `/org/staff/${id}`,
-  ROLES: '/org/roles',
-  ROLE: (id: string) => `/org/roles/${id}`,
+  ROLES: '/org/staff/roles',
+  ROLE: (id: string) => `/org/staff/roles/${id}`,
   PERMISSIONS_CATALOG: '/org/permissions/catalog',
 } as const
 

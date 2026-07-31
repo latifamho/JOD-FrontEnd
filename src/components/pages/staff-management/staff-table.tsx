@@ -13,10 +13,7 @@ import {
 import { formatUtcDate } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
-import {
-  staffRoleLabels,
-  type StaffMemberItem,
-} from "@/components/pages/staff-management/static-data";
+import type { StaffMemberItem } from "@/features/org/staff/org.staff.types";
 
 type StaffTableProps = {
   rows: StaffMemberItem[];
@@ -56,10 +53,10 @@ export function StaffTable({ rows, onEdit, onDelete }: StaffTableProps) {
                 </p>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{staffRoleLabels[row.role]}</Badge>
+                <Badge variant="outline">{row.role}</Badge>
               </TableCell>
               <TableCell className="text-right text-xs text-muted-foreground">
-                {formatUtcDate(row.invitedAt)}
+                {row.invitedAt ? formatUtcDate(row.invitedAt) : "-"}
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-1">
