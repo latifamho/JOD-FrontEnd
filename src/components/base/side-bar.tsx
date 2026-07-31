@@ -18,6 +18,7 @@ import {
   type AppNavLink,
 } from "@/constant/routes";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 const DESKTOP_BREAKPOINT = 1024;
 const COLLAPSE_STORAGE_KEY = "jod:sidebar-collapsed";
@@ -248,8 +249,15 @@ function SideBarContent({
   onMouseLeave,
   onLinkClick,
 }: SideBarContentProps) {
-  const role = getRoleFromPath(pathname);
-  const links = getRoleLinks(role);
+  const { dashboardRole, can } = useAuth();
+  const role = dashboardRole === "admin"
+    ? "admin"
+    : dashboardRole === "org_staff"
+      ? "organization_staff"
+      : dashboardRole === "org_owner"
+        ? "organization_owner"
+        : getRoleFromPath(pathname);
+  const links = getRoleLinks(role, can);
   const homeHref = getDashboardHomeByRole(role);
   const searchIndex = buildSearchIndex(links);
   const groupedLinks = groupLinksBySection(links);

@@ -13,7 +13,7 @@ export interface MeResponse { data: MeProfile; message: string }
 export interface DashboardContextProfile extends MeProfile { dashboardRole: DashboardRole | null }
 export interface DashboardOrganization { id: string; name: string; status: string; verificationStatus: string }
 export interface DashboardStaffRole { id: string; name: string; description: string | null; isActive: boolean; isSystem: boolean; membershipStatus: string }
-export interface DashboardCounters { unreadNotifications: number; pendingReviews: number; openReports: number }
+export interface DashboardCounters { pendingReviews: number; openReports: number }
 export interface DashboardContextData {
   profile: DashboardContextProfile
   organization: DashboardOrganization | null

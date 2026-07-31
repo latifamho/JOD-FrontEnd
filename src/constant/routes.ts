@@ -158,6 +158,23 @@ export type SectionTabLink = {
   icon: AppIconName;
 };
 
+const organizationNotificationsEnabled =
+  process.env.NEXT_PUBLIC_ORG_NOTIFICATIONS_ENABLED === "true";
+
+export function getOrganizationPermissionForPath(pathname: string): string | null {
+  if (pathname.includes("/campaigns")) return "org.campaigns.view";
+  if (pathname.includes("/posts")) return "org.posts.view";
+  if (pathname.includes("/donors/applicants")) return "org.applicants.view";
+  if (pathname.includes("/donors")) return "org.donors.view";
+  if (pathname.includes("/reports")) return "org.reports.view";
+  if (pathname.includes("/audit-log")) return "org.audit_logs.view";
+  if (pathname.includes("/settings")) return "org.settings.view";
+  return pathname.includes("/dashboard/org-") ? "dashboard.view" : null;
+}
+
+export function isOrganizationRouteEnabled(pathname: string): boolean {
+  return organizationNotificationsEnabled || !pathname.includes("/notifications");
+}
 export type AppNavLink = {
   label: string;
   href: string;
@@ -592,15 +609,31 @@ export function getRoleFromPath(pathname: string): DashboardRole {
   return "organization_owner";
 }
 
-export function getRoleLinks(role: DashboardRole): AppNavLink[] {
-  return roleLinks[role];
+export function getRoleLinks(
+  role: DashboardRole,
+  can?: (permission: string) => boolean,
+): AppNavLink[] {
+  return roleLinks[role]
+    .filter((link) => role === "admin" || isOrganizationRouteEnabled(link.href))
+    .filter((link) => {
+      if (role !== "organization_staff" || !can) return true;
+      const permission = getOrganizationPermissionForPath(link.href);
+      return permission === null || can(permission);
+    })
+    .map((link) => ({
+      ...link,
+      tabs: link.tabs?.filter((tab) =>
+        role === "admin" || isOrganizationRouteEnabled(tab.href),
+      ),
+    }));
 }
 
 export function getTabsForPath(
   role: DashboardRole,
   pathname: string,
+  can?: (permission: string) => boolean,
 ): SectionTabLink[] {
-  const links = getRoleLinks(role);
+  const links = getRoleLinks(role, can);
 
   const activeLinkWithTabs = links.find(
     (link) =>
@@ -612,6 +645,12 @@ export function getTabsForPath(
   return activeLinkWithTabs?.tabs ?? [];
 }
 
+export function getFirstAllowedRoute(
+  role: DashboardRole,
+  can?: (permission: string) => boolean,
+): string {
+  return getRoleLinks(role, can)[0]?.href ?? getDashboardHomeByRole(role);
+}
 export function getDashboardHomeByRole(role: DashboardRole): string {
   return roleBaseRoute[role];
 }

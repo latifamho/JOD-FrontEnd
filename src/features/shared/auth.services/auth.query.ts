@@ -24,7 +24,7 @@ function getDashboardHome(role: DashboardRole): string {
 
 export function useLogin() {
   const router = useRouter()
-  const { login, updateUser } = useAuth()
+  const { login, setDashboardContext } = useAuth()
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authServices.login(data),
@@ -35,7 +35,8 @@ export function useLogin() {
 
       try {
         const contextResponse = await authServices.getDashboardContext()
-        const { profile } = contextResponse.data
+        const context = contextResponse.data
+        const { profile } = context
         const role = normalizeDashboardRole(profile.dashboardRole)
 
         if (!role) {
@@ -46,7 +47,7 @@ export function useLogin() {
         setUser(profile)
         setDashboardRole(role)
         login()
-        updateUser(profile)
+        setDashboardContext(context)
         toast.success(API_SUCCESS_MESSAGES.loginSuccess)
 
         router.push(getDashboardHome(role))

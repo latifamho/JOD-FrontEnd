@@ -13,9 +13,6 @@ function getDashboardScope(pathname: string): DashboardRoleCookie | null {
   return null
 }
 
-// Kept for the commented role-isolation block below (re-enable in production).
-void getDashboardScope
-
 function getDashboardHome(role: DashboardRoleCookie): string {
   if (role === 'admin') return '/dashboard/admin'
   if (role === 'org_owner') return '/dashboard/org-owner'
@@ -33,28 +30,23 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith('/dashboard')
   const isAuthRoute = pathname === '/login' || pathname === '/register'
 
-  // Unauthenticated user trying to access a protected route
   if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Authenticated user trying to access login / register
   if (isAuthRoute && isAuthenticated) {
     const destination = dashboardRole ? getDashboardHome(dashboardRole) : '/dashboard/admin'
     return NextResponse.redirect(new URL(destination, request.url))
   }
 
-  // TEMP (dev): allow any authenticated user to open admin / org-owner / org-staff pages.
-  // Re-enable role isolation before production.
-  // Role isolation: redirect users who end up in the wrong dashboard section
-  // if (isProtectedRoute && isAuthenticated && dashboardRole) {
-  //   const scope = getDashboardScope(pathname)
-  //   if (scope && scope !== dashboardRole) {
-  //     return NextResponse.redirect(new URL(getDashboardHome(dashboardRole), request.url))
-  //   }
-  // }
+  if (isProtectedRoute && isAuthenticated && dashboardRole) {
+    const scope = getDashboardScope(pathname)
+    if (scope && scope !== dashboardRole) {
+      return NextResponse.redirect(new URL(getDashboardHome(dashboardRole), request.url))
+    }
+  }
 
   return NextResponse.next()
 }

@@ -8,18 +8,31 @@ import {
   getRoleFromPath,
   getTabsForPath,
   isRouteActive,
+  type DashboardRole,
 } from "@/constant/routes";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 function normalizePathname(pathname: string): string {
   const normalized = pathname.trim().replace(/\/+$/, "");
   return normalized === "" ? "/" : normalized;
 }
 
+function toRouteRole(
+  dashboardRole: "admin" | "org_owner" | "org_staff" | null,
+  pathname: string,
+): DashboardRole {
+  if (dashboardRole === "admin") return "admin";
+  if (dashboardRole === "org_owner") return "organization_owner";
+  if (dashboardRole === "org_staff") return "organization_staff";
+  return getRoleFromPath(pathname);
+}
+
 export function SectionTabs() {
   const pathname = usePathname();
-  const role = getRoleFromPath(pathname);
-  const tabs = getTabsForPath(role, pathname);
+  const { dashboardRole, can } = useAuth();
+  const role = toRouteRole(dashboardRole, pathname);
+  const tabs = getTabsForPath(role, pathname, can);
   const normalizedPath = normalizePathname(pathname);
 
   const activeTabHref =
@@ -32,9 +45,7 @@ export function SectionTabs() {
           normalizePathname(firstTab.href).length,
       )[0]?.href;
 
-  if (tabs.length === 0) {
-    return null;
-  }
+  if (tabs.length === 0) return null;
 
   return (
     <div className="border-b border-border bg-background/95 px-4">
