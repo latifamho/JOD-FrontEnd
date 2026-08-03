@@ -8,7 +8,7 @@ import { toast } from '@/lib/toast'
 import type { ApiError } from '@/types/api.types'
 import type { ToastPosition } from '@/types/toast.types'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost/api/v1'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL!
 const SKIP_AUTH_URLS = ['/auth/login']
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 let hasHandledUnauthorized = false
