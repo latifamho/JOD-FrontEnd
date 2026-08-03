@@ -11,66 +11,61 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type {
   OrganizationType,
+  RegisterFieldErrors,
   RegisterInputChangeEvent,
   RegisterValues,
 } from "@/app/(auth)/register/register-form.types";
 
 type RegisterPhaseTwoFieldsProps = {
   values: RegisterValues;
-  organizationType: OrganizationType | "";
-  onOrganizationTypeChange: (value: OrganizationType) => void;
+  errors: RegisterFieldErrors;
+  disabled: boolean;
   acceptTerms: boolean;
-  onAcceptTermsChange: (checked: boolean) => void;
   confirmAccuracy: boolean;
+  onOrganizationTypeChange: (value: OrganizationType) => void;
+  onAcceptTermsChange: (checked: boolean) => void;
   onConfirmAccuracyChange: (checked: boolean) => void;
   onInputChange: (event: RegisterInputChangeEvent) => void;
 };
 
 export function RegisterPhaseTwoFields({
   values,
-  organizationType,
-  onOrganizationTypeChange,
+  errors,
+  disabled,
   acceptTerms,
-  onAcceptTermsChange,
   confirmAccuracy,
+  onOrganizationTypeChange,
+  onAcceptTermsChange,
   onConfirmAccuracyChange,
   onInputChange,
 }: RegisterPhaseTwoFieldsProps) {
   return (
     <section className="space-y-5">
-      <h3 className="text-sm font-semibold text-foreground">بيانات المنظمة والتوثيق</h3>
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">بيانات المنظمة</h3>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          أدخل البيانات الرسمية المطابقة للسجل أو الترخيص لتسهيل عملية المراجعة.
+        </p>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="organizationNameAr">اسم المنظمة (عربي)</Label>
+        <Field label="اسم المنظمة" error={errors.companyName}>
           <Input
-            id="organizationNameAr"
-            name="organizationNameAr"
-            value={values.organizationNameAr}
+            id="companyName"
+            name="companyName"
+            value={values.companyName}
             onChange={onInputChange}
+            disabled={disabled}
             placeholder="مثال: جمعية نبض الخير"
             className="h-11 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="organizationNameEn">اسم المنظمة (إنجليزي) - اختياري</Label>
-          <Input
-            id="organizationNameEn"
-            name="organizationNameEn"
-            dir="ltr"
-            value={values.organizationNameEn}
-            onChange={onInputChange}
-            placeholder="Organization Name"
-            className="h-11 rounded-xl bg-background/85 text-left"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="organizationType">نوع المنظمة</Label>
+        <Field label="نوع المنظمة" error={errors.organizationType}>
           <Select
             dir="rtl"
-            value={organizationType}
+            value={values.organizationType}
+            disabled={disabled}
             onValueChange={(value) => onOrganizationTypeChange(value as OrganizationType)}
           >
             <SelectTrigger id="organizationType" className="h-11 w-full rounded-xl">
@@ -82,98 +77,98 @@ export function RegisterPhaseTwoFields({
               <SelectItem value="initiative">مبادرة</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="registrationNumber">رقم السجل أو الترخيص</Label>
+        <Field label="رقم السجل أو الترخيص" error={errors.registrationNumber}>
           <Input
             id="registrationNumber"
             name="registrationNumber"
             value={values.registrationNumber}
             onChange={onInputChange}
+            disabled={disabled}
             placeholder="مثال: 1234567890"
             className="h-11 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="establishmentDate">تاريخ التأسيس</Label>
+        <Field label="تاريخ التأسيس" error={errors.establishmentDate}>
           <Input
             id="establishmentDate"
             name="establishmentDate"
             type="date"
+            max={new Date().toISOString().slice(0, 10)}
             value={values.establishmentDate}
             onChange={onInputChange}
+            disabled={disabled}
             className="h-11 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="city">المدينة</Label>
+        <Field label="البريد الرسمي" error={errors.companyEmail}>
+          <Input
+            id="companyEmail"
+            name="companyEmail"
+            type="email"
+            dir="ltr"
+            value={values.companyEmail}
+            onChange={onInputChange}
+            disabled={disabled}
+            placeholder="org@example.com"
+            className="h-11 rounded-xl bg-background/85 text-left"
+          />
+        </Field>
+
+        <Field label="الهاتف الرسمي" error={errors.companyPhone}>
+          <Input
+            id="companyPhone"
+            name="companyPhone"
+            type="tel"
+            dir="ltr"
+            value={values.companyPhone}
+            onChange={onInputChange}
+            disabled={disabled}
+            placeholder="+966XXXXXXXXX"
+            className="h-11 rounded-xl bg-background/85 text-left"
+          />
+        </Field>
+
+        <Field label="المدينة" error={errors.city}>
           <Input
             id="city"
             name="city"
             value={values.city}
             onChange={onInputChange}
+            disabled={disabled}
             placeholder="مثال: الرياض"
             className="h-11 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="shortAddress">العنوان المختصر</Label>
+        <Field label="العنوان المختصر" error={errors.shortAddress}>
           <Input
             id="shortAddress"
             name="shortAddress"
             value={values.shortAddress}
             onChange={onInputChange}
+            disabled={disabled}
             placeholder="الحي - الشارع - رقم المبنى"
             className="h-11 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="organizationDescription">وصف مختصر للمنظمة</Label>
+        <Field className="md:col-span-2" label="وصف مختصر" error={errors.description}>
           <Textarea
-            id="organizationDescription"
-            name="organizationDescription"
-            value={values.organizationDescription}
+            id="description"
+            name="description"
+            value={values.description}
             onChange={onInputChange}
-            placeholder="اذكر نبذة عن أنشطة المنظمة ومجالات عملها."
+            disabled={disabled}
+            placeholder="نبذة عن أنشطة المنظمة ومجالات عملها."
             className="min-h-28 rounded-xl bg-background/85"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="officialEmail">البريد الرسمي للمنظمة</Label>
-          <Input
-            id="officialEmail"
-            name="officialEmail"
-            type="email"
-            dir="ltr"
-            value={values.officialEmail}
-            onChange={onInputChange}
-            placeholder="org@example.com"
-            className="h-11 rounded-xl bg-background/85 text-left"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="officialPhone">الهاتف الرسمي للمنظمة</Label>
-          <Input
-            id="officialPhone"
-            name="officialPhone"
-            type="tel"
-            dir="ltr"
-            value={values.officialPhone}
-            onChange={onInputChange}
-            placeholder="+966XXXXXXXXX"
-            className="h-11 rounded-xl bg-background/85 text-left"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="website">الموقع الإلكتروني - اختياري</Label>
+        <Field className="md:col-span-2" label="الموقع الإلكتروني - اختياري" error={errors.website}>
           <Input
             id="website"
             name="website"
@@ -181,70 +176,77 @@ export function RegisterPhaseTwoFields({
             dir="ltr"
             value={values.website}
             onChange={onInputChange}
+            disabled={disabled}
             placeholder="https://example.org"
             className="h-11 rounded-xl bg-background/85 text-left"
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="socialMedia">حسابات التواصل - اختياري</Label>
-          <Input
-            id="socialMedia"
-            name="socialMedia"
-            dir="ltr"
-            value={values.socialMedia}
-            onChange={onInputChange}
-            placeholder="X / Instagram / LinkedIn"
-            className="h-11 rounded-xl bg-background/85 text-left"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="licenseDocument">وثيقة الترخيص أو السجل</Label>
-          <Input
-            id="licenseDocument"
-            name="licenseDocument"
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            className="h-11 rounded-xl bg-background/85"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="delegationDocument">هوية المفوض أو خطاب التفويض</Label>
-          <Input
-            id="delegationDocument"
-            name="delegationDocument"
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            className="h-11 rounded-xl bg-background/85"
-          />
-        </div>
+        </Field>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-border/70 bg-muted/40 p-4">
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="acceptTerms"
-            checked={acceptTerms}
-            onCheckedChange={(checked) => onAcceptTermsChange(Boolean(checked))}
-          />
-          <Label htmlFor="acceptTerms" className="text-sm leading-6">
-            أوافق على الشروط والأحكام وسياسة الخصوصية.
-          </Label>
-        </div>
-
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="confirmAccuracy"
-            checked={confirmAccuracy}
-            onCheckedChange={(checked) => onConfirmAccuracyChange(Boolean(checked))}
-          />
-          <Label htmlFor="confirmAccuracy" className="text-sm leading-6">
-            أقر بأن جميع البيانات المرفوعة صحيحة وكاملة.
-          </Label>
-        </div>
+      <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/40 p-4">
+        <CheckRow
+          id="acceptTerms"
+          checked={acceptTerms}
+          disabled={disabled}
+          onChange={onAcceptTermsChange}
+          label="أوافق على الشروط والأحكام وسياسة الخصوصية."
+        />
+        <CheckRow
+          id="confirmAccuracy"
+          checked={confirmAccuracy}
+          disabled={disabled}
+          onChange={onConfirmAccuracyChange}
+          label="أقر بأن جميع البيانات المدخلة صحيحة وكاملة."
+        />
       </div>
     </section>
+  );
+}
+
+function Field({
+  label,
+  error,
+  className,
+  children,
+}: {
+  label: string;
+  error?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`space-y-2 ${className ?? ""}`}>
+      <Label>{label}</Label>
+      {children}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+    </div>
+  );
+}
+
+function CheckRow({
+  id,
+  checked,
+  disabled,
+  onChange,
+  label,
+}: {
+  id: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Checkbox
+        id={id}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={(value) => onChange(Boolean(value))}
+      />
+      <Label htmlFor={id} className="text-sm leading-6">
+        {label}
+      </Label>
+    </div>
   );
 }

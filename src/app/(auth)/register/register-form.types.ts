@@ -4,43 +4,44 @@ export type RegisterPhase = "phase-1" | "phase-2";
 export type OrganizationType = "association" | "foundation" | "initiative";
 
 export type RegisterValues = {
-  adminFullName: string;
-  adminEmail: string;
-  adminPhone: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone: string;
   password: string;
-  confirmPassword: string;
-  organizationNameAr: string;
-  organizationNameEn: string;
+  passwordConfirmation: string;
+  companyName: string;
+  companyEmail: string;
+  companyPhone: string;
+  organizationType: OrganizationType | "";
   registrationNumber: string;
   establishmentDate: string;
   city: string;
   shortAddress: string;
-  organizationDescription: string;
-  officialEmail: string;
-  officialPhone: string;
+  description: string;
   website: string;
-  socialMedia: string;
 };
+
+export type RegisterFieldName = keyof RegisterValues;
+export type RegisterFieldErrors = Partial<Record<RegisterFieldName | "root", string>>;
 
 export type RegisterInputChangeEvent = ChangeEvent<
   HTMLInputElement | HTMLTextAreaElement
 >;
 
 export const INITIAL_REGISTER_VALUES: RegisterValues = {
-  adminFullName: "",
-  adminEmail: "",
-  adminPhone: "",
+  ownerName: "",
+  ownerEmail: "",
+  ownerPhone: "",
   password: "",
-  confirmPassword: "",
-  organizationNameAr: "",
-  organizationNameEn: "",
+  passwordConfirmation: "",
+  companyName: "",
+  companyEmail: "",
+  companyPhone: "",
+  organizationType: "",
   registrationNumber: "",
   establishmentDate: "",
   city: "",
   shortAddress: "",
-  organizationDescription: "",
-  officialEmail: "",
-  officialPhone: "",
+  description: "",
   website: "",
-  socialMedia: "",
 };

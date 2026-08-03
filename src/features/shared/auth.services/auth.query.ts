@@ -1,70 +1,115 @@
-'use client'
+"use client";
 
-import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
-import { API_SUCCESS_MESSAGES } from '@/constant/api-success-messages'
-import { clearAuthData, setAuthToken, setDashboardRole, setUser } from '@/lib/cookies'
-import type { DashboardRoleCookie } from '@/lib/cookies'
-import { toast } from '@/lib/toast'
-import { useAuth } from '@/providers/AuthProvider'
-import { authServices } from './auth.service'
-import type { DashboardRole, LoginRequest } from './auth.type'
+import { API_SUCCESS_MESSAGES } from "@/constant/api-success-messages";
+import {
+  AuthFlowError,
+  getAuthenticatedLanding,
+  isAccountTypeCompatible,
+} from "@/features/shared/auth.services/auth.utils";
+import {
+  clearAuthData,
+  setAuthTokens,
+} from "@/lib/cookies";
+import { toast } from "@/lib/toast";
+import { useAuth } from "@/providers/AuthProvider";
+import { authServices } from "./auth.service";
+import type {
+  CompanyRegisterRequest,
+  DashboardContextData,
+  DashboardRole,
+  LoginAccountType,
+  LoginMutationInput,
+  LoginResponse,
+} from "./auth.type";
 
-function normalizeDashboardRole(role: DashboardRole | null): DashboardRoleCookie | null {
-  if (role === 'admin' || role === 'org_owner' || role === 'org_staff') return role
-  return null
+async function completeAuthentication(
+  response: LoginResponse,
+  accountType: LoginAccountType,
+  ownerOnly = false,
+): Promise<{ context: DashboardContextData; role: DashboardRole }> {
+  setAuthTokens(response.data);
+
+  try {
+    const contextResponse = await authServices.getDashboardContext();
+    const context = contextResponse.data;
+    const role = context.profile.dashboardRole;
+
+    if (!role) {
+      throw new AuthFlowError("هذا الحساب لا يملك صلاحية الوصول إلى لوحة التحكم.");
+    }
+
+    if (!isAccountTypeCompatible(accountType, role)) {
+      throw new AuthFlowError(
+        accountType === "admin"
+          ? "هذا الحساب ليس حساب إدارة منصة. اختر حساب منظمة وحاول مرة أخرى."
+          : "هذا الحساب ليس مرتبطاً بمنظمة. اختر حساب إدارة المنصة وحاول مرة أخرى.",
+      );
+    }
+
+    if (ownerOnly && role !== "org_owner") {
+      throw new AuthFlowError("تعذّر تهيئة حساب مالك المنظمة بعد التسجيل.");
+    }
+
+    return { context, role };
+  } catch (error) {
+    clearAuthData();
+    throw error;
+  }
 }
 
-function getDashboardHome(role: DashboardRole): string {
-  if (role === 'admin') return '/dashboard/admin'
-  if (role === 'org_owner') return '/dashboard/org-owner'
-  return '/dashboard/org-staff'
+function useCompleteAuthSession() {
+  const router = useRouter();
+  const { login, setDashboardContext } = useAuth();
+
+  return (context: DashboardContextData, successMessage: string) => {
+    setDashboardContext(context);
+    login();
+    toast.success(successMessage);
+    router.replace(getAuthenticatedLanding(context));
+  };
 }
 
 export function useLogin() {
-  const router = useRouter()
-  const { login, setDashboardContext } = useAuth()
+  const completeSession = useCompleteAuthSession();
 
   return useMutation({
-    mutationFn: (data: LoginRequest) => authServices.login(data),
-    onSuccess: async (response) => {
-      const { token } = response.data
-
-      setAuthToken(token)
-
-      try {
-        const contextResponse = await authServices.getDashboardContext()
-        const context = contextResponse.data
-        const { profile } = context
-        const role = normalizeDashboardRole(profile.dashboardRole)
-
-        if (!role) {
-          clearAuthData()
-          throw new Error('The authenticated account does not have dashboard access.')
-        }
-
-        setUser(profile)
-        setDashboardRole(role)
-        login()
-        setDashboardContext(context)
-        toast.success(API_SUCCESS_MESSAGES.loginSuccess)
-
-        router.push(getDashboardHome(role))
-      } catch {
-        clearAuthData()
-      }
+    mutationFn: async ({ accountType, email, password }: LoginMutationInput) => {
+      const response = await authServices.login({ email, password }, accountType);
+      return completeAuthentication(response, accountType);
     },
-  })
+    onSuccess: ({ context }) => {
+      completeSession(context, API_SUCCESS_MESSAGES.loginSuccess);
+    },
+  });
+}
+
+export function useRegisterOrganization() {
+  const completeSession = useCompleteAuthSession();
+
+  return useMutation({
+    mutationFn: async (data: CompanyRegisterRequest) => {
+      const response = await authServices.registerOrganization(data);
+      return completeAuthentication(response, "organization", true);
+    },
+    onSuccess: ({ context }) => {
+      completeSession(
+        context,
+        "تم استلام طلب تسجيل منظمتك بنجاح.",
+      );
+    },
+  });
 }
 
 export function useLogout() {
-  const { logout } = useAuth()
+  const { logout } = useAuth();
 
   return useMutation({
     mutationFn: () => authServices.logout(),
     onSettled: () => {
-      logout()
+      logout();
     },
-  })
+  });
 }
