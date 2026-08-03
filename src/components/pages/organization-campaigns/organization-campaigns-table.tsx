@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,23 +34,22 @@ import {
 
 type OrganizationCampaignsTableProps = {
   rows: OrganizationCampaignItem[];
-  onEditCampaign: (campaignId: string) => void;
   onCloseCampaign: (campaignId: string) => void;
   onDeleteCampaign: (campaignId: string) => void;
-  canEdit: boolean;
   canClose: boolean;
   canDelete: boolean;
 };
 
 export function OrganizationCampaignsTable({
   rows,
-  onEditCampaign,
   onCloseCampaign,
   onDeleteCampaign,
-  canEdit,
   canClose,
   canDelete,
 }: OrganizationCampaignsTableProps) {
+  const pathname = usePathname();
+  const isStaffScope = pathname.startsWith(routePaths.dashboardScope.orgStaffRoot);
+
   return (
     <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
       <Table className="min-w-340 bg-background">
@@ -182,27 +182,15 @@ export function OrganizationCampaignsTable({
                         asChild
                       >
                         <Link
-                          href={routePaths.organizationOwnerScope.campaignDetails(
-                            campaign.id,
-                          )}
+                          href={
+                            isStaffScope
+                              ? routePaths.organizationStaffScope.campaignDetails(campaign.id)
+                              : routePaths.organizationOwnerScope.campaignDetails(campaign.id)
+                          }
                         >
                           <AppIcons.eye className="size-4 text-info" />
                         </Link>
                       </Button>
-                      {canEdit ? (
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="تعديل الحملة"
-                        className="shadow-sm"
-                        onClick={() => onEditCampaign(campaign.id)}
-                        disabled={campaign.status === "closed"}
-                      >
-                        <AppIcons.PencilLine className="size-4 text-info" />
-                      </Button>
-                      ) : null}
                       {canClose ? (
 
                       <Button

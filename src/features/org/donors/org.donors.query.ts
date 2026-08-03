@@ -21,6 +21,14 @@ export function useOrgDonors(params: OrgDonorsParams, enabled = true) {
   })
 }
 
+export function useOrgDonor(donorId: string | null) {
+  return useQuery({
+    queryKey: orgDonorsKeys.detail(donorId ?? ''),
+    queryFn: () => orgDonorsServices.getDonorById(donorId!),
+    enabled: Boolean(donorId),
+  })
+}
+
 export function useCreateOrgDonor() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -57,6 +65,14 @@ export function useOrgApplicants(params: OrgApplicantsParams, enabled = true) {
     queryKey: orgApplicantsKeys.list(params),
     queryFn: () => orgDonorsServices.getApplicants(params),
     enabled,
+  })
+}
+
+export function useOrgApplicant(applicantId: string | null) {
+  return useQuery({
+    queryKey: orgApplicantsKeys.detail(applicantId ?? ''),
+    queryFn: () => orgDonorsServices.getApplicantById(applicantId!),
+    enabled: Boolean(applicantId),
   })
 }
 

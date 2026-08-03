@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import * as React from 'react'
+import { FormLoadingSkeleton } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,11 +34,15 @@ export function OrganizationSettingsPage() {
   return (
     <section className="flex flex-1 flex-col gap-6">
       <div><h2 className="text-lg font-semibold">إعدادات المؤسسة</h2><p className="mt-1 text-sm text-muted-foreground">بيانات المؤسسة والحساب البنكي المرتبط بها.</p></div>
+      {profile.isLoading || bank.isLoading ? (
+        <div className="rounded-xl border bg-card p-6"><FormLoadingSkeleton count={5} /></div>
+      ) : (
       <div className="space-y-6 rounded-xl border bg-card p-6">
         <div className="grid gap-4 sm:grid-cols-2">{field('name', 'اسم المؤسسة')}{field('email', 'البريد الإلكتروني')}{field('phone', 'رقم الهاتف')}</div>
         <div className="grid gap-4 border-t pt-6 sm:grid-cols-2">{field('bankName', 'اسم البنك')}{field('iban', 'رقم الآيبان')}</div>
         {canUpdate ? <div className="flex gap-2"><Button onClick={() => updateProfile.mutate({ name: values.name, email: values.email, phone: values.phone })}>حفظ بيانات المؤسسة</Button><Button variant="outline" onClick={() => updateBank.mutate({ bankName: values.bankName || null, iban: values.iban || null })}>حفظ الحساب البنكي</Button></div> : <p className="text-sm text-muted-foreground">لديك صلاحية عرض الإعدادات فقط.</p>}
       </div>
+      )}
     </section>
   )
 }

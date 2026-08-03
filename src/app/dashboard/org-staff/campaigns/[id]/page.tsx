@@ -8,5 +8,5 @@ export default async function OrgStaffCampaignDetailsPage({
   params,
 }: CampaignDetailsRoutePageProps) {
   const resolvedParams = await params;
-  return <OrganizationCampaignDetailsPage campaignId={resolvedParams.id} />;
+  return <OrganizationCampaignDetailsPage campaignId={resolvedParams.id} scope="staff" />;
 }

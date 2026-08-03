@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { EmptyState, PaginationControls } from "@/components/shared";
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { DonorEntryDetailsSheet } from "@/components/pages/donors-management/donor-entry-details-sheet";
 import { DonorEntryDeleteDialog } from "@/components/pages/donors-management/donor-entry-delete-dialog";
 import {
@@ -316,7 +316,9 @@ export function DonorsManagementPage({
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {activeQuery.isLoading ? (
+        <ListLoadingSkeleton />
+      ) : rows.length === 0 ? (
         <EmptyState
           icon="donors"
           title={view === "donors" ? "لا يوجد متبرعون حتى الآن" : "لا يوجد متقدمون"}

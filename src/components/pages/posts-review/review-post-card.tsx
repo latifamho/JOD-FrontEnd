@@ -81,7 +81,7 @@ export function ReviewPostCard({
             size="sm"
             onClick={() => setDetailsOpen(true)}
           >
-            <AppIcons.profile className="size-4" />
+            <AppIcons.eye className="size-4" />
             عرض التفاصيل
           </Button>
 

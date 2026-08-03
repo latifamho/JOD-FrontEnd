@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/shared";
+import { DetailsLoadingSkeleton, EmptyState } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
 import {
   formatUtcDate,
@@ -18,28 +20,29 @@ import {
 import {
   organizationCampaignCategoryLabels,
   organizationCampaignStatusLabels,
-  organizationCampaignsStaticData,
   type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
+import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
+import { useAuth } from "@/providers/AuthProvider";
 
 type OrganizationCampaignDetailsPageProps = {
   campaignId: string;
-};
-
-const statusRouteMap: Record<OrganizationCampaignStatus, string> = {
-  draft: routePaths.organizationOwnerScope.campaignsDraft,
-  active: routePaths.organizationOwnerScope.campaignsActive,
-  closed: routePaths.organizationOwnerScope.campaignsClosed,
+  scope: "owner" | "staff";
 };
 
 export function OrganizationCampaignDetailsPage({
   campaignId,
+  scope,
 }: OrganizationCampaignDetailsPageProps) {
-  const campaign = organizationCampaignsStaticData.find(
-    (candidate) => candidate.id === campaignId,
-  );
+  const { can } = useAuth();
+  const campaignQuery = useOrgCampaign(campaignId);
+  const campaign = campaignQuery.data?.data;
 
-  if (!campaign) {
+  if (campaignQuery.isLoading) {
+    return <DetailsLoadingSkeleton className="rounded-xl border border-border bg-card" />;
+  }
+
+  if (!campaign || campaignQuery.isError) {
     return (
       <section className="flex flex-1 flex-col gap-4">
         <EmptyState
@@ -59,6 +62,26 @@ export function OrganizationCampaignDetailsPage({
   }
 
   const progress = getProgress(campaign.goalAmount, campaign.raisedAmount);
+  const campaignsRoot =
+    scope === "staff"
+      ? routePaths.organizationStaffScope.campaigns
+      : routePaths.organizationOwnerScope.campaigns;
+  const statusRouteMap: Record<OrganizationCampaignStatus, string> =
+    scope === "staff"
+      ? {
+          draft: routePaths.organizationStaffScope.campaigns,
+          active: routePaths.organizationStaffScope.campaignsActive,
+          closed: routePaths.organizationStaffScope.campaignsClosed,
+        }
+      : {
+          draft: routePaths.organizationOwnerScope.campaignsDraft,
+          active: routePaths.organizationOwnerScope.campaignsActive,
+          closed: routePaths.organizationOwnerScope.campaignsClosed,
+        };
+  const editRoute =
+    scope === "staff"
+      ? routePaths.organizationStaffScope.campaignEdit(campaign.id)
+      : routePaths.organizationOwnerScope.campaignEdit(campaign.id);
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -82,15 +105,18 @@ export function OrganizationCampaignDetailsPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {can("org.campaigns.update") && campaign.status !== "closed" ? (
+              <Button asChild>
+                <Link href={editRoute}>تعديل الحملة</Link>
+              </Button>
+            ) : null}
             <Button asChild variant="outline">
               <Link href={statusRouteMap[campaign.status]}>
                 الرجوع إلى قائمة {organizationCampaignStatusLabels[campaign.status]}
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routePaths.organizationOwnerScope.campaigns}>
-                كل الحملات
-              </Link>
+              <Link href={campaignsRoot}>كل الحملات</Link>
             </Button>
           </div>
         </div>

@@ -24,8 +24,8 @@ import {
   getDashboardHomeByRole,
   getPageTitle,
   getRoleFromPath,
-  getRoleProfileRoute,
   getRoleSettingsRoute,
+  routePaths,
   type DashboardRole,
 } from "@/constant/routes";
 import { useLogout } from "@/features/shared/auth.services/auth.query";
@@ -199,17 +199,16 @@ export function Header() {
             </div>
 
             <div className="p-1">
-              <DropdownMenuItem asChild>
-                <Link
-                  href={getRoleProfileRoute(role)}
-                  className="cursor-pointer py-2"
-                >
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                    <AppIcons.profile className="size-3.5 text-muted-foreground" />
-                  </div>
-                  الملف الشخصي
-                </Link>
-              </DropdownMenuItem>
+              {role === "admin" ? (
+                <DropdownMenuItem asChild>
+                  <Link href={routePaths.adminScope.profile} className="cursor-pointer py-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
+                      <AppIcons.profile className="size-3.5 text-muted-foreground" />
+                    </div>
+                    الملف الشخصي
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
 
               <DropdownMenuItem asChild>
                 <Link

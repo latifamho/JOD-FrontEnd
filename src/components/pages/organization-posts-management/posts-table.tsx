@@ -33,10 +33,8 @@ type WorkflowAction =
 type PostsTableProps = {
   rows: OrganizationPostItem[];
   onOpenDetails: (postId: string) => void;
-  onEditPost: (postId: string) => void;
   onWorkflowAction: (postId: string, action: WorkflowAction) => void;
   onDeletePost: (postId: string) => void;
-  canEdit: boolean;
   canPublish: boolean;
   canArchive: boolean;
   canRestore: boolean;
@@ -99,10 +97,8 @@ function WorkflowActionButton({
 export function PostsTable({
   rows,
   onOpenDetails,
-  onEditPost,
   onWorkflowAction,
   onDeletePost,
-  canEdit,
   canPublish,
   canArchive,
   canRestore,
@@ -218,18 +214,7 @@ export function PostsTable({
                     >
                       <AppIcons.eye className="size-4 text-info" />
                     </Button>
-                    {canEdit ? (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="تعديل البوست"
-                      onClick={() => onEditPost(post.id)}
-                      className="shadow-sm"
-                    >
-                      <AppIcons.PencilLine className="size-4 text-info" />
-                    </Button>
-                    ) : null}
+
                     {(normalizedStatus === "draft" ? canPublish : normalizedStatus === "published" ? canArchive : canRestore) ? (
                     <WorkflowActionButton
                       status={normalizedStatus}

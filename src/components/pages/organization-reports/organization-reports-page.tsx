@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { PaginationControls } from '@/components/shared'
+import { ListLoadingSkeleton, PaginationControls } from '@/components/shared'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
 import { useOrgReports, useUpdateOrgReportStatus } from '@/features/org/reports/org.reports.query'
 import type { OrgReportStatus } from '@/features/org/reports/org.reports.types'
@@ -48,6 +48,9 @@ export function OrganizationReportsPage() {
 
       {reports.isError ? <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">تعذر تحميل البلاغات.</div> : null}
 
+      {reports.isLoading ? (
+        <ListLoadingSkeleton />
+      ) : (
       <div className="overflow-auto rounded-md border bg-card">
         <Table>
           <TableHeader><TableRow><TableHead>العنوان</TableHead><TableHead>الخطورة</TableHead><TableHead>الحالة</TableHead><TableHead>المبلّغ</TableHead><TableHead>التاريخ</TableHead><TableHead>الإجراء</TableHead></TableRow></TableHeader>
@@ -72,6 +75,7 @@ export function OrganizationReportsPage() {
           </TableBody>
         </Table>
       </div>
+      )}
 
       <PaginationControls currentPage={pagination.currentPage} totalPages={pagination.totalPages} hasPreviousPage={pagination.hasPreviousPage} hasNextPage={pagination.hasNextPage} paginationRange={pagination.paginationRange} onPageChange={pagination.goToPage} onPreviousPage={pagination.goToPreviousPage} onNextPage={pagination.goToNextPage} pageSize={pageSize} onPageSizeChange={setPageSize} pageSizeOptions={PAGE_SIZE_OPTIONS} />
     </section>

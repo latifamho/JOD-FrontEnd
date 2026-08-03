@@ -162,7 +162,7 @@ function ReviewPostRow({
                   className="size-8"
                   onClick={() => onOpenDetails(post)}
                 >
-                  <AppIcons.profile className="size-4" />
+                  <AppIcons.eye className="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">

@@ -45,6 +45,7 @@ export const orgPostsServices = {
     return response.data
   },
 
+
   async publishPost(postId: string): Promise<PostStateResponse> {
     const response = await api.patch<PostStateResponse>(ENDPOINTS.POST_STATUS(postId), { status: 'published' })
     return response.data

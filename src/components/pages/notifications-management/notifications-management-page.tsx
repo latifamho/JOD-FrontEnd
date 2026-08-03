@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import { EmptyState, PaginationControls } from "@/components/shared";
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
@@ -62,7 +62,7 @@ export function NotificationsManagementPage({
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isError, refetch } = useAdminNotifications({
+  const { data, isLoading, isError, refetch } = useAdminNotifications({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: "-sentAt",
@@ -208,7 +208,9 @@ export function NotificationsManagementPage({
         </div>
       )}
 
-      {notifications.length === 0 ? (
+      {isLoading ? (
+        <ListLoadingSkeleton />
+      ) : notifications.length === 0 ? (
         <EmptyState
           icon="notifications"
           title={`لا توجد إشعارات ضمن ${notificationMailboxLabels[activeMailbox]}`}

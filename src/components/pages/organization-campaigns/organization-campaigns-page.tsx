@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import { EmptyState, PaginationControls } from "@/components/shared";
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
@@ -16,10 +16,7 @@ import {
 } from "@/components/pages/organization-campaigns/campaign-form-sheet";
 import { CloseCampaignDialog } from "@/components/pages/organization-campaigns/close-campaign-dialog";
 import { DeleteCampaignDialog } from "@/components/pages/organization-campaigns/delete-campaign-dialog";
-import {
-  toDateInputValue,
-  toDateTimeFromInput,
-} from "@/components/pages/organization-campaigns/helpers";
+import { toDateTimeFromInput } from "@/components/pages/organization-campaigns/helpers";
 import {
   type CampaignSortOption,
   OrganizationCampaignsFilters,
@@ -33,7 +30,6 @@ import {
 import {
   useOrgCampaigns,
   useCreateOrgCampaign,
-  useUpdateOrgCampaign,
   useCloseOrgCampaign,
   useDeleteOrgCampaign,
 } from "@/features/org/campaigns/org.campaigns.query";
@@ -54,7 +50,6 @@ export function OrganizationCampaignsPage({
 }: OrganizationCampaignsPageProps) {
   const { can } = useAuth();
   const canCreate = can("org.campaigns.create");
-  const canEdit = can("org.campaigns.update");
   const canClose = can("org.campaigns.close");
   const canDelete = can("org.campaigns.delete");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
@@ -66,10 +61,6 @@ export function OrganizationCampaignsPage({
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
   const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
-  const [formInitialValues, setFormInitialValues] =
-    React.useState<CampaignFormValues>(EMPTY_CAMPAIGN_FORM_VALUES);
-  const [editingCampaignId, setEditingCampaignId] = React.useState<string | null>(null);
 
   const [closeDialogOpen, setCloseDialogOpen] = React.useState(false);
   const [closeTargetCampaignId, setCloseTargetCampaignId] = React.useState<string | null>(null);
@@ -82,7 +73,7 @@ export function OrganizationCampaignsPage({
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isError, refetch } = useOrgCampaigns({
+  const { data, isLoading, isError, refetch } = useOrgCampaigns({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
@@ -105,86 +96,32 @@ export function OrganizationCampaignsPage({
   const campaigns = data?.data ?? [];
 
   const createMutation = useCreateOrgCampaign();
-  const updateMutation = useUpdateOrgCampaign();
   const closeMutation = useCloseOrgCampaign();
   const deleteMutation = useDeleteOrgCampaign();
 
   const openCreateSheet = React.useCallback(() => {
-    setFormMode("create");
-    setEditingCampaignId(null);
-    setFormInitialValues(EMPTY_CAMPAIGN_FORM_VALUES);
     setFormOpen(true);
   }, []);
 
-  const openEditSheet = React.useCallback(
-    (campaignId: string) => {
-      const campaign = campaigns.find((c) => c.id === campaignId);
-      if (!campaign) return;
-
-      setFormMode("edit");
-      setEditingCampaignId(campaign.id);
-      setFormInitialValues({
-        title: campaign.title,
-        summary: campaign.summary,
-        category: campaign.category,
-        status: campaign.status,
-        location: campaign.location,
-        goalAmount: campaign.goalAmount,
-        beneficiariesCount: campaign.beneficiariesCount,
-        startDate: toDateInputValue(campaign.startDate),
-        endDate: toDateInputValue(campaign.endDate),
-      });
-      setFormOpen(true);
-    },
-    [campaigns],
-  );
 
   const handleSaveForm = React.useCallback(
     (values: CampaignFormValues) => {
-      if (formMode === "create") {
-        createMutation.mutate(
-          {
-            title: values.title,
-            summary: values.summary,
-            category: values.category,
-            status: values.status,
-            location: values.location,
-            goalAmount: values.goalAmount,
-            beneficiariesCount: values.beneficiariesCount,
-            startDate: toDateTimeFromInput(values.startDate),
-            endDate: toDateTimeFromInput(values.endDate),
-          },
-          { onSuccess: () => setFormOpen(false) },
-        );
-        return;
-      }
-
-      if (!editingCampaignId) return;
-
-      updateMutation.mutate(
+      createMutation.mutate(
         {
-          campaignId: editingCampaignId,
-          body: {
-            title: values.title,
-            summary: values.summary,
-            category: values.category,
-            status: values.status,
-            location: values.location,
-            goalAmount: values.goalAmount,
-            beneficiariesCount: values.beneficiariesCount,
-            startDate: toDateTimeFromInput(values.startDate),
-            endDate: toDateTimeFromInput(values.endDate),
-          },
+          title: values.title,
+          summary: values.summary,
+          category: values.category,
+          status: values.status,
+          location: values.location,
+          goalAmount: values.goalAmount,
+          beneficiariesCount: values.beneficiariesCount,
+          startDate: toDateTimeFromInput(values.startDate),
+          endDate: toDateTimeFromInput(values.endDate),
         },
-        {
-          onSuccess: () => {
-            setFormOpen(false);
-            setEditingCampaignId(null);
-          },
-        },
+        { onSuccess: () => setFormOpen(false) },
       );
     },
-    [formMode, editingCampaignId, createMutation, updateMutation],
+    [createMutation],
   );
 
   const openCloseDialog = React.useCallback(
@@ -280,7 +217,9 @@ export function OrganizationCampaignsPage({
         </div>
       )}
 
-      {campaigns.length === 0 ? (
+      {isLoading ? (
+        <ListLoadingSkeleton />
+      ) : campaigns.length === 0 ? (
         <EmptyState
           icon="campaigns"
           title="لا توجد حملات مطابقة"
@@ -289,10 +228,8 @@ export function OrganizationCampaignsPage({
       ) : (
         <OrganizationCampaignsTable
           rows={campaigns}
-          onEditCampaign={openEditSheet}
           onCloseCampaign={openCloseDialog}
           onDeleteCampaign={openDeleteDialog}
-          canEdit={canEdit}
           canClose={canClose}
           canDelete={canDelete}
         />
@@ -314,12 +251,9 @@ export function OrganizationCampaignsPage({
 
       <CampaignFormSheet
         open={formOpen}
-        mode={formMode}
-        initialValues={formInitialValues}
-        onOpenChange={(nextOpen) => {
-          setFormOpen(nextOpen);
-          if (!nextOpen) setEditingCampaignId(null);
-        }}
+        mode="create"
+        initialValues={EMPTY_CAMPAIGN_FORM_VALUES}
+        onOpenChange={setFormOpen}
         onSubmit={handleSaveForm}
       />
 

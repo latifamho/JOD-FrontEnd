@@ -17,11 +17,19 @@ import type { StaffMemberItem } from "@/features/org/staff/org.staff.types";
 
 type StaffTableProps = {
   rows: StaffMemberItem[];
+  currentUserId: string | null;
+  currentUserEmail: string | null;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 };
 
-export function StaffTable({ rows, onEdit, onDelete }: StaffTableProps) {
+export function StaffTable({
+  rows,
+  currentUserId,
+  currentUserEmail,
+  onEdit,
+  onDelete,
+}: StaffTableProps) {
   return (
     <div className="rounded-md border border-border bg-card shadow-sm">
       <Table>
@@ -70,16 +78,19 @@ export function StaffTable({ rows, onEdit, onDelete }: StaffTableProps) {
                   >
                     <AppIcons.PencilLine className="size-4 text-warning" />
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    title="حذف الموظف"
-                    onClick={() => onDelete(row.id)}
-                  >
-                    <AppIcons.Trash className="size-4 text-destructive" />
-                  </Button>
+                  {row.id !== currentUserId &&
+                  row.email.trim().toLowerCase() !== currentUserEmail?.trim().toLowerCase() ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      title="حذف الموظف"
+                      onClick={() => onDelete(row.id)}
+                    >
+                      <AppIcons.Trash className="size-4 text-destructive" />
+                    </Button>
+                  ) : null}
                 </div>
               </TableCell>
             </TableRow>

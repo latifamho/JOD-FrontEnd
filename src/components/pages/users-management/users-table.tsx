@@ -29,6 +29,7 @@ type UsersTableProps = {
   rows: AdminUserItem[];
   isLoading: boolean;
   loadingRowIds: Set<string>;
+  currentUserId: string | null;
   onEditUser: (userId: string) => void;
   onToggleUserStatus: (userId: string) => void;
   onChangeUserPassword: (userId: string) => void;
@@ -43,6 +44,7 @@ export function UsersTable({
   rows,
   isLoading,
   loadingRowIds,
+  currentUserId,
   onEditUser,
   onToggleUserStatus,
   onChangeUserPassword,
@@ -203,17 +205,19 @@ export function UsersTable({
                       >
                         <AppIcons.UserLock className="size-4 text-success" />
                       </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="حذف المستخدم"
-                        disabled={isToggleLoading}
-                        onClick={() => onDeleteUser(user.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
+                      {user.id !== currentUserId ? (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          title="حذف المستخدم"
+                          disabled={isToggleLoading}
+                          onClick={() => onDeleteUser(user.id)}
+                          className="shadow-sm"
+                        >
+                          <AppIcons.Trash className="size-4 text-destructive" />
+                        </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>

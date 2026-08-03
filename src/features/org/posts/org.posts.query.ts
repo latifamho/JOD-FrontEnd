@@ -13,6 +13,14 @@ export function useOrgPosts(params: OrgPostsParams) {
   })
 }
 
+export function useOrgPost(postId: string | null) {
+  return useQuery({
+    queryKey: orgPostsKeys.detail(postId ?? ''),
+    queryFn: () => orgPostsServices.getPostById(postId!),
+    enabled: Boolean(postId),
+  })
+}
+
 export function useCreateOrgPost() {
   const queryClient = useQueryClient()
   return useMutation({

@@ -2,17 +2,17 @@
 
 import * as React from "react";
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { EmptyState, PaginationControls } from "@/components/shared";
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
+import { routePaths } from "@/constant/routes";
 import { usePagination } from "@/hooks/use-pagination";
 import { useAuth } from "@/providers/AuthProvider";
 import {
   isCampaignRelatedPostType,
-  normalizePostStatus,
 } from "@/components/pages/organization-posts-management/helpers";
 import { DeletePostDialog } from "@/components/pages/organization-posts-management/delete-post-dialog";
 import {
@@ -20,7 +20,6 @@ import {
   PostFormSheet,
   type PostFormValues,
 } from "@/components/pages/organization-posts-management/post-form-sheet";
-import { PostDetailsSheet } from "@/components/pages/organization-posts-management/post-details-sheet";
 import {
   PostsFilters,
   type PostsSortOption,
@@ -34,7 +33,6 @@ import {
 import {
   useOrgPosts,
   useCreateOrgPost,
-  useUpdateOrgPost,
   usePublishOrgPost,
   useArchiveOrgPost,
   useRestoreOrgPost,
@@ -69,12 +67,13 @@ function OrganizationPostsManagementPageContent({
 }: OrganizationPostsManagementPageProps) {
   const { can } = useAuth();
   const canCreate = can("org.posts.create");
-  const canEdit = can("org.posts.update");
   const canPublish = can("org.posts.publish");
   const canArchive = can("org.posts.archive");
   const canRestore = can("org.posts.restore");
   const canDelete = can("org.posts.delete");
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -85,14 +84,6 @@ function OrganizationPostsManagementPageContent({
   const [sortBy, setSortBy] = React.useState<PostsSortOption>("updated_newest");
 
   const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
-  const [editingPostId, setEditingPostId] = React.useState<string | null>(null);
-  const [formInitialValues, setFormInitialValues] =
-    React.useState<PostFormValues>(EMPTY_POST_FORM_VALUES);
-
-  const [detailsSheetOpen, setDetailsSheetOpen] = React.useState(false);
-  const [detailsPostId, setDetailsPostId] = React.useState<string | null>(null);
-  const [detailsPost, setDetailsPost] = React.useState<OrganizationPostItem | null>(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletePostId, setDeletePostId] = React.useState<string | null>(null);
@@ -103,7 +94,7 @@ function OrganizationPostsManagementPageContent({
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isError, refetch } = useOrgPosts({
+  const { data, isLoading, isError, refetch } = useOrgPosts({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
@@ -126,39 +117,14 @@ function OrganizationPostsManagementPageContent({
   const posts = data?.data ?? [];
 
   const createMutation = useCreateOrgPost();
-  const updateMutation = useUpdateOrgPost();
   const publishMutation = usePublishOrgPost();
   const archiveMutation = useArchiveOrgPost();
   const restoreMutation = useRestoreOrgPost();
   const deleteMutation = useDeleteOrgPost();
 
   const openCreateSheet = React.useCallback(() => {
-    setFormMode("create");
-    setEditingPostId(null);
-    setFormInitialValues(EMPTY_POST_FORM_VALUES);
     setFormOpen(true);
   }, []);
-
-  const openEditSheet = React.useCallback(
-    (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
-      if (!post) return;
-
-      setFormMode("edit");
-      setEditingPostId(post.id);
-      setFormInitialValues({
-        title: post.title,
-        summary: post.summary,
-        type: post.type,
-        status: normalizePostStatus(post.status),
-        authorName: post.authorName,
-        location: post.location,
-        campaignTitle: post.campaignTitle ?? "",
-      });
-      setFormOpen(true);
-    },
-    [posts],
-  );
 
   React.useEffect(() => {
     const action = searchParams.get("action");
@@ -173,20 +139,17 @@ function OrganizationPostsManagementPageContent({
       return;
     }
 
-    if (action === "edit" && postId) {
-      handledNavigationAction.current = actionKey;
-      openEditSheet(postId);
-    }
-  }, [openCreateSheet, openEditSheet, searchParams]);
+  }, [openCreateSheet, searchParams]);
 
   const openDetails = React.useCallback(
     (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
-      setDetailsPostId(postId);
-      setDetailsPost(post ?? null);
-      setDetailsSheetOpen(true);
+      const detailsRoute = pathname.startsWith(routePaths.dashboardScope.orgStaffRoot)
+        ? routePaths.organizationStaffScope.postDetails(postId)
+        : routePaths.organizationOwnerScope.postDetails(postId);
+
+      router.push(detailsRoute);
     },
-    [posts],
+    [pathname, router],
   );
 
   const handleSaveForm = React.useCallback(
@@ -195,46 +158,20 @@ function OrganizationPostsManagementPageContent({
         ? values.campaignTitle || undefined
         : undefined;
 
-      if (formMode === "create") {
-        createMutation.mutate(
-          {
-            title: values.title,
-            summary: values.summary,
-            type: values.type,
-            status: values.status,
-            authorName: values.authorName,
-            location: values.location,
-            campaignTitle,
-          },
-          { onSuccess: () => setFormOpen(false) },
-        );
-        return;
-      }
-
-      if (!editingPostId) return;
-
-      updateMutation.mutate(
+      createMutation.mutate(
         {
-          postId: editingPostId,
-          body: {
-            title: values.title,
-            summary: values.summary,
-            type: values.type,
-            status: values.status,
-            authorName: values.authorName,
-            location: values.location,
-            campaignTitle,
-          },
+          title: values.title,
+          summary: values.summary,
+          type: values.type,
+          status: values.status,
+          authorName: values.authorName,
+          location: values.location,
+          campaignTitle,
         },
-        {
-          onSuccess: () => {
-            setFormOpen(false);
-            setEditingPostId(null);
-          },
-        },
+        { onSuccess: () => setFormOpen(false) },
       );
     },
-    [formMode, editingPostId, createMutation, updateMutation],
+    [createMutation],
   );
 
   const handleWorkflowAction = React.useCallback(
@@ -264,16 +201,11 @@ function OrganizationPostsManagementPageContent({
     if (!deletePostId) return;
     deleteMutation.mutate(deletePostId, {
       onSuccess: () => {
-        if (detailsPostId === deletePostId) {
-          setDetailsSheetOpen(false);
-          setDetailsPostId(null);
-          setDetailsPost(null);
-        }
         setDeletePostId(null);
         setDeleteDialogOpen(false);
       },
     });
-  }, [deletePostId, detailsPostId, deleteMutation]);
+  }, [deletePostId, deleteMutation]);
 
   const pageTitle =
     status === "all"
@@ -320,7 +252,9 @@ function OrganizationPostsManagementPageContent({
         </div>
       )}
 
-      {posts.length === 0 ? (
+      {isLoading ? (
+        <ListLoadingSkeleton />
+      ) : posts.length === 0 ? (
         <EmptyState
           icon="posts"
           title="لا توجد بوستات مطابقة"
@@ -330,10 +264,8 @@ function OrganizationPostsManagementPageContent({
         <PostsTable
           rows={posts}
           onOpenDetails={openDetails}
-          onEditPost={openEditSheet}
           onWorkflowAction={handleWorkflowAction}
           onDeletePost={openDeleteDialog}
-          canEdit={canEdit}
           canPublish={canPublish}
           canArchive={canArchive}
           canRestore={canRestore}
@@ -357,26 +289,12 @@ function OrganizationPostsManagementPageContent({
 
       <PostFormSheet
         open={formOpen}
-        mode={formMode}
-        initialValues={formInitialValues}
-        onOpenChange={(nextOpen) => {
-          setFormOpen(nextOpen);
-          if (!nextOpen) setEditingPostId(null);
-        }}
+        mode="create"
+        initialValues={EMPTY_POST_FORM_VALUES}
+        onOpenChange={setFormOpen}
         onSubmit={handleSaveForm}
       />
 
-      <PostDetailsSheet
-        open={detailsSheetOpen}
-        post={detailsPost}
-        onOpenChange={(nextOpen) => {
-          setDetailsSheetOpen(nextOpen);
-          if (!nextOpen) {
-            setDetailsPostId(null);
-            setDetailsPost(null);
-          }
-        }}
-      />
 
       <DeletePostDialog
         open={deleteDialogOpen}

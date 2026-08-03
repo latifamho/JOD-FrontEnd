@@ -16,7 +16,7 @@ import {
   type StaffRoleFormValues,
 } from '@/components/pages/staff-management/staff-role-form-sheet'
 import { StaffTable } from '@/components/pages/staff-management/staff-table'
-import { EmptyState, PaginationControls } from '@/components/shared'
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { AppIcons } from '@/constant/icons'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
@@ -26,23 +26,38 @@ import {
   useDeleteOrgRole,
   useDeleteOrgStaff,
   useOrgPermissionsCatalog,
+  useOrgRole,
   useOrgRoles,
   useOrgStaff,
+  useOrgStaffMember,
   useUpdateOrgRole,
   useUpdateOrgStaff,
 } from '@/features/org/staff/org.staff.query'
 import { usePagination } from '@/hooks/use-pagination'
+import { useAuth } from '@/providers/AuthProvider'
 
 export function StaffManagementPage({ view = 'employees' }: { view?: 'employees' | 'roles' }) {
+  const { user: currentUser } = useAuth()
   const isEmployeesView = view === 'employees'
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE)
   const [total, setTotal] = React.useState(0)
   const pagination = usePagination({ totalItems: total, pageSize })
+  const [memberOptionsRequested, setMemberOptionsRequested] = React.useState(false)
+  const [roleOptionsRequested, setRoleOptionsRequested] = React.useState(false)
 
-  const staffQuery = useOrgStaff({ page: pagination.currentPage, perPage: pageSize, sort: '-invitedAt' })
-  const rolesQuery = useOrgRoles({ page: pagination.currentPage, perPage: pageSize, sort: '-updatedAt' })
-  const roleOptionsQuery = useOrgRoles({ page: 1, perPage: 100, sort: 'name', filter: { status: 'active' } })
-  const catalogQuery = useOrgPermissionsCatalog()
+  const staffQuery = useOrgStaff(
+    { page: pagination.currentPage, perPage: pageSize, sort: '-invitedAt' },
+    isEmployeesView,
+  )
+  const rolesQuery = useOrgRoles(
+    { page: pagination.currentPage, perPage: pageSize, sort: '-updatedAt' },
+    !isEmployeesView,
+  )
+  const roleOptionsQuery = useOrgRoles(
+    { page: 1, perPage: 100, sort: 'name', filter: { status: 'active' } },
+    isEmployeesView && memberOptionsRequested,
+  )
+  const catalogQuery = useOrgPermissionsCatalog(!isEmployeesView && roleOptionsRequested)
 
   const activeQuery = isEmployeesView ? staffQuery : rolesQuery
   React.useEffect(() => {
@@ -76,7 +91,23 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
   const [roleDeleteName, setRoleDeleteName] = React.useState('')
   const [roleDeleteMembersCount, setRoleDeleteMembersCount] = React.useState(0)
 
+  const memberDetailQuery = useOrgStaffMember(memberOpen && memberMode === 'edit' ? memberId : null)
+  const roleDetailQuery = useOrgRole(roleOpen && roleMode === 'edit' ? roleId : null)
+
+  React.useEffect(() => {
+    const member = memberDetailQuery.data?.data
+    if (!member) return
+    setMemberValues({ name: member.name, email: member.email, organizationRoleId: member.roleId })
+  }, [memberDetailQuery.data])
+
+  React.useEffect(() => {
+    const role = roleDetailQuery.data?.data
+    if (!role) return
+    setRoleValues({ name: role.role, description: role.description ?? '', permissions: role.permissions, isActive: role.isActive })
+  }, [roleDetailQuery.data])
+
   const openCreateMember = () => {
+    setMemberOptionsRequested(true)
     setMemberMode('create')
     setMemberId(null)
     setMemberValues({ ...EMPTY_STAFF_MEMBER_FORM_VALUES, organizationRoleId: roleOptions[0]?.id ?? '' })
@@ -84,6 +115,7 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
   }
 
   const openEditMember = (id: string) => {
+    setMemberOptionsRequested(true)
     const member = staffRows.find((item) => item.id === id)
     if (!member) return
     setMemberMode('edit')
@@ -103,12 +135,17 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
 
   const requestDeleteMember = (id: string) => {
     const member = staffRows.find((item) => item.id === id)
+    const isCurrentUser =
+      id === currentUser?.id ||
+      member?.email.trim().toLowerCase() === currentUser?.email.trim().toLowerCase()
+    if (!member || isCurrentUser) return
     setMemberId(id)
-    setMemberDeleteName(member?.name ?? '')
+    setMemberDeleteName(member.name)
     setMemberDeleteOpen(true)
   }
 
   const openCreateRole = () => {
+    setRoleOptionsRequested(true)
     setRoleMode('create')
     setRoleId(null)
     setRoleValues(EMPTY_STAFF_ROLE_FORM_VALUES)
@@ -116,6 +153,7 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
   }
 
   const openEditRole = (id: string) => {
+    setRoleOptionsRequested(true)
     const role = roleRows.find((item) => item.id === id)
     if (!role || role.isSystem) return
     setRoleMode('edit')
@@ -146,23 +184,33 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
     <section className="flex flex-1 flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold">{isEmployeesView ? '????? ????? ???????' : '????? ??????? ??????????'}</h2>
-          <p className="mt-1 text-xs text-muted-foreground">{isEmployeesView ? '???? ???????? ?????? ???????.' : '????? ????? ????? ?? ?????? ????????? ??????.'}</p>
+          <h2 className="text-base font-semibold">
+            {isEmployeesView ? 'إدارة موظفي المنظمة' : 'إدارة الأدوار والصلاحيات'}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {isEmployeesView
+              ? 'إدارة الموظفين وربطهم بالأدوار المناسبة.'
+              : 'إنشاء أدوار مخصصة وتحديد صلاحيات كل دور.'}
+          </p>
         </div>
-        <Button size="sm" onClick={isEmployeesView ? openCreateMember : openCreateRole} disabled={isEmployeesView && roleOptions.length === 0}>
+        <Button size="sm" onClick={isEmployeesView ? openCreateMember : openCreateRole}>
           {isEmployeesView ? <AppIcons.UserPlus className="size-4" /> : <AppIcons.settings className="size-4" />}
-          {isEmployeesView ? '????? ????' : '????? ???'}
+          {isEmployeesView ? 'إضافة موظف' : 'إضافة دور'}
         </Button>
       </div>
 
-      {activeQuery.isError ? (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">???? ????? ????????. ???? ??? ????.</div>
+      {activeQuery.isLoading ? (
+        <ListLoadingSkeleton />
+      ) : activeQuery.isError ? (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          تعذّر تحميل البيانات. حاول مرة أخرى.
+        </div>
       ) : isEmployeesView ? (
-        staffRows.length ? <StaffTable rows={staffRows} onEdit={openEditMember} onDelete={requestDeleteMember} /> : <EmptyState icon="staff" title="?? ???? ??????" description="???? ?????? ??? ???? ???????." />
+        staffRows.length ? <StaffTable rows={staffRows} currentUserId={currentUser?.id ?? null} currentUserEmail={currentUser?.email ?? null} onEdit={openEditMember} onDelete={requestDeleteMember} /> : <EmptyState icon="staff" title="لا يوجد موظفون" description="ابدأ بإضافة أول موظف إلى المنظمة." />
       ) : roleRows.length ? (
         <RolesTable rows={roleRows} onEditRole={openEditRole} onDeleteRole={requestDeleteRole} />
       ) : (
-        <EmptyState icon="settings" title="?? ???? ?????" description="???? ????? ?????? ?????????? ????????." />
+        <EmptyState icon="settings" title="لا توجد أدوار" description="ابدأ بإضافة دور وتحديد صلاحياته." />
       )}
 
       <PaginationControls
@@ -179,9 +227,21 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <StaffMemberFormSheet open={memberOpen} mode={memberMode} initialValues={memberValues} roleOptions={roleOptions} onOpenChange={setMemberOpen} onSubmit={submitMember} />
-      <StaffMemberDeleteDialog open={memberDeleteOpen} staffName={memberDeleteName} onOpenChange={setMemberDeleteOpen} onConfirm={() => memberId && deleteStaff.mutate(memberId, { onSuccess: () => setMemberDeleteOpen(false) })} />
-      <StaffRoleFormSheet open={roleOpen} mode={roleMode} initialValues={roleValues} permissionOptions={permissionOptions} onOpenChange={setRoleOpen} onSubmit={submitRole} />
+      <StaffMemberFormSheet open={memberOpen} mode={memberMode} initialValues={memberValues} roleOptions={roleOptions} isLoadingDetails={roleOptionsQuery.isLoading || memberDetailQuery.isLoading} onOpenChange={setMemberOpen} onSubmit={submitMember} />
+      <StaffMemberDeleteDialog
+        open={memberDeleteOpen}
+        staffName={memberDeleteName}
+        onOpenChange={setMemberDeleteOpen}
+        onConfirm={() => {
+          const member = staffRows.find((item) => item.id === memberId)
+          const isCurrentUser =
+            memberId === currentUser?.id ||
+            member?.email.trim().toLowerCase() === currentUser?.email.trim().toLowerCase()
+          if (!memberId || isCurrentUser) return
+          deleteStaff.mutate(memberId, { onSuccess: () => setMemberDeleteOpen(false) })
+        }}
+      />
+      <StaffRoleFormSheet open={roleOpen} mode={roleMode} initialValues={roleValues} permissionOptions={permissionOptions} isLoadingDetails={catalogQuery.isLoading || roleDetailQuery.isLoading} onOpenChange={setRoleOpen} onSubmit={submitRole} />
       <StaffRoleDeleteDialog open={roleDeleteOpen} roleName={roleDeleteName} membersCount={roleDeleteMembersCount} onOpenChange={setRoleDeleteOpen} onConfirm={() => roleId && deleteRole.mutate(roleId, { onSuccess: () => setRoleDeleteOpen(false) })} />
     </section>
   )

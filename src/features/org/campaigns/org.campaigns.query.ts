@@ -18,6 +18,14 @@ export function useOrgCampaigns(params: OrgCampaignsParams) {
   })
 }
 
+export function useOrgCampaign(campaignId: string | null) {
+  return useQuery({
+    queryKey: orgCampaignsKeys.detail(campaignId ?? ''),
+    queryFn: () => orgCampaignsServices.getCampaignById(campaignId!),
+    enabled: Boolean(campaignId),
+  })
+}
+
 export function useCreateOrgCampaign() {
   const queryClient = useQueryClient()
   return useMutation({

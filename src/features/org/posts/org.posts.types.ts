@@ -37,6 +37,7 @@ export interface PostUpdateRequest {
   campaignTitle?: string
 }
 
+
 export type OrgPostsResponse = ApiListResponse<OrganizationPostItem>
 export type OrgPostDetailResponse = ApiSingleResponse<OrganizationPostItem>
 export type CreatePostResponse = ApiMutationResponse<OrganizationPostItem>

@@ -1,5 +1,5 @@
-import { NotificationsManagementPage } from "@/components/pages/notifications-management";
+import { OrganizationNotificationsPage } from "@/components/pages/organization-notifications";
 
 export default function OrgStaffNotificationsSentPage() {
-  return <NotificationsManagementPage mailbox="sent" />;
+  return <OrganizationNotificationsPage mailbox="sent" />;
 }

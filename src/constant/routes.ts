@@ -36,7 +36,7 @@ export const routePaths = {
     contentEdit: (id = ":id") => `/dashboard/admin/content/${id}/edit`,
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
-    auditLog: "/dashboard/admin/audit-log",
+    profile: "/dashboard/admin/profile",
     settings: "/dashboard/admin/settings",
   },
   organizationOwnerScope: {
@@ -47,10 +47,16 @@ export const routePaths = {
     campaignsClosed: "/dashboard/org-owner/campaigns/closed",
     campaignDetails: (id = ":id") => `/dashboard/org-owner/campaigns/${id}`,
     campaignDetailsTemplate: "/dashboard/org-owner/campaigns/:id",
+    campaignEdit: (id = ":id") => `/dashboard/org-owner/campaigns/${id}/edit`,
+    campaignEditTemplate: "/dashboard/org-owner/campaigns/:id/edit",
     posts: "/dashboard/org-owner/posts",
     postsDraft: "/dashboard/org-owner/posts/draft",
     postsPublished: "/dashboard/org-owner/posts/published",
     postsArchived: "/dashboard/org-owner/posts/archived",
+    postDetails: (id = ":id") => `/dashboard/org-owner/posts/${id}`,
+    postDetailsTemplate: "/dashboard/org-owner/posts/:id",
+    postEdit: (id = ":id") => `/dashboard/org-owner/posts/${id}/edit`,
+    postEditTemplate: "/dashboard/org-owner/posts/:id/edit",
     donors: "/dashboard/org-owner/donors",
     donorsApplicants: "/dashboard/org-owner/donors/applicants",
     staff: "/dashboard/org-owner/staff",
@@ -59,8 +65,6 @@ export const routePaths = {
     notificationsInbox: "/dashboard/org-owner/notifications/inbox",
     notificationsSent: "/dashboard/org-owner/notifications/sent",
     reports: "/dashboard/org-owner/reports",
-    auditLog: "/dashboard/org-owner/audit-log",
-    profile: "/dashboard/org-owner/profile",
     settings: "/dashboard/org-owner/settings",
   },
   organizationStaffScope: {
@@ -70,18 +74,22 @@ export const routePaths = {
     campaignsClosed: "/dashboard/org-staff/campaigns/closed",
     campaignDetails: (id = ":id") => `/dashboard/org-staff/campaigns/${id}`,
     campaignDetailsTemplate: "/dashboard/org-staff/campaigns/:id",
+    campaignEdit: (id = ":id") => `/dashboard/org-staff/campaigns/${id}/edit`,
+    campaignEditTemplate: "/dashboard/org-staff/campaigns/:id/edit",
     posts: "/dashboard/org-staff/posts",
     postsDraft: "/dashboard/org-staff/posts/draft",
     postsPublished: "/dashboard/org-staff/posts/published",
     postsArchived: "/dashboard/org-staff/posts/archived",
+    postDetails: (id = ":id") => `/dashboard/org-staff/posts/${id}`,
+    postDetailsTemplate: "/dashboard/org-staff/posts/:id",
+    postEdit: (id = ":id") => `/dashboard/org-staff/posts/${id}/edit`,
+    postEditTemplate: "/dashboard/org-staff/posts/:id/edit",
     donors: "/dashboard/org-staff/donors",
     donorsApplicants: "/dashboard/org-staff/donors/applicants",
     notifications: "/dashboard/org-staff/notifications",
     notificationsInbox: "/dashboard/org-staff/notifications/inbox",
     notificationsSent: "/dashboard/org-staff/notifications/sent",
     reports: "/dashboard/org-staff/reports",
-    auditLog: "/dashboard/org-staff/audit-log",
-    profile: "/dashboard/org-staff/profile",
     settings: "/dashboard/org-staff/settings",
   },
 } as const;
@@ -167,7 +175,6 @@ export function getOrganizationPermissionForPath(pathname: string): string | nul
   if (pathname.includes("/donors/applicants")) return "org.applicants.view";
   if (pathname.includes("/donors")) return "org.donors.view";
   if (pathname.includes("/reports")) return "org.reports.view";
-  if (pathname.includes("/audit-log")) return "org.audit_logs.view";
   if (pathname.includes("/settings")) return "org.settings.view";
   return pathname.includes("/dashboard/org-") ? "dashboard.view" : null;
 }
@@ -291,7 +298,7 @@ const adminLinks: AppNavLink[] = [
     ],
   },
   {
-    label: "الحساب والإعدادات",
+    label: "الإعدادات",
     href: routePaths.adminScope.settings,
     icon: "settings",
     section: "الحساب",
@@ -300,11 +307,6 @@ const adminLinks: AppNavLink[] = [
         label: "الإعدادات",
         href: routePaths.adminScope.settings,
         icon: "settings",
-      },
-      {
-        label: "سجل النشاط",
-        href: routePaths.adminScope.auditLog,
-        icon: "auditLog",
       },
     ],
   },
@@ -428,25 +430,15 @@ const organizationOwnerLinks: AppNavLink[] = [
     ],
   },
   {
-    label: "الحساب والإعدادات",
-    href: routePaths.organizationOwnerScope.profile,
+    label: "الإعدادات",
+    href: routePaths.organizationOwnerScope.settings,
     icon: "settings",
     section: "الحساب",
     tabs: [
       {
-        label: "الملف الشخصي",
-        href: routePaths.organizationOwnerScope.profile,
-        icon: "profile",
-      },
-      {
         label: "الإعدادات",
         href: routePaths.organizationOwnerScope.settings,
         icon: "settings",
-      },
-      {
-        label: "سجل النشاط",
-        href: routePaths.organizationOwnerScope.auditLog,
-        icon: "auditLog",
       },
     ],
   },
@@ -547,25 +539,15 @@ const organizationStaffLinks: AppNavLink[] = [
     ],
   },
   {
-    label: "الحساب والإعدادات",
-    href: routePaths.organizationStaffScope.profile,
+    label: "الإعدادات",
+    href: routePaths.organizationStaffScope.settings,
     icon: "settings",
     section: "الحساب",
     tabs: [
       {
-        label: "الملف الشخصي",
-        href: routePaths.organizationStaffScope.profile,
-        icon: "profile",
-      },
-      {
         label: "الإعدادات",
         href: routePaths.organizationStaffScope.settings,
         icon: "settings",
-      },
-      {
-        label: "سجل النشاط",
-        href: routePaths.organizationStaffScope.auditLog,
-        icon: "auditLog",
       },
     ],
   },
@@ -581,12 +563,6 @@ const roleBaseRoute: Record<DashboardRole, string> = {
   admin: routePaths.dashboardScope.adminRoot,
   organization_owner: routePaths.dashboardScope.orgOwnerRoot,
   organization_staff: routePaths.dashboardScope.orgStaffRoot,
-};
-
-const roleProfileRoute: Record<DashboardRole, string> = {
-  admin: routePaths.adminScope.settings,
-  organization_owner: routePaths.organizationOwnerScope.profile,
-  organization_staff: routePaths.organizationStaffScope.profile,
 };
 
 const roleSettingsRoute: Record<DashboardRole, string> = {
@@ -655,10 +631,6 @@ export function getDashboardHomeByRole(role: DashboardRole): string {
   return roleBaseRoute[role];
 }
 
-export function getRoleProfileRoute(role: DashboardRole): string {
-  return roleProfileRoute[role];
-}
-
 export function getRoleSettingsRoute(role: DashboardRole): string {
   return roleSettingsRoute[role];
 }
@@ -691,7 +663,6 @@ const segmentLabels: Record<string, string> = {
   new: "جديد",
   edit: "تعديل",
   analytics: "الإحصائيات",
-  "audit-log": "سجل النشاط",
   profile: "الملف الشخصي",
   settings: "الإعدادات",
   donors: "المتبرعون",
@@ -719,6 +690,30 @@ routeTitleMap.set(
 routeTitleMap.set(
   normalizePathname(routePaths.organizationStaffScope.campaignDetailsTemplate),
   "تفاصيل الحملة",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationOwnerScope.postDetailsTemplate),
+  "تفاصيل المنشور",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationStaffScope.postDetailsTemplate),
+  "تفاصيل المنشور",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationOwnerScope.campaignEditTemplate),
+  "تعديل الحملة",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationStaffScope.campaignEditTemplate),
+  "تعديل الحملة",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationOwnerScope.postEditTemplate),
+  "تعديل المنشور",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.organizationStaffScope.postEditTemplate),
+  "تعديل المنشور",
 );
 routeTitleMap.set(
   normalizePathname(routePaths.adminScope.organizationDetailsTemplate),
@@ -751,8 +746,12 @@ export function getPathLabel(pathname: string): string {
     return exactLabel;
   }
 
-  for (const [template, label] of routeTitleMap) {
-    if (template.includes(":") && isRouteActive(normalizedPath, template)) {
+  const dynamicRoutes = [...routeTitleMap.entries()]
+    .filter(([template]) => template.includes(":"))
+    .sort(([firstTemplate], [secondTemplate]) => secondTemplate.length - firstTemplate.length);
+
+  for (const [template, label] of dynamicRoutes) {
+    if (isRouteActive(normalizedPath, template)) {
       return label;
     }
   }

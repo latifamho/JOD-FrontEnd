@@ -13,10 +13,19 @@ import type {
   RoleUpdateRequest,
 } from './org.staff.types'
 
-export function useOrgStaff(params: OrgStaffParams) {
+export function useOrgStaff(params: OrgStaffParams, enabled = true) {
   return useQuery({
     queryKey: orgStaffKeys.list(params),
     queryFn: () => orgStaffServices.getStaff(params),
+    enabled,
+  })
+}
+
+export function useOrgStaffMember(staffId: string | null) {
+  return useQuery({
+    queryKey: orgStaffKeys.detail(staffId ?? ''),
+    queryFn: () => orgStaffServices.getStaffById(staffId!),
+    enabled: Boolean(staffId),
   })
 }
 
@@ -51,10 +60,19 @@ export function useDeleteOrgStaff() {
   })
 }
 
-export function useOrgRoles(params: OrgRolesParams) {
+export function useOrgRoles(params: OrgRolesParams, enabled = true) {
   return useQuery({
     queryKey: orgRolesKeys.list(params),
     queryFn: () => orgStaffServices.getRoles(params),
+    enabled,
+  })
+}
+
+export function useOrgRole(roleId: string | null) {
+  return useQuery({
+    queryKey: orgRolesKeys.detail(roleId ?? ''),
+    queryFn: () => orgStaffServices.getRoleById(roleId!),
+    enabled: Boolean(roleId),
   })
 }
 
@@ -90,10 +108,11 @@ export function useDeleteOrgRole() {
   })
 }
 
-export function useOrgPermissionsCatalog() {
+export function useOrgPermissionsCatalog(enabled = true) {
   return useQuery({
     queryKey: orgRolesKeys.catalog(),
     queryFn: () => orgStaffServices.getPermissionsCatalog(),
+    enabled,
     staleTime: Infinity,
   })
 }

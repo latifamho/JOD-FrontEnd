@@ -25,6 +25,8 @@ export type OrganizationPostItem = {
   viewsCount: number;
   reactionsCount: number;
   applicationsCount: number;
+  body?: string | null;
+  images?: string[] | null;
 };
 
 export const organizationPostStatusLabels: Record<OrganizationPostStatus, string> =

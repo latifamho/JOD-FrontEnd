@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { EmptyState, PaginationControls } from "@/components/shared";
+import { CardGridLoadingSkeleton, EmptyState, PaginationControls } from "@/components/shared";
 import type { ModerationStatus } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
@@ -44,7 +44,7 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
-  const { data, isError, refetch } = useAdminReviewCampaigns({
+  const { data, isLoading, isError, refetch } = useAdminReviewCampaigns({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
@@ -123,7 +123,9 @@ export function CampaignsReviewPage({ status }: CampaignsReviewPageProps) {
         </div>
       )}
 
-      {campaigns.length === 0 ? (
+      {isLoading ? (
+        <CardGridLoadingSkeleton />
+      ) : campaigns.length === 0 ? (
         <EmptyState
           icon="campaigns"
           title={`لا توجد حملات ضمن حالة ${reviewStatusLabels[status]}`}

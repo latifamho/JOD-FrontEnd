@@ -20,6 +20,7 @@ import { displayOrDash } from "@/lib/text";
 import { normalizeApiError } from "@/lib/api-errors";
 import { UsersFilters } from "@/components/pages/users-management/users-filters";
 import { AppIcons } from "@/constant/icons";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   useAdminUsers,
   useCreateUser,
@@ -38,6 +39,7 @@ import {
 
 export function UsersManagementPage() {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -256,13 +258,17 @@ export function UsersManagementPage() {
     [users, toggleStatusMutation, addLoadingRow, removeLoadingRow],
   );
 
-  const openDeleteDialog = React.useCallback((userId: string) => {
-    setDeleteTargetUserId(userId);
-    setDeleteDialogOpen(true);
-  }, []);
+  const openDeleteDialog = React.useCallback(
+    (userId: string) => {
+      if (userId === currentUser?.id) return;
+      setDeleteTargetUserId(userId);
+      setDeleteDialogOpen(true);
+    },
+    [currentUser?.id],
+  );
 
   const handleDeleteUser = React.useCallback(() => {
-    if (!deleteTargetUserId) return;
+    if (!deleteTargetUserId || deleteTargetUserId === currentUser?.id) return;
     deleteMutation.mutate(deleteTargetUserId, {
       onSuccess: () => {
         // success toast from api interceptor
@@ -270,7 +276,7 @@ export function UsersManagementPage() {
         setDeleteTargetUserId(null);
       },
     });
-  }, [deleteTargetUserId, deleteMutation]);
+  }, [currentUser?.id, deleteTargetUserId, deleteMutation]);
 
   const openChangePasswordDialog = React.useCallback(
     (userId: string) => {
@@ -359,6 +365,7 @@ export function UsersManagementPage() {
         rows={users}
         isLoading={isLoading}
         loadingRowIds={loadingRowIds}
+        currentUserId={currentUser?.id ?? null}
         onEditUser={openEditSheet}
         onToggleUserStatus={handleToggleUserStatus}
         onChangeUserPassword={openChangePasswordDialog}
