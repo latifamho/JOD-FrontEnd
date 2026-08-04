@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminUsersParams,
   AdminUsersResponse,
@@ -21,13 +21,9 @@ const ENDPOINTS = {
   USER_PASSWORD: (id: string) => `/admin/users/${id}/password`,
 } as const
 
-function buildParams(params: AdminUsersParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminUsersServices = {
   async getUsers(params: AdminUsersParams): Promise<AdminUsersResponse> {
-    const response = await api.get<AdminUsersResponse>(ENDPOINTS.USERS, { params: buildParams(params) })
+    const response = await api.get<AdminUsersResponse>(ENDPOINTS.USERS, { params: buildApiParams(params) })
     return response.data
   },
 

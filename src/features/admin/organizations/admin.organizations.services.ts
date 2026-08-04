@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminOrganizationsParams,
   AdminOrganizationsResponse,
@@ -20,14 +20,10 @@ const ENDPOINTS = {
   ORGANIZATION_ACCEPT: (id: string) => `/admin/organizations/${id}/accept`,
 } as const
 
-function buildParams(params: AdminOrganizationsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminOrganizationsServices = {
   async getOrganizations(params: AdminOrganizationsParams): Promise<AdminOrganizationsResponse> {
     const response = await api.get<AdminOrganizationsResponse>(ENDPOINTS.ORGANIZATIONS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

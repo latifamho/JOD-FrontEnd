@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useQueryDisclosure } from '@/hooks/use-query-modal'
 
 import { RolesTable } from '@/components/pages/staff-management/roles-table'
 import { StaffMemberDeleteDialog } from '@/components/pages/staff-management/staff-member-delete-dialog'
@@ -76,18 +77,18 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
   const updateRole = useUpdateOrgRole()
   const deleteRole = useDeleteOrgRole()
 
-  const [memberOpen, setMemberOpen] = React.useState(false)
+  const [memberOpen, setMemberOpen] = useQueryDisclosure('staff-member-form')
   const [memberMode, setMemberMode] = React.useState<'create' | 'edit'>('create')
   const [memberValues, setMemberValues] = React.useState(EMPTY_STAFF_MEMBER_FORM_VALUES)
   const [memberId, setMemberId] = React.useState<string | null>(null)
-  const [memberDeleteOpen, setMemberDeleteOpen] = React.useState(false)
+  const [memberDeleteOpen, setMemberDeleteOpen] = useQueryDisclosure('staff-member-delete')
   const [memberDeleteName, setMemberDeleteName] = React.useState('')
 
-  const [roleOpen, setRoleOpen] = React.useState(false)
+  const [roleOpen, setRoleOpen] = useQueryDisclosure('staff-role-form')
   const [roleMode, setRoleMode] = React.useState<'create' | 'edit'>('create')
   const [roleValues, setRoleValues] = React.useState(EMPTY_STAFF_ROLE_FORM_VALUES)
   const [roleId, setRoleId] = React.useState<string | null>(null)
-  const [roleDeleteOpen, setRoleDeleteOpen] = React.useState(false)
+  const [roleDeleteOpen, setRoleDeleteOpen] = useQueryDisclosure('staff-role-delete')
   const [roleDeleteName, setRoleDeleteName] = React.useState('')
   const [roleDeleteMembersCount, setRoleDeleteMembersCount] = React.useState(0)
 

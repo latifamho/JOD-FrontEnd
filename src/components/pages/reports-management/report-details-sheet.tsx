@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Loader2 } from "lucide-react";
 
@@ -56,8 +57,14 @@ export function ReportDetailsSheet({
   isClosing,
   closingReportId,
 }: ReportDetailsSheetProps) {
-  const [requestInfoOpen, setRequestInfoOpen] = React.useState(false);
-  const [closeDialogOpen, setCloseDialogOpen] = React.useState(false);
+  const [requestInfoOpen, setRequestInfoOpen] = useQueryDisclosure(
+    "report-request-info",
+    { queryKey: "dialog" },
+  );
+  const [closeDialogOpen, setCloseDialogOpen] = useQueryDisclosure(
+    "report-close",
+    { queryKey: "dialog" },
+  );
   const { data: detailData } = useAdminReportDetail(open ? report?.id ?? null : null);
   const activeReport = detailData?.data ?? report;
   const waitMutation = useWaitReport();

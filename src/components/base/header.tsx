@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { CheckIcon, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,27 +21,18 @@ import { SIDEBAR_TOGGLE_EVENT } from "@/constant/events";
 import { AppIcons } from "@/constant/icons";
 import {
   dashboardRoleLabels,
-  getDashboardHomeByRole,
   getPageTitle,
   getRoleFromPath,
   getRoleSettingsRoute,
-  routePaths,
   type DashboardRole,
 } from "@/constant/routes";
 import { useLogout } from "@/features/shared/auth.services/auth.query";
 import { useAuth } from "@/providers/AuthProvider";
-import { setDashboardRole, type DashboardRoleCookie } from "@/lib/cookies";
 import { cn } from "@/lib/utils";
 
 type ThemeMode = "light" | "dark" | "system";
 
 const THEME_STORAGE_KEY = "jod:theme-mode";
-
-function toDashboardRoleCookie(role: DashboardRole): DashboardRoleCookie {
-  if (role === "admin") return "admin";
-  if (role === "organization_owner") return "org_owner";
-  return "org_staff";
-}
 
 function getSystemThemeIsDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -52,12 +43,6 @@ function applyThemeMode(themeMode: ThemeMode) {
     themeMode === "dark" || (themeMode === "system" && getSystemThemeIsDark());
   document.documentElement.classList.toggle("dark", isDark);
 }
-
-const ROLES: DashboardRole[] = [
-  "admin",
-  "organization_owner",
-  "organization_staff",
-];
 
 const THEME_CHOICES: {
   mode: ThemeMode;
@@ -71,7 +56,6 @@ const THEME_CHOICES: {
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const role = getRoleFromPath(pathname);
   const pageTitle = getPageTitle(pathname);
 
@@ -161,9 +145,6 @@ export function Header() {
                 <p className="text-xs font-semibold leading-4 text-foreground">
                   {displayName}
                 </p>
-                <p className="text-[11px] leading-4 text-muted-foreground">
-                  {dashboardRoleLabels[role]}
-                </p>
               </div>
 
               {/* Chevron indicator */}
@@ -191,25 +172,11 @@ export function Header() {
                   <p className="truncate text-xs text-muted-foreground">
                     {displayEmail}
                   </p>
-                  <span className="mt-1 inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
-                    {dashboardRoleLabels[role]}
-                  </span>
                 </div>
               </div>
             </div>
 
             <div className="p-1">
-              {role === "admin" ? (
-                <DropdownMenuItem asChild>
-                  <Link href={routePaths.adminScope.profile} className="cursor-pointer py-2">
-                    <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                      <AppIcons.profile className="size-3.5 text-muted-foreground" />
-                    </div>
-                    الملف الشخصي
-                  </Link>
-                </DropdownMenuItem>
-              ) : null}
-
               <DropdownMenuItem asChild>
                 <Link
                   href={getRoleSettingsRoute(role)}
@@ -223,42 +190,6 @@ export function Header() {
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
-
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="cursor-pointer py-2">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                    <AppIcons.staff className="size-3.5 text-muted-foreground" />
-                  </div>
-                  تبديل الدور
-                  <span className="text-[10px] text-muted-foreground">
-                    {dashboardRoleLabels[role]}
-                  </span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="min-w-48 text-right"
-                  sideOffset={4}
-                  alignOffset={-4}
-                >
-                  {ROLES.map((r) => (
-                    <DropdownMenuItem
-                      key={r}
-                      className={cn(
-                        "cursor-pointer",
-                        r === role && "bg-primary/10 text-primary",
-                      )}
-                      onSelect={() => {
-                        setDashboardRole(toDashboardRoleCookie(r));
-                        router.push(getDashboardHomeByRole(r));
-                      }}
-                    >
-                      {dashboardRoleLabels[r]}
-                      {r === role && (
-                        <CheckIcon className="ms-auto size-3.5 text-primary" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
 
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="cursor-pointer py-2">

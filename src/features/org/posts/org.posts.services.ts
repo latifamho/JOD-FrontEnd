@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   OrgPostsParams,
   OrgPostsResponse,
@@ -18,14 +18,10 @@ const ENDPOINTS = {
   POST_STATUS: (id: string) => `/org/posts/${id}/status`,
 } as const
 
-function buildParams(params: OrgPostsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const orgPostsServices = {
   async getPosts(params: OrgPostsParams): Promise<OrgPostsResponse> {
     const response = await api.get<OrgPostsResponse>(ENDPOINTS.POSTS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

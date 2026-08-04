@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminNotificationsParams,
   AdminNotificationsResponse,
@@ -19,14 +19,10 @@ const ENDPOINTS = {
   NOTIFICATION_RESEND: (id: string) => `/admin/notifications/${id}/resend`,
 } as const
 
-function buildParams(params: AdminNotificationsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminNotificationsServices = {
   async getNotifications(params: AdminNotificationsParams): Promise<AdminNotificationsResponse> {
     const response = await api.get<AdminNotificationsResponse>(ENDPOINTS.NOTIFICATIONS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

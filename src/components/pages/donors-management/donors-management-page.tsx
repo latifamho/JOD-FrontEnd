@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { DonorEntryDetailsSheet } from "@/components/pages/donors-management/donor-entry-details-sheet";
@@ -62,17 +63,17 @@ export function DonorsManagementPage({
   const [apiTotal, setApiTotal] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<DonorSortOption>("date_newest");
 
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
+  const [detailsOpen, setDetailsOpen] = useQueryDisclosure("donor-details");
   const [detailsEntry, setDetailsEntry] = React.useState<DonorEntryItem | null>(null);
   const [detailsView, setDetailsView] = React.useState<"donors" | "applicants">(view);
 
-  const [formOpen, setFormOpen] = React.useState(false);
+  const [formOpen, setFormOpen] = useQueryDisclosure("donor-form");
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<DonorEntryFormValues>(EMPTY_DONOR_ENTRY_FORM_VALUES);
   const [editingEntryId, setEditingEntryId] = React.useState<string | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useQueryDisclosure("donor-delete");
   const [deleteEntryId, setDeleteEntryId] = React.useState<string | null>(null);
   const [deleteEntryName, setDeleteEntryName] = React.useState("");
 

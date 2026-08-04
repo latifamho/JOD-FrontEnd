@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export function UsersManagementPage() {
   const users = data?.data ?? [];
 
   // Form sheet state
-  const [formOpen, setFormOpen] = React.useState(false);
+  const [formOpen, setFormOpen] = useQueryDisclosure("user-form");
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formInitialValues, setFormInitialValues] =
     React.useState<UserFormValues>(EMPTY_USER_FORM_VALUES);
@@ -92,14 +93,14 @@ export function UsersManagementPage() {
   );
 
   // Delete dialog state
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useQueryDisclosure("user-delete");
   const [deleteTargetUserId, setDeleteTargetUserId] = React.useState<
     string | null
   >(null);
 
   // Change password dialog state
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
-    React.useState(false);
+    useQueryDisclosure("user-change-password");
   const [changePasswordTargetUserId, setChangePasswordTargetUserId] =
     React.useState<string | null>(null);
   const [changePasswordTargetUserName, setChangePasswordTargetUserName] =

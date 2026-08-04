@@ -31,6 +31,7 @@ import { AppIcons } from "@/constant/icons";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import {
   useAdminBadges,
   useCreateBadge,
@@ -48,14 +49,15 @@ export function RewardsManagementPage() {
   const [apiTotal, setApiTotal] = React.useState(0);
   const [searchFilter, setSearchFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const formModal = useQueryModal("reward-form");
+  const deleteModal = useQueryModal("reward-delete");
+  const formMode = formModal.mode === "edit" ? "edit" : "create";
   const [formInitialValues, setFormInitialValues] =
     React.useState<RewardFormValues>(EMPTY_REWARD_FORM_VALUES);
-  const [editingBadgeId, setEditingBadgeId] = React.useState<string | null>(null);
+  const editingBadgeId = formMode === "edit" ? formModal.id : null;
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
-  const [deleteBadgeId, setDeleteBadgeId] = React.useState<string | null>(null);
+  const deleteBadgeId = deleteModal.id;
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -107,20 +109,18 @@ export function RewardsManagementPage() {
   }, []);
 
   const openCreateSheet = React.useCallback(() => {
-    setFormMode("create");
-    setEditingBadgeId(null);
+
     setFormInitialValues(EMPTY_REWARD_FORM_VALUES);
     setIsLoadingDetails(false);
-    setFormOpen(true);
+    formModal.open({ mode: "create" });
   }, []);
 
   const openEditSheet = React.useCallback(
     async (rewardId: string) => {
-      setFormMode("edit");
-      setEditingBadgeId(rewardId);
+
       setFormInitialValues(EMPTY_REWARD_FORM_VALUES);
       setIsLoadingDetails(true);
-      setFormOpen(true);
+      formModal.open({ id: rewardId, mode: "edit" });
 
       try {
         const response = await queryClient.fetchQuery({
@@ -137,8 +137,7 @@ export function RewardsManagementPage() {
           isActive: Boolean(badge.isActive),
         });
       } catch {
-        setFormOpen(false);
-        setEditingBadgeId(null);
+        formModal.close();
       } finally {
         setIsLoadingDetails(false);
       }
@@ -158,7 +157,7 @@ export function RewardsManagementPage() {
 
       if (formMode === "create") {
         createMutation.mutate(body, {
-          onSuccess: () => setFormOpen(false),
+          onSuccess: () => formModal.close(),
         });
         return;
       }
@@ -168,10 +167,7 @@ export function RewardsManagementPage() {
       updateMutation.mutate(
         { badgeId: editingBadgeId, body },
         {
-          onSuccess: () => {
-            setFormOpen(false);
-            setEditingBadgeId(null);
-          },
+          onSuccess: () => formModal.close(),
         },
       );
     },
@@ -284,7 +280,7 @@ export function RewardsManagementPage() {
           loadingRowIds={loadingRowIds}
           onEditReward={openEditSheet}
           onToggleRewardStatus={handleToggleRewardStatus}
-          onDeleteReward={setDeleteBadgeId}
+          onDeleteReward={(id) => deleteModal.open({ id })}
         />
       )}
 
@@ -302,21 +298,21 @@ export function RewardsManagementPage() {
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <Dialog open={Boolean(deleteBadgeId)} onOpenChange={(open) => !open && setDeleteBadgeId(null)}>
+      <Dialog open={deleteModal.isOpen} onOpenChange={deleteModal.onOpenChange}>
         <DialogContent dir="rtl" className="sm:max-w-md">
           <DialogHeader className="pe-12 text-right sm:text-right">
             <DialogTitle>حذف الشارة؟</DialogTitle>
             <DialogDescription>سيتم حذف الشارة نهائيًا.</DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-start">
-            <Button type="button" variant="outline" disabled={deleteMutation.isPending} onClick={() => setDeleteBadgeId(null)}>إلغاء</Button>
+            <Button type="button" variant="outline" disabled={deleteMutation.isPending} onClick={() => deleteModal.close()}>إلغاء</Button>
             <Button
               type="button"
               variant="destructive"
               disabled={deleteMutation.isPending}
               onClick={() => {
                 if (!deleteBadgeId) return;
-                deleteMutation.mutate(deleteBadgeId, { onSuccess: () => setDeleteBadgeId(null) });
+                deleteMutation.mutate(deleteBadgeId, { onSuccess: () => deleteModal.close() });
               }}
             >
               حذف
@@ -326,15 +322,14 @@ export function RewardsManagementPage() {
       </Dialog>
 
       <RewardFormSheet
-        open={formOpen}
+        open={formModal.isOpen}
         mode={formMode}
         initialValues={formInitialValues}
         isSubmitting={isFormSubmitting}
         isLoadingDetails={isLoadingDetails}
         onOpenChange={(nextOpen) => {
           if (isFormSubmitting || isLoadingDetails) return;
-          setFormOpen(nextOpen);
-          if (!nextOpen) setEditingBadgeId(null);
+          if (!nextOpen) formModal.close();
         }}
         onSubmit={handleSaveForm}
       />

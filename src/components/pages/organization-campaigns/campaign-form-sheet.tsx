@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -102,7 +103,7 @@ export function CampaignFormSheet({
 }: CampaignFormSheetProps) {
   const [formValues, setFormValues] =
     React.useState<CampaignFormValues>(initialValues);
-  const [discardDialogOpen, setDiscardDialogOpen] = React.useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure("campaign-discard-changes", { queryKey: "dialog" });
 
   React.useEffect(() => {
     if (open) {

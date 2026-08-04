@@ -10,8 +10,6 @@ import type {
   MeResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
-  UpdateProfileRequest,
-  UpdateProfileResponse,
 } from "./auth.type";
 
 export const authServices = {
@@ -68,10 +66,4 @@ export const authServices = {
     return response.data;
   },
 
-  async updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-    const response = await api.patch<UpdateProfileResponse>("/me/profile", data, {
-      successMessageKey: "updated",
-    });
-    return response.data;
-  },
 };

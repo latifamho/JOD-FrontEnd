@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +123,7 @@ function ReportRow({
   isClosing,
   closingReportId,
 }: ReportRowProps) {
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
+  const [detailsOpen, setDetailsOpen] = useQueryDisclosure(`report-details-${report.id}`);
   const isClaimingThis = isClaiming && claimingReportId === report.id;
 
   return (

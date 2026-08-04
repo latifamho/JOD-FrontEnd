@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,8 @@ export function ReviewPostCard({
   onApprove,
   onReject,
 }: ReviewPostCardProps) {
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [detailsOpen, setDetailsOpen] = useQueryDisclosure(`post-details-${post.id}`);
+  const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`post-reject-${post.id}`);
 
   return (
     <>

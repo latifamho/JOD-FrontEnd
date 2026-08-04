@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -89,7 +90,7 @@ export function RewardFormSheet({
   onOpenChange,
   onSubmit,
 }: RewardFormSheetProps) {
-  const [discardDialogOpen, setDiscardDialogOpen] = React.useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure("reward-discard-changes", { queryKey: "dialog" });
 
   const {
     register,

@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   OrgDonorsParams,
   OrgDonorsResponse,
@@ -26,14 +26,10 @@ const ENDPOINTS = {
   APPLICANT: (id: string) => `/org/applicants/${id}`,
 } as const
 
-function buildParams(params: OrgDonorsParams | OrgApplicantsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const orgDonorsServices = {
   async getDonors(params: OrgDonorsParams): Promise<OrgDonorsResponse> {
     const response = await api.get<OrgDonorsResponse>(ENDPOINTS.DONORS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },
@@ -60,7 +56,7 @@ export const orgDonorsServices = {
 
   async getApplicants(params: OrgApplicantsParams): Promise<OrgApplicantsResponse> {
     const response = await api.get<OrgApplicantsResponse>(ENDPOINTS.APPLICANTS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

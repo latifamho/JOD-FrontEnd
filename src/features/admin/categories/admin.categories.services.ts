@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminCategoriesParams,
   AdminCategoriesResponse,
@@ -19,14 +19,10 @@ const ENDPOINTS = {
   CATEGORY_STATUS: (id: string) => `/admin/categories/${id}/status`,
 } as const
 
-function buildParams(params: AdminCategoriesParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminCategoriesServices = {
   async getCategories(params: AdminCategoriesParams): Promise<AdminCategoriesResponse> {
     const response = await api.get<AdminCategoriesResponse>(ENDPOINTS.CATEGORIES, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

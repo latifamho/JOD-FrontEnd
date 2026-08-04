@@ -7,6 +7,7 @@ import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/component
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import { displayOrDash } from "@/lib/text";
 import { useAuth } from "@/providers/AuthProvider";
 import {
@@ -60,15 +61,9 @@ export function OrganizationCampaignsPage({
   >("all");
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
-  const [formOpen, setFormOpen] = React.useState(false);
-
-  const [closeDialogOpen, setCloseDialogOpen] = React.useState(false);
-  const [closeTargetCampaignId, setCloseTargetCampaignId] = React.useState<string | null>(null);
-  const [closeTargetTitle, setCloseTargetTitle] = React.useState("");
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTargetCampaignId, setDeleteTargetCampaignId] = React.useState<string | null>(null);
-  const [deleteTargetTitle, setDeleteTargetTitle] = React.useState("");
+  const formModal = useQueryModal("campaign-create");
+  const closeModal = useQueryModal("campaign-close");
+  const deleteModal = useQueryModal("campaign-delete");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -94,14 +89,22 @@ export function OrganizationCampaignsPage({
   }, [categoryFilter, pageSize, sortBy, status, setCurrentPage]);
 
   const campaigns = data?.data ?? [];
+  const closeTargetCampaignId = closeModal.id;
+  const deleteTargetCampaignId = deleteModal.id;
+  const closeTargetTitle = displayOrDash(
+    campaigns.find((campaign) => campaign.id === closeTargetCampaignId)?.title,
+  );
+  const deleteTargetTitle = displayOrDash(
+    campaigns.find((campaign) => campaign.id === deleteTargetCampaignId)?.title,
+  );
 
   const createMutation = useCreateOrgCampaign();
   const closeMutation = useCloseOrgCampaign();
   const deleteMutation = useDeleteOrgCampaign();
 
   const openCreateSheet = React.useCallback(() => {
-    setFormOpen(true);
-  }, []);
+    formModal.open();
+  }, [formModal]);
 
 
   const handleSaveForm = React.useCallback(
@@ -118,20 +121,15 @@ export function OrganizationCampaignsPage({
           startDate: toDateTimeFromInput(values.startDate),
           endDate: toDateTimeFromInput(values.endDate),
         },
-        { onSuccess: () => setFormOpen(false) },
+        { onSuccess: () => formModal.close() },
       );
     },
     [createMutation],
   );
 
   const openCloseDialog = React.useCallback(
-    (campaignId: string) => {
-      const campaign = campaigns.find((c) => c.id === campaignId);
-      setCloseTargetCampaignId(campaignId);
-      setCloseTargetTitle(displayOrDash(campaign?.title));
-      setCloseDialogOpen(true);
-    },
-    [campaigns],
+    (campaignId: string) => closeModal.open({ id: campaignId }),
+    [closeModal],
   );
 
   const handleCloseCampaign = React.useCallback(
@@ -140,10 +138,7 @@ export function OrganizationCampaignsPage({
       closeMutation.mutate(
         { campaignId: closeTargetCampaignId, body: { reason } },
         {
-          onSuccess: () => {
-            setCloseDialogOpen(false);
-            setCloseTargetCampaignId(null);
-          },
+          onSuccess: () => closeModal.close(),
         },
       );
     },
@@ -151,22 +146,14 @@ export function OrganizationCampaignsPage({
   );
 
   const openDeleteDialog = React.useCallback(
-    (campaignId: string) => {
-      const campaign = campaigns.find((c) => c.id === campaignId);
-      setDeleteTargetCampaignId(campaignId);
-      setDeleteTargetTitle(displayOrDash(campaign?.title));
-      setDeleteDialogOpen(true);
-    },
-    [campaigns],
+    (campaignId: string) => deleteModal.open({ id: campaignId }),
+    [deleteModal],
   );
 
   const handleDeleteCampaign = React.useCallback(() => {
     if (!deleteTargetCampaignId) return;
     deleteMutation.mutate(deleteTargetCampaignId, {
-      onSuccess: () => {
-        setDeleteDialogOpen(false);
-        setDeleteTargetCampaignId(null);
-      },
+      onSuccess: () => deleteModal.close(),
     });
   }, [deleteTargetCampaignId, deleteMutation]);
 
@@ -250,30 +237,24 @@ export function OrganizationCampaignsPage({
       />
 
       <CampaignFormSheet
-        open={formOpen}
+        open={formModal.isOpen}
         mode="create"
         initialValues={EMPTY_CAMPAIGN_FORM_VALUES}
-        onOpenChange={setFormOpen}
+        onOpenChange={formModal.onOpenChange}
         onSubmit={handleSaveForm}
       />
 
       <CloseCampaignDialog
-        open={closeDialogOpen}
+        open={closeModal.isOpen}
         campaignTitle={closeTargetTitle}
-        onOpenChange={(nextOpen) => {
-          setCloseDialogOpen(nextOpen);
-          if (!nextOpen) setCloseTargetCampaignId(null);
-        }}
+        onOpenChange={closeModal.onOpenChange}
         onConfirm={handleCloseCampaign}
       />
 
       <DeleteCampaignDialog
-        open={deleteDialogOpen}
+        open={deleteModal.isOpen}
         campaignTitle={deleteTargetTitle}
-        onOpenChange={(nextOpen) => {
-          setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) setDeleteTargetCampaignId(null);
-        }}
+        onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeleteCampaign}
       />
     </section>

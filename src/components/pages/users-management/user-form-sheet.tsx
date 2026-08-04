@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { Controller, useForm, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -117,7 +118,7 @@ export function UserFormSheet({
   onOpenChange,
   onSubmit,
 }: UserFormSheetProps) {
-  const [discardDialogOpen, setDiscardDialogOpen] = React.useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure("user-discard-changes", { queryKey: "dialog" });
 
   const schema = mode === "create" ? createUserSchema : editUserSchema;
 

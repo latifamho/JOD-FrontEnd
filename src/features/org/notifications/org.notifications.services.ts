@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   OrgNotificationsParams,
   OrgNotificationsResponse,
@@ -19,14 +19,10 @@ const ENDPOINTS = {
   NOTIFICATION_RESEND: (id: string) => `/org/notifications/${id}/resend`,
 } as const
 
-function buildParams(params: OrgNotificationsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const orgNotificationsServices = {
   async getNotifications(params: OrgNotificationsParams): Promise<OrgNotificationsResponse> {
     const response = await api.get<OrgNotificationsResponse>(ENDPOINTS.NOTIFICATIONS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

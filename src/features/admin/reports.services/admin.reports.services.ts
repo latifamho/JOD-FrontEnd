@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminReportDetailResponse,
   AdminReportsParams,
@@ -20,14 +20,10 @@ const ENDPOINTS = {
   CLOSE: (id: string) => `/admin/reports/${id}/close`,
 } as const
 
-function buildParams(params: AdminReportsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminReportsServices = {
   async getReports(params: AdminReportsParams): Promise<AdminReportsResponse> {
     const response = await api.get<AdminReportsResponse>(ENDPOINTS.REPORTS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

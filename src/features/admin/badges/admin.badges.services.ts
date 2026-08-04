@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminBadgesParams,
   AdminBadgesResponse,
@@ -19,14 +19,10 @@ const ENDPOINTS = {
   BADGE_STATUS: (id: string) => `/admin/badges/${id}/status`,
 } as const
 
-function buildParams(params: AdminBadgesParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminBadgesServices = {
   async getBadges(params: AdminBadgesParams): Promise<AdminBadgesResponse> {
     const response = await api.get<AdminBadgesResponse>(ENDPOINTS.BADGES, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

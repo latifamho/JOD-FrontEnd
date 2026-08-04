@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   AdminReviewCampaignsParams,
   AdminReviewCampaignsResponse,
@@ -17,14 +17,10 @@ const ENDPOINTS = {
   CAMPAIGN_REJECT: (id: string) => `/admin/review/campaigns/${id}/reject`,
 } as const
 
-function buildParams(params: AdminReviewCampaignsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const adminReviewCampaignsServices = {
   async getReviewCampaigns(params: AdminReviewCampaignsParams): Promise<AdminReviewCampaignsResponse> {
     const response = await api.get<AdminReviewCampaignsResponse>(ENDPOINTS.CAMPAIGNS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

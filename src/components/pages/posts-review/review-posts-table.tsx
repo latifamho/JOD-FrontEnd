@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -106,7 +107,7 @@ function ReviewPostRow({
   onReject,
   onOpenDetails,
 }: ReviewPostRowProps) {
-  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`post-reject-${post.id}`);
 
   const dateToShow =
     post.status === "approved" && post.publishedAt

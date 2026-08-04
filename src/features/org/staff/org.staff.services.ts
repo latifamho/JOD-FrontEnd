@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   OrgStaffParams,
   OrgStaffResponse,
@@ -28,14 +28,10 @@ const ENDPOINTS = {
   PERMISSIONS_CATALOG: '/org/permissions/catalog',
 } as const
 
-function buildParams(params: OrgStaffParams | OrgRolesParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const orgStaffServices = {
   async getStaff(params: OrgStaffParams): Promise<OrgStaffResponse> {
     const response = await api.get<OrgStaffResponse>(ENDPOINTS.STAFF, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },
@@ -62,7 +58,7 @@ export const orgStaffServices = {
 
   async getRoles(params: OrgRolesParams): Promise<OrgRolesResponse> {
     const response = await api.get<OrgRolesResponse>(ENDPOINTS.ROLES, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

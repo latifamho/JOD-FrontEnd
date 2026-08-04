@@ -7,6 +7,7 @@ import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/component
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import {
   type CreateNotificationValues,
   CreateNotificationSheet,
@@ -53,11 +54,9 @@ export function NotificationsManagementPage({
   const [dateFilter, setDateFilter] =
     React.useState<NotificationDateFilter>("all");
 
-  const [detailsSheetOpen, setDetailsSheetOpen] = React.useState(false);
-  const [detailsNotificationId, setDetailsNotificationId] = React.useState<
-    string | null
-  >(null);
-  const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
+  const detailsModal = useQueryModal("notification-details");
+  const createModal = useQueryModal("notification-create");
+  const detailsNotificationId = detailsModal.id;
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -112,10 +111,10 @@ export function NotificationsManagementPage({
   const resendMutation = useResendAdminNotification();
   const deleteMutation = useDeleteAdminNotification();
 
-  const openDetails = React.useCallback((notificationId: string) => {
-    setDetailsNotificationId(notificationId);
-    setDetailsSheetOpen(true);
-  }, []);
+  const openDetails = React.useCallback(
+    (notificationId: string) => detailsModal.open({ id: notificationId }),
+    [detailsModal],
+  );
 
   const handleToggleReadStatus = React.useCallback(
     (notificationId: string) => {
@@ -139,10 +138,7 @@ export function NotificationsManagementPage({
     (notificationId: string) => {
       deleteMutation.mutate(notificationId, {
         onSuccess: () => {
-          if (detailsNotificationId === notificationId) {
-            setDetailsSheetOpen(false);
-            setDetailsNotificationId(null);
-          }
+          if (detailsNotificationId === notificationId) detailsModal.close();
         },
       });
     },
@@ -159,7 +155,7 @@ export function NotificationsManagementPage({
           recipientScope: values.recipientScope,
           recipientLabel: values.recipientLabel,
         },
-        { onSuccess: () => setCreateSheetOpen(false) },
+        { onSuccess: () => createModal.close() },
       );
     },
     [createMutation],
@@ -178,7 +174,7 @@ export function NotificationsManagementPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" onClick={() => setCreateSheetOpen(true)}>
+          <Button type="button" onClick={() => createModal.open()}>
             إرسال إشعار جديد
             <AppIcons.send className="size-4" />
           </Button>
@@ -244,21 +240,16 @@ export function NotificationsManagementPage({
       <NotificationDetailsSheet
         mailbox={activeMailbox}
         notification={detailsNotification}
-        open={detailsSheetOpen}
-        onOpenChange={(nextOpen) => {
-          setDetailsSheetOpen(nextOpen);
-          if (!nextOpen) {
-            setDetailsNotificationId(null);
-          }
-        }}
+        open={detailsModal.isOpen}
+        onOpenChange={detailsModal.onOpenChange}
         onToggleReadStatus={handleToggleReadStatus}
         onResend={handleResend}
         onDelete={handleDelete}
       />
 
       <CreateNotificationSheet
-        open={createSheetOpen}
-        onOpenChange={setCreateSheetOpen}
+        open={createModal.isOpen}
+        onOpenChange={createModal.onOpenChange}
         onSubmit={handleCreateNotification}
       />
     </section>

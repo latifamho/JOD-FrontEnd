@@ -5,11 +5,11 @@ import * as React from "react";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import type { ModerationStatus } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import { useDebounce } from "@/hooks/use-debounce";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   reviewStatusLabels,
-  type ReviewPostItem,
   type ReviewPostType,
 } from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
@@ -41,8 +41,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [sortBy, setSortBy] =
     React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
-  const [selectedPostForDetails, setSelectedPostForDetails] =
-    React.useState<ReviewPostItem | null>(null);
+  const detailsModal = useQueryModal("post-details");
 
   const debouncedOrgSearch = useDebounce(organizationSearch, 400);
 
@@ -78,6 +77,8 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const rejectMutation = useRejectPost();
 
   const posts = data?.data ?? [];
+  const selectedPostForDetails =
+    posts.find((post) => post.id === detailsModal.id) ?? null;
 
   const handleApprove = React.useCallback(
     (postId: string) => {
@@ -136,14 +137,14 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
           posts={posts}
           onApprove={handleApprove}
           onReject={handleReject}
-          onOpenDetails={setSelectedPostForDetails}
+          onOpenDetails={(post) => detailsModal.open({ id: post.id })}
         />
       )}
 
       {selectedPostForDetails && (
         <PostDetailsDialog
-          open={!!selectedPostForDetails}
-          onOpenChange={(open) => !open && setSelectedPostForDetails(null)}
+          open={detailsModal.isOpen}
+          onOpenChange={detailsModal.onOpenChange}
           post={selectedPostForDetails}
         />
       )}

@@ -1,5 +1,5 @@
 ﻿import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type { OrgReportsParams, OrgReportsResponse, OrgReportDetailResponse, UpdateOrgReportStatusRequest, UpdateOrgReportStatusResponse } from './org.reports.types'
 
 const ENDPOINTS = {
@@ -10,7 +10,7 @@ const ENDPOINTS = {
 
 export const orgReportsServices = {
   async getReports(params: OrgReportsParams): Promise<OrgReportsResponse> {
-    const response = await api.get<OrgReportsResponse>(ENDPOINTS.REPORTS, { params: buildListParams(params) })
+    const response = await api.get<OrgReportsResponse>(ENDPOINTS.REPORTS, { params: buildApiParams(params) })
     return response.data
   },
   async getReportById(reportId: string): Promise<OrgReportDetailResponse> {

@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import { buildListParams } from '@/lib/build-list-params'
+import { buildApiParams } from '@/lib/build-api-params'
 import type {
   OrgCampaignsParams,
   OrgCampaignsResponse,
@@ -19,14 +19,10 @@ const ENDPOINTS = {
   CAMPAIGN_STATUS: (id: string) => `/org/campaigns/${id}/status`,
 } as const
 
-function buildParams(params: OrgCampaignsParams): Record<string, unknown> {
-  return buildListParams(params)
-}
-
 export const orgCampaignsServices = {
   async getCampaigns(params: OrgCampaignsParams): Promise<OrgCampaignsResponse> {
     const response = await api.get<OrgCampaignsResponse>(ENDPOINTS.CAMPAIGNS, {
-      params: buildParams(params),
+      params: buildApiParams(params),
     })
     return response.data
   },

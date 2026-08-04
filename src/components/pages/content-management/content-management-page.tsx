@@ -30,6 +30,7 @@ import { routePaths } from "@/constant/routes";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import {
   useAdminArticles,
   useDeleteArticle,
@@ -43,8 +44,8 @@ export function ContentManagementPage() {
   const [apiTotal, setApiTotal] = React.useState(0);
   const [searchFilter, setSearchFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | ArticleStatus>("all");
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
+  const deleteModal = useQueryModal("article-delete");
+  const deleteTargetId = deleteModal.id;
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -94,8 +95,7 @@ export function ContentManagementPage() {
     deleteMutation.mutate(deleteTargetId, {
       onSuccess: () => {
         // success toast from api interceptor
-        setDeleteDialogOpen(false);
-        setDeleteTargetId(null);
+        deleteModal.close();
       },
     });
   }, [deleteTargetId, deleteMutation]);
@@ -189,8 +189,7 @@ export function ContentManagementPage() {
           isLoading={showTableLoading}
           onEdit={handleEdit}
           onDelete={(id) => {
-            setDeleteTargetId(id);
-            setDeleteDialogOpen(true);
+            deleteModal.open({ id });
           }}
         />
       )}
@@ -210,12 +209,9 @@ export function ContentManagementPage() {
       />
 
       <Dialog
-        open={deleteDialogOpen}
+        open={deleteModal.isOpen}
         onOpenChange={(nextOpen) => {
-          if (!deleteMutation.isPending) {
-            setDeleteDialogOpen(nextOpen);
-            if (!nextOpen) setDeleteTargetId(null);
-          }
+          if (!deleteMutation.isPending && !nextOpen) deleteModal.close();
         }}
       >
         <DialogContent dir="rtl" className="sm:max-w-md">
@@ -234,7 +230,7 @@ export function ContentManagementPage() {
               type="button"
               variant="outline"
               disabled={deleteMutation.isPending}
-              onClick={() => setDeleteDialogOpen(false)}
+              onClick={() => deleteModal.close()}
             >
               إلغاء
             </Button>

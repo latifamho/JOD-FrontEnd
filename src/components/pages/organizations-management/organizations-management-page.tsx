@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { PaginationControls } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { Button } from "@/components/ui/button";
 import { OrganizationsTable } from "@/components/pages/organizations-management/organizations-table";
@@ -46,9 +47,8 @@ export function OrganizationsManagementPage() {
   >("all");
   const [sortBy, setSortBy] = React.useState<OrganizationsSortOption>("created_newest");
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTargetOrganizationId, setDeleteTargetOrganizationId] =
-    React.useState<string | null>(null);
+  const deleteModal = useQueryModal("organization-delete");
+  const deleteTargetOrganizationId = deleteModal.id;
   const [loadingRowIds, setLoadingRowIds] = React.useState<Set<string>>(new Set());
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -164,18 +164,15 @@ export function OrganizationsManagementPage() {
     ],
   );
 
-  const openDeleteDialog = React.useCallback((organizationId: string) => {
-    setDeleteTargetOrganizationId(organizationId);
-    setDeleteDialogOpen(true);
-  }, []);
+  const openDeleteDialog = React.useCallback(
+    (organizationId: string) => deleteModal.open({ id: organizationId }),
+    [deleteModal],
+  );
 
   const handleDeleteOrganization = React.useCallback(() => {
     if (!deleteTargetOrganizationId) return;
     deleteMutation.mutate(deleteTargetOrganizationId, {
-      onSuccess: () => {
-        setDeleteDialogOpen(false);
-        setDeleteTargetOrganizationId(null);
-      },
+      onSuccess: () => deleteModal.close(),
     });
   }, [deleteTargetOrganizationId, deleteMutation]);
 
@@ -244,12 +241,9 @@ export function OrganizationsManagementPage() {
       />
 
       <OrganizationDeleteDialog
-        open={deleteDialogOpen}
+        open={deleteModal.isOpen}
         organizationName={deleteTargetOrganization?.name ?? "-"}
-        onOpenChange={(nextOpen) => {
-          setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) setDeleteTargetOrganizationId(null);
-        }}
+        onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeleteOrganization}
       />
     </section>

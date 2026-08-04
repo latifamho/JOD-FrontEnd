@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,8 @@ export function ReviewCampaignCard({
   onApprove,
   onReject,
 }: ReviewCampaignCardProps) {
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [detailsOpen, setDetailsOpen] = useQueryDisclosure(`campaign-details-${campaign.id}`);
+  const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`campaign-reject-${campaign.id}`);
   const progress = getProgress(campaign.goalAmount, campaign.raisedAmount);
 
   return (

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import {
   type CategoryStatus,
   type CategoryTarget,
@@ -66,20 +67,18 @@ export function CategoriesManagementPage() {
 
   const categories = data?.data ?? [];
 
-  // Form sheet state
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const formModal = useQueryModal("category-form");
+  const deleteModal = useQueryModal("category-delete");
+  const formMode = formModal.mode === "edit" ? "edit" : "create";
   const [formInitialValues, setFormInitialValues] =
     React.useState<CategoryFormValues>(EMPTY_CATEGORY_FORM_VALUES);
-  const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
+  const editingCategoryId = formMode === "edit" ? formModal.id : null;
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
   // Per-row toggle loading
   const [togglingRowIds, setTogglingRowIds] = React.useState<Set<string>>(new Set());
 
-  // Delete dialog state
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTargetCategoryId, setDeleteTargetCategoryId] = React.useState<string | null>(null);
+  const deleteTargetCategoryId = deleteModal.id;
 
   // Mutations
   const createMutation = useCreateCategory();
@@ -110,20 +109,18 @@ export function CategoriesManagementPage() {
   }, []);
 
   const openCreateSheet = React.useCallback(() => {
-    setFormMode("create");
-    setEditingCategoryId(null);
+
     setFormInitialValues(EMPTY_CATEGORY_FORM_VALUES);
     setIsLoadingDetails(false);
-    setFormOpen(true);
+    formModal.open({ mode: "create" });
   }, []);
 
   const openEditSheet = React.useCallback(
     async (categoryId: string) => {
-      setFormMode("edit");
-      setEditingCategoryId(categoryId);
+
       setFormInitialValues(EMPTY_CATEGORY_FORM_VALUES);
       setIsLoadingDetails(true);
-      setFormOpen(true);
+      formModal.open({ id: categoryId, mode: "edit" });
 
       try {
         const response = await queryClient.fetchQuery({
@@ -140,8 +137,7 @@ export function CategoriesManagementPage() {
         });
       } catch {
         // toast already shown by the api interceptor
-        setFormOpen(false);
-        setEditingCategoryId(null);
+        formModal.close();
       } finally {
         setIsLoadingDetails(false);
       }
@@ -161,7 +157,7 @@ export function CategoriesManagementPage() {
       if (formMode === "create") {
         createMutation.mutate(body, {
           onSuccess: () => {
-            setFormOpen(false);
+            formModal.close();
           },
         });
         return;
@@ -173,8 +169,7 @@ export function CategoriesManagementPage() {
         { categoryId: editingCategoryId, body },
         {
           onSuccess: () => {
-            setFormOpen(false);
-            setEditingCategoryId(null);
+            formModal.close();
           },
         },
       );
@@ -197,18 +192,15 @@ export function CategoriesManagementPage() {
     [categories, toggleStatusMutation, addTogglingRow, removeTogglingRow],
   );
 
-  const openDeleteDialog = React.useCallback((categoryId: string) => {
-    setDeleteTargetCategoryId(categoryId);
-    setDeleteDialogOpen(true);
-  }, []);
+  const openDeleteDialog = React.useCallback(
+    (categoryId: string) => deleteModal.open({ id: categoryId }),
+    [deleteModal],
+  );
 
   const handleDeleteCategory = React.useCallback(() => {
     if (!deleteTargetCategoryId) return;
     deleteMutation.mutate(deleteTargetCategoryId, {
-      onSuccess: () => {
-        setDeleteDialogOpen(false);
-        setDeleteTargetCategoryId(null);
-      },
+      onSuccess: () => deleteModal.close(),
     });
   }, [deleteTargetCategoryId, deleteMutation]);
 
@@ -275,16 +267,15 @@ export function CategoriesManagementPage() {
       />
 
       <CategoryFormSheet
-        open={formOpen}
+        open={formModal.isOpen}
         mode={formMode}
         initialValues={formInitialValues}
         isSubmitting={isFormSubmitting}
         isLoadingDetails={isLoadingDetails}
         onOpenChange={(nextOpen) => {
           if (isFormSubmitting || isLoadingDetails) return;
-          setFormOpen(nextOpen);
           if (!nextOpen) {
-            setEditingCategoryId(null);
+            formModal.close();
             setIsLoadingDetails(false);
           }
         }}
@@ -292,13 +283,12 @@ export function CategoriesManagementPage() {
       />
 
       <CategoryDeleteDialog
-        open={deleteDialogOpen}
+        open={deleteModal.isOpen}
         categoryName={displayOrDash(deleteTargetCategory?.name)}
         isDeleting={deleteMutation.isPending}
         onOpenChange={(nextOpen) => {
           if (!deleteMutation.isPending) {
-            setDeleteDialogOpen(nextOpen);
-            if (!nextOpen) setDeleteTargetCategoryId(null);
+            if (!nextOpen) deleteModal.close();
           }
         }}
         onConfirm={handleDeleteCategory}

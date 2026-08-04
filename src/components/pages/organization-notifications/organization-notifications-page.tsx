@@ -27,6 +27,7 @@ import {
   useUpdateOrgNotificationReadState,
 } from "@/features/org/notifications/org.notifications.query";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 
@@ -41,7 +42,7 @@ const filterLabels: Record<Filter, string> = {
 
 export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?: Mailbox }) {
   const [filter, setFilter] = React.useState<Filter>("all");
-  const [openId, setOpenId] = React.useState<string | null>(null);
+  const detailsModal = useQueryModal("notification-details");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -67,12 +68,12 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
 
   React.useEffect(() => {
     setFilter("all");
-    setOpenId(null);
-  }, [mailbox]);
+    detailsModal.close();
+  }, [mailbox, detailsModal.close]);
 
   const updateReadState = useUpdateOrgNotificationReadState();
   const rows = query.data?.data ?? [];
-  const selected = rows.find((row) => row.id === openId) ?? null;
+  const selected = rows.find((row) => row.id === detailsModal.id) ?? null;
   const unreadCount = mailbox === "inbox" ? rows.filter((row) => !row.read).length : 0;
 
   const toggleRead = (id: string, currentlyRead: boolean) => {
@@ -153,7 +154,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatUtcDateTime(row.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      <Button type="button" variant="outline" size="sm" onClick={() => setOpenId(row.id)}>التفاصيل</Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => detailsModal.open({ id: row.id })}>التفاصيل</Button>
                       {mailbox === "inbox" ? (
                         <Button type="button" variant="ghost" size="sm" disabled={updateReadState.isPending} onClick={() => toggleRead(row.id, row.read)}>
                           {row.read ? "تعيين غير مقروء" : "تعيين مقروء"}
@@ -182,7 +183,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <Sheet open={openId !== null} onOpenChange={(open) => !open && setOpenId(null)}>
+      <Sheet open={detailsModal.isOpen} onOpenChange={detailsModal.onOpenChange}>
         <SheetContent side="right" dir="rtl" className="sm:max-w-md">
           <SheetHeader>
             <SheetTitle>{selected?.title}</SheetTitle>
@@ -197,7 +198,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                     </div>
                     <p className="text-xs text-muted-foreground">{formatUtcDateTime(selected.createdAt)}</p>
                     {mailbox === "inbox" ? (
-                      <Button type="button" disabled={updateReadState.isPending} onClick={() => { toggleRead(selected.id, selected.read); setOpenId(null); }}>
+                      <Button type="button" disabled={updateReadState.isPending} onClick={() => { toggleRead(selected.id, selected.read); detailsModal.close(); }}>
                         {selected.read ? "إعادة كغير مقروء" : "تعيين كمقروء وإغلاق"}
                       </Button>
                     ) : null}

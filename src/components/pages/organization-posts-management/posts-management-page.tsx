@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Suspense } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
@@ -10,6 +10,7 @@ import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { routePaths } from "@/constant/routes";
 import { usePagination } from "@/hooks/use-pagination";
+import { useQueryModal } from "@/hooks/use-query-modal";
 import { useAuth } from "@/providers/AuthProvider";
 import {
   isCampaignRelatedPostType,
@@ -71,7 +72,6 @@ function OrganizationPostsManagementPageContent({
   const canArchive = can("org.posts.archive");
   const canRestore = can("org.posts.restore");
   const canDelete = can("org.posts.delete");
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -83,13 +83,8 @@ function OrganizationPostsManagementPageContent({
   >("all");
   const [sortBy, setSortBy] = React.useState<PostsSortOption>("updated_newest");
 
-  const [formOpen, setFormOpen] = React.useState(false);
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deletePostId, setDeletePostId] = React.useState<string | null>(null);
-  const [deletePostTitle, setDeletePostTitle] = React.useState("");
-
-  const handledNavigationAction = React.useRef<string | null>(null);
+  const formModal = useQueryModal("post-create");
+  const deleteModal = useQueryModal("post-delete");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -115,6 +110,9 @@ function OrganizationPostsManagementPageContent({
   }, [pageSize, sortBy, status, typeFilter, setCurrentPage]);
 
   const posts = data?.data ?? [];
+  const deletePostId = deleteModal.id;
+  const deletePostTitle =
+    posts.find((post) => post.id === deletePostId)?.title ?? "-";
 
   const createMutation = useCreateOrgPost();
   const publishMutation = usePublishOrgPost();
@@ -123,23 +121,8 @@ function OrganizationPostsManagementPageContent({
   const deleteMutation = useDeleteOrgPost();
 
   const openCreateSheet = React.useCallback(() => {
-    setFormOpen(true);
-  }, []);
-
-  React.useEffect(() => {
-    const action = searchParams.get("action");
-    const postId = searchParams.get("postId");
-    const actionKey = `${action ?? "none"}:${postId ?? ""}`;
-
-    if (handledNavigationAction.current === actionKey) return;
-
-    if (action === "create") {
-      handledNavigationAction.current = actionKey;
-      openCreateSheet();
-      return;
-    }
-
-  }, [openCreateSheet, searchParams]);
+    formModal.open();
+  }, [formModal]);
 
   const openDetails = React.useCallback(
     (postId: string) => {
@@ -168,7 +151,7 @@ function OrganizationPostsManagementPageContent({
           location: values.location,
           campaignTitle,
         },
-        { onSuccess: () => setFormOpen(false) },
+        { onSuccess: () => formModal.close() },
       );
     },
     [createMutation],
@@ -188,22 +171,14 @@ function OrganizationPostsManagementPageContent({
   );
 
   const openDeleteDialog = React.useCallback(
-    (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
-      setDeletePostId(postId);
-      setDeletePostTitle(post?.title ?? "-");
-      setDeleteDialogOpen(true);
-    },
-    [posts],
+    (postId: string) => deleteModal.open({ id: postId }),
+    [deleteModal],
   );
 
   const handleDeletePost = React.useCallback(() => {
     if (!deletePostId) return;
     deleteMutation.mutate(deletePostId, {
-      onSuccess: () => {
-        setDeletePostId(null);
-        setDeleteDialogOpen(false);
-      },
+      onSuccess: () => deleteModal.close(),
     });
   }, [deletePostId, deleteMutation]);
 
@@ -288,21 +263,18 @@ function OrganizationPostsManagementPageContent({
       />
 
       <PostFormSheet
-        open={formOpen}
+        open={formModal.isOpen}
         mode="create"
         initialValues={EMPTY_POST_FORM_VALUES}
-        onOpenChange={setFormOpen}
+        onOpenChange={formModal.onOpenChange}
         onSubmit={handleSaveForm}
       />
 
 
       <DeletePostDialog
-        open={deleteDialogOpen}
+        open={deleteModal.isOpen}
         postTitle={deletePostTitle}
-        onOpenChange={(nextOpen) => {
-          setDeleteDialogOpen(nextOpen);
-          if (!nextOpen) setDeletePostId(null);
-        }}
+        onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeletePost}
       />
     </section>

@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Logo } from "@/components/base/logo";
 import { Input } from "@/components/ui/input";
@@ -346,7 +347,7 @@ export function SideBar() {
   const [isDesktop, setIsDesktop] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(true);
   const [hoverExpanded, setHoverExpanded] = React.useState(false);
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useQueryDisclosure("mobile-sidebar");
   const [searchValue, setSearchValue] = React.useState("");
 
   React.useEffect(() => {
@@ -392,7 +393,7 @@ export function SideBar() {
 
     window.addEventListener(SIDEBAR_TOGGLE_EVENT, handleToggle);
     return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, handleToggle);
-  }, [isDesktop]);
+  }, [isDesktop, setMobileOpen]);
 
   React.useEffect(() => {
     setSearchValue("");
@@ -402,7 +403,7 @@ export function SideBar() {
     if (isDesktop && mobileOpen) {
       setMobileOpen(false);
     }
-  }, [isDesktop, mobileOpen]);
+  }, [isDesktop, mobileOpen, setMobileOpen]);
 
   const visualExpanded = !collapsed || hoverExpanded;
 

@@ -36,7 +36,6 @@ export const routePaths = {
     contentEdit: (id = ":id") => `/dashboard/admin/content/${id}/edit`,
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
-    profile: "/dashboard/admin/profile",
     settings: "/dashboard/admin/settings",
   },
   organizationOwnerScope: {
@@ -239,7 +238,7 @@ const adminLinks: AppNavLink[] = [
       {
         label: "مغلق",
         href: routePaths.adminScope.reportsClosed,
-        icon: "auditLog",
+        icon: "archive",
       },
     ],
   },
@@ -371,7 +370,7 @@ const organizationOwnerLinks: AppNavLink[] = [
       {
         label: "مؤرشف",
         href: routePaths.organizationOwnerScope.postsArchived,
-        icon: "auditLog",
+        icon: "archive",
       },
     ],
   },
@@ -498,7 +497,7 @@ const organizationStaffLinks: AppNavLink[] = [
       {
         label: "مؤرشف",
         href: routePaths.organizationStaffScope.postsArchived,
-        icon: "auditLog",
+        icon: "archive",
       },
     ],
   },
@@ -663,7 +662,6 @@ const segmentLabels: Record<string, string> = {
   new: "جديد",
   edit: "تعديل",
   analytics: "الإحصائيات",
-  profile: "الملف الشخصي",
   settings: "الإعدادات",
   donors: "المتبرعون",
   applicants: "المتقدمون",
