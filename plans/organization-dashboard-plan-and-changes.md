@@ -1,446 +1,262 @@
-# Organization Dashboard Plan and Implementation Changes
+# Organization Dashboard Plan, Branch History, and Implementation Changes
 
-> This file exists with identical content in both the Backend and Frontend repositories and serves as the shared reference for the Organization Owner and Organization Staff dashboard implementation.
+> This is the Frontend repository record for the Organization Owner and Organization Staff dashboard work. It documents the original Backend feature branch, its merge into Backend `main`, the matching Frontend feature work, the transition back to Frontend `main`, and all follow-up changes through the latest implementation.
 
 ## Document Information
 
 | Item | Value |
 |---|---|
-| Status | Completed and implemented |
-| Last updated | 2026-07-31 |
-| Scope | Organization Owner Dashboard + Organization Staff Dashboard |
-| Backend | Laravel API in `BE-JOD/jod` |
-| Frontend | Next.js in `JOD-FrontEnd` |
-| Out of scope | Organization Notifications and Mobile Backend Integration |
+| Status | Implemented and merged to `main` |
+| Last updated | 2026-08-04 |
+| Backend repository | `BE-JOD/jod` |
+| Frontend repository | `JOD-FrontEnd` |
+| Backend feature branch | `feature/org-owner-staff-permissions-backend` |
+| Frontend feature branch | `feature/org-owner-staff-permissions-frontend` |
+| Backend merge commit | `3c951c4` — PR #8 |
+| Frontend feature tip | `8a20456` |
+| Current Frontend `main` | `38bf7c9` |
+| Main scope | Organization authentication, Owner/Staff dashboards, permissions, organization-scoped data, and UI/security refinements |
+| Remaining out of scope | Mobile application integration |
 
 ---
 
-## 1. Plan Objective
+## 1. Objective
 
-The objective is to deliver a unified Full Stack integration for the organization dashboard so that:
+The work started to provide a complete organization dashboard for two authenticated organization roles:
 
-- The Backend is the source of truth for permissions, contracts, and data.
-- Organization Owner and Organization Staff use the same organization-scoped APIs.
-- Pages, navigation items, and actions differ based on the authenticated user's permissions.
-- Backend Policies prevent access to data owned by another organization.
-- Permission names are identical across Backend and Frontend.
-- Completed sections use real API data instead of static data.
-- Lifecycle operations use canonical status endpoints instead of separate action-specific frontend integrations.
+- Organization Owner.
+- Organization Staff.
 
----
+The main goals were:
 
-## 2. Implementation Scope
-
-### Included
-
-- Authentication Context and permission refresh.
-- Isolation between Admin, Organization Owner, and Organization Staff.
-- Organization Overview Dashboard.
-- Staff Management.
-- Roles and Permission Catalog.
-- Campaigns.
-- Posts.
-- Donors.
-- Applicants.
-- Reports.
-- Organization Audit Log.
-- Organization Profile and Settings.
-- Staff Personal Profile.
-- Route Guards and Navigation Guards.
-- Backend feature tests and shared contracts.
-
-### Excluded from the current delivery
-
-- Organization Notifications UI/API integration.
-- Mobile Application Backend integration.
-- Mobile-only compatibility endpoints.
-
-Existing notification source files were not removed. Their organization navigation links are hidden and guarded until notifications are implemented as a separate phase.
+1. Make the Backend the source of truth for organization membership, permissions, resource ownership, and lifecycle rules.
+2. Use the same organization-scoped API surface for Owner and Staff.
+3. Allow the Owner to manage staff, roles, and organization operations.
+4. Allow Staff to see and execute only the sections and actions granted by their assigned role.
+5. Prevent cross-organization data access in Backend policies and services.
+6. Keep Backend and Frontend permission names aligned.
+7. Replace static dashboard data with real API data.
+8. Protect pages, navigation, buttons, requests, routes, Sheets, and Dialogs.
+9. Support separate Admin and Organization authentication flows.
+10. Provide a clear pending-approval experience after organization registration.
 
 ---
 
-## 3. Architectural Principles
+## 2. Branch and Merge History
 
-### 3.1 Backend as the permission source of truth
+## 2.1 Backend feature branch
 
-Dashboard context is loaded from:
+The Backend implementation was developed on:
+
+```text
+feature/org-owner-staff-permissions-backend
+```
+
+The branch started with the organization authentication and dashboard context foundation, then added organization-scoped resources, policies, contracts, tests, and review fixes.
+
+The remote branch ended at:
+
+```text
+d338753 Restore organization report permission actions
+```
+
+## 2.2 Backend merge to `main`
+
+The Backend feature branch was merged through:
+
+```text
+3c951c4 Merge pull request #8 from feature/org-owner-staff-permissions-backend
+```
+
+The merge message records that CodeRabbit review feedback was resolved and regression coverage was added.
+
+## 2.3 Authentication work around the Backend merge
+
+Before the organization feature merge, Backend `main` already received the rotating refresh-token flow through PR #5. That work added:
+
+- Access-token and refresh-token separation.
+- Token lifetime configuration.
+- Refresh request validation.
+- Refresh-token rotation.
+- Access-token middleware.
+- Refresh-token tests.
+
+After PR #8, Backend `main` received the company authentication contract through PR #9:
+
+```text
+ea5d1d9 Merge pull request #9 from MustafaFares445/agent/company-auth-endpoints
+```
+
+That added:
+
+- Company/organization registration validation.
+- Company registration service logic.
+- Company login and registration endpoints.
+- Company authentication route registration.
+- Seeded company accounts.
+
+## 2.4 Frontend feature branch and return to `main`
+
+The matching Frontend implementation was developed on:
+
+```text
+feature/org-owner-staff-permissions-frontend
+```
+
+The feature branch currently points to:
+
+```text
+8a20456 feat: refactor modal handling with useQueryModal hook
+```
+
+Frontend `main` directly continues from that commit. The latest follow-up commit is:
+
+```text
+38bf7c9 Refactor modal handling in donors, campaigns, notifications, posts, and staff management
+```
+
+There is no separate Frontend merge commit in the current history. `main` contains the feature branch history and then the final permission-aware modal and Sidebar update.
+
+---
+
+## 3. Backend Implementation — Step by Step
+
+## Step 1 — Owner and Staff dashboard context
+
+Commit:
+
+```text
+8ca8c19 feat(org-auth): add owner staff dashboard context
+```
+
+Implemented the organization-aware dashboard context used by the Frontend:
 
 ```http
 GET /api/v1/me/dashboard-context
 ```
 
-It contains:
+The response provides:
 
-- Authenticated user data.
-- Dashboard role/type.
-- The user's organization membership.
-- Hierarchical permissions in `modules`.
-- Direct permission lookup in `flat`.
-- Granted permission names in `granted`.
+- Authenticated user profile.
+- Dashboard role: `admin`, `org_owner`, or `org_staff`.
+- Organization information.
+- Staff role information when applicable.
+- Hierarchical permission modules.
+- Flat permission lookup.
+- Granted permission names.
+- Dashboard counters.
 
-If a non-admin user is not linked to an organization, the Backend returns `422` instead of generating an incomplete organization dashboard context.
+This contract became the basis for route guards, navigation filtering, and action authorization in the Frontend.
 
-### 3.2 Organization scoping
+## Step 2 — Staff and role safeguards
 
-All organization resources are scoped using the authenticated user's `organization_id`. Security does not rely on hidden buttons only. It is enforced through:
+Commit:
 
-- Laravel Policies.
-- Resource ownership checks.
-- Service-level filters.
-- Route authorization.
-
-### 3.3 Permission-aware Frontend
-
-The Frontend uses `AuthProvider` and:
-
-```ts
-can('permission.name')
+```text
+e73bcfe feat(org-staff): enforce role assignment safeguards
 ```
 
-This controls:
+Added safeguards for staff and role management, including protection against unsafe owner/system-role changes and organization membership mistakes.
 
-- Sidebar items.
-- Section tabs.
-- Create, update, and delete buttons.
-- Lifecycle actions.
-- Optional query execution.
-- Direct route access.
-- Redirects to the first allowed route.
-
-### 3.4 Canonical API contracts
-
-Canonical status endpoints were introduced:
+The final contract includes:
 
 ```http
-PATCH /api/v1/org/campaigns/{campaign}/status
-PATCH /api/v1/org/posts/{post}/status
-PATCH /api/v1/org/reports/{report}/status
+GET    /api/v1/org/staff
+POST   /api/v1/org/staff
+GET    /api/v1/org/staff/{id}
+PATCH  /api/v1/org/staff/{id}
+DELETE /api/v1/org/staff/{id}
+
+GET    /api/v1/org/staff/roles
+POST   /api/v1/org/staff/roles
+GET    /api/v1/org/staff/roles/{id}
+PATCH  /api/v1/org/staff/roles/{id}
+DELETE /api/v1/org/staff/roles/{id}
+
+GET    /api/v1/org/permissions/catalog
 ```
 
-Legacy action endpoints may remain in the Backend for temporary compatibility, but the new Frontend integration uses the canonical contracts.
+## Step 3 — Organization overview
 
----
+Commit:
 
-## 4. Implementation Phases
-
-| Phase | Content | Status |
-|---|---|---|
-| Phase 1 | Authentication Context and Permission Navigation | Completed |
-| Phase 2 | Staff, Roles, and Permission Catalog | Completed |
-| Phase 3 | Organization Overview | Completed |
-| Phase 4 | Campaigns and Posts Lifecycle | Completed |
-| Phase 5 | Donors and Applicants | Completed |
-| Phase 6 | Reports and Audit Log | Completed |
-| Phase 7 | Profile and Settings | Completed |
-| Phase 8 | Tests, Cleanup, and Documentation | Completed |
-
----
-
-## 5. Changes by Section
-
-## 5.1 Authentication and Permissions
-
-### Backend changes
-
-- Updated `/me/dashboard-context` to return complete organization and permission context.
-- Added the organization audit log permission group `org.audit_logs`.
-- Added the report update permission `org.reports.update`.
-- Removed organization notification permissions from the assignable catalog for this delivery.
-- Prevented organization dashboard context generation for users without an organization.
-- Removed organization notification counters from the current dashboard context.
-
-### Frontend changes
-
-- Hydrated Dashboard Context in `AuthProvider` on login and refresh.
-- Added `can(permission)` as the unified permission check.
-- Protected dashboard layouts.
-- Filtered Sidebar and Section Tabs by permission.
-- Isolated Admin, Owner, and Staff routes.
-- Redirected unauthorized direct routes to the first allowed route.
-- Hid organization notification routes from current navigation.
-
----
-
-## 5.2 Staff Management, Roles, and Permission Catalog
-
-### Backend changes
-
-- Updated role requests to accept `isActive` and map it to `is_active`.
-- Added `roleId` to the Staff Resource contract.
-- Protected Staff and Roles using Policies.
-- Preserved safeguards that prevent unsafe system-role changes or removal of the last owner.
-- Exposed the permission catalog through:
-
-```http
-GET /api/v1/org/permissions/catalog
+```text
+5131908 feat(org-overview): add scoped dashboard data
 ```
 
-- Kept Staff and Roles management owner-only and excluded them from assignable staff permissions.
-
-### Frontend changes
-
-- Removed static roles and static permission catalog data.
-- Loaded roles from:
-
-```http
-GET /api/v1/org/staff/roles
-```
-
-- Used `organizationRoleId` during staff create and update operations.
-- Connected staff and role forms to real APIs.
-- Restricted Staff and Roles pages to the organization owner.
-- Built permission fields dynamically from the Backend catalog.
-
----
-
-## 5.3 Organization Overview
-
-### Backend changes
-
-Exposed:
+Added:
 
 ```http
 GET /api/v1/org/dashboard/overview
 ```
 
-The response includes:
+The overview is scoped to the authenticated organization and contains permission-aware statistics and recent activity.
 
-- Campaign statistics.
-- Post statistics.
-- Donor, applicant, and report statistics when permitted.
-- `recentActivity` instead of the previous `activity` key.
+## Step 4 — Campaign and post lifecycle
 
-### Frontend changes
+Commit:
 
-- Removed static Overview data for Owner and Staff.
-- Created a shared Overview component for both dashboard types.
-- Loaded data from `/org/dashboard/overview`.
-- Hid statistics for sections the user cannot view.
-- Added loading, error, and empty states.
-
----
-
-## 5.4 Campaigns
-
-### Backend changes
-
-- Full CRUD through:
-
-```http
-/api/v1/org/campaigns
+```text
+24f3374 feat(org-content): enforce campaign post lifecycle
 ```
 
-- Canonical status endpoint:
+Implemented organization-scoped Campaign and Post CRUD and lifecycle rules.
+
+Canonical lifecycle endpoints:
 
 ```http
 PATCH /api/v1/org/campaigns/{campaign}/status
-```
-
-- Supported statuses:
-  - `draft`
-  - `active`
-  - `closed`
-- Supported `closedReason` when closing a campaign.
-- Protected view, create, update, close, and delete operations using Policies.
-- Rejected access to campaigns owned by another organization.
-
-### Frontend changes
-
-- Replaced the `/close` integration with the canonical `/status` contract.
-- Sends:
-
-```json
-{
-  "status": "closed",
-  "closedReason": "..."
-}
-```
-
-- Protected actions using:
-  - `org.campaigns.create`
-  - `org.campaigns.update`
-  - `org.campaigns.close`
-  - `org.campaigns.delete`
-- Protected the section itself using `org.campaigns.view`.
-- Connected main campaign operations to real API data.
-
----
-
-## 5.5 Posts
-
-### Backend changes
-
-- Full CRUD through:
-
-```http
-/api/v1/org/posts
-```
-
-- Canonical status endpoint:
-
-```http
 PATCH /api/v1/org/posts/{post}/status
 ```
 
-- Supported statuses:
-  - `draft`
-  - `published`
-  - `archived`
-- Enforced lifecycle transition rules in the Backend.
-- Protected Publish, Archive, and Restore using separate permissions.
+Campaign statuses:
 
-### Frontend changes
+- `draft`
+- `active`
+- `closed`
 
-- Stopped using separate Publish, Archive, and Restore endpoints in the new integration.
-- Uses the canonical status contract:
+Post statuses:
 
-```json
-{ "status": "published" }
-{ "status": "archived" }
-{ "status": "draft" }
+- `draft`
+- `published`
+- `archived`
+
+The Backend validates allowed transitions instead of trusting only the Frontend UI.
+
+## Step 5 — Donors, applicants, reports, and audit data
+
+Commit:
+
+```text
+4a4f4dd feat(org-data): scope donors applicants reports audit
 ```
 
-- Protected operations using:
-  - `org.posts.create`
-  - `org.posts.update`
-  - `org.posts.publish`
-  - `org.posts.archive`
-  - `org.posts.restore`
-  - `org.posts.delete`
-
----
-
-## 5.6 Donors
-
-### Backend changes
-
-- Full CRUD through:
+Added organization scoping and permission checks for:
 
 ```http
 /api/v1/org/donors
-```
-
-- Scoped data to the authenticated user's organization.
-- Protected View, Create, Update, and Delete with Policies.
-
-### Frontend changes
-
-- Connected list, create, edit, and delete operations to the API.
-- Runs the Donors query only when the donor section is active and the user has view permission.
-- Protected actions using:
-  - `org.donors.create`
-  - `org.donors.update`
-  - `org.donors.delete`
-
----
-
-## 5.7 Applicants
-
-### Backend changes
-
-- Independent CRUD through:
-
-```http
 /api/v1/org/applicants
+/api/v1/org/reports
+/api/v1/org/audit-logs
 ```
 
-- Kept applicants separate from donors at the API level.
-- Scoped results to the authenticated user's organization.
-- Protected View, Create, Update, and Delete using Policies.
+Donors and Applicants remain separate resources and endpoints.
 
-### Frontend changes
-
-- Uses an independent Applicants query.
-- Does not run the Applicants query while the Donors section is active, and vice versa.
-- Protected actions using:
-  - `org.applicants.create`
-  - `org.applicants.update`
-  - `org.applicants.delete`
-
----
-
-## 5.8 Reports
-
-### Backend changes
-
-- List and detail endpoints:
-
-```http
-GET /api/v1/org/reports
-GET /api/v1/org/reports/{report}
-```
-
-- Added the canonical status endpoint:
+Reports use a canonical status contract:
 
 ```http
 PATCH /api/v1/org/reports/{report}/status
 ```
 
-- Supported transitions:
-  - `new -> in_progress`
-  - `in_progress -> waiting_response`
-  - `in_progress -> closed`
-  - `waiting_response -> closed`
-- Reused existing service methods to avoid duplicating business logic.
-- Protected updates with `org.reports.update`.
-- Rejected updates to reports owned by another organization.
+## Step 6 — Settings and profile security
 
-### Frontend changes
-
-- Created organization-specific reports service and query hooks.
-- Displays actual `ReportResource` fields:
-  - `title`
-  - `description`
-  - `severity`
-  - `status`
-  - `reporterName`
-  - `createdAt`
-- Displays status controls only when the user has `org.reports.update`.
-- Prevents invalid transitions based on the current report status.
-
----
-
-## 5.9 Organization Audit Log
-
-### Backend changes
-
-- Uses:
-
-```http
-GET /api/v1/org/audit-logs
-```
-
-- Always allows the organization owner.
-- Allows organization staff only when they have:
+Commit:
 
 ```text
-org.audit_logs.view
+c7136ac feat(org-settings): secure profile and password flows
 ```
 
-- Scopes logs by the actor's organization.
-- Supports filters:
-  - `actorUserId`
-  - `action`
-  - `from`
-  - `to`
-
-### Frontend changes
-
-- Removed the Admin Audit Log hook from organization pages.
-- Added:
-  - `org.audit-logs.services.ts`
-  - `org.audit-logs.query.ts`
-  - `org.audit-logs.types.ts`
-- Sends requests to `/org/audit-logs` instead of `/admin/audit-logs`.
-- Protects route and navigation access using `org.audit_logs.view`.
-
----
-
-## 5.10 Organization Profile and Settings
-
-### Backend changes
-
-Provided:
+Added organization settings contracts and authorization:
 
 ```http
 GET   /api/v1/org/settings/profile
@@ -449,77 +265,743 @@ GET   /api/v1/org/settings/bank-account
 PATCH /api/v1/org/settings/bank-account
 ```
 
-Organization data includes:
+These endpoints remain part of the Backend contract even though later Frontend cleanup removed separate personal profile pages.
 
-- Name.
-- Email.
-- Phone.
-- Bank name.
-- IBAN.
+## Step 7 — Contract alignment
 
-Access is protected by:
+The following commits aligned the Backend contract with the Frontend implementation:
 
-- `org.settings.view`
-- `org.settings.update`
+```text
+abe3781 feat(org-dashboard): finalize auth context permissions
+6a5ac1d feat(org-dashboard): align staff role contracts
+4a2d304 feat(org-dashboard): expose overview activity contract
+7b5bb61 feat(org-dashboard): connect reports audit permissions
+```
 
-### Frontend changes
+Important alignments included:
 
-- Removed local-only organization settings behavior.
-- Created organization settings services and query hooks.
-- Connected Owner and Staff settings pages to the organization settings APIs.
-- Displays read-only fields when the user lacks update permission.
-- Split Profile behavior:
-  - Organization Owner updates organization profile data.
-  - Organization Staff updates personal account data through `/me/profile` only.
+- Final dashboard permission structure.
+- `roleId` and organization-role mapping.
+- `isActive` role behavior.
+- `recentActivity` naming.
+- Report update permission restoration.
+- Audit-log permission behavior.
+
+## Step 8 — Tests and initial documentation
+
+Commits:
+
+```text
+2e75132 test(org-dashboard): cover reports audit integration
+b3a4394 docs(org-dashboard): add implementation plan and changes
+39aa42b docs(org-dashboard): translate implementation plan to English
+```
+
+Feature tests and regression coverage were added for organization scoping, lifecycle operations, staff/role behavior, reports, audit access, and settings.
+
+## Step 9 — Review and regression fixes
+
+The review phase produced the following fixes before the final branch tip:
+
+```text
+b9a1795 fix: scope report assignees to organization
+55723b3 style: add explicit role index return type
+c7ba407 style: add explicit staff index return type
+7ccf73d fix: validate campaign date ordering
+6279c45 fix: default campaign status to draft
+beb319d fix: keep campaign DTO default parameter valid
+96b804a fix: default post status to draft
+151bb0d fix: allow partial role updates
+6bf21a7 fix: scope active staff membership to user organization
+f3608b9 fix: ignore all sentinel in campaign search
+ad0a6ea fix: support permissions count sorting across databases
+1f4483a fix: serialize final owner transitions
+ad49450 test: align organization overview response assertions
+fa22174 Fix organization role management test routes
+95769c3 Fix staff deletion assertion and add organization scope regression
+d338753 Restore organization report permission actions
+```
+
+These commits closed edge cases around validation, database compatibility, owner transitions, staff membership scoping, report assignment, and test accuracy.
 
 ---
 
-## 5.11 Organization Notifications
+## 4. Frontend Implementation — Step by Step
 
-This section is intentionally deferred.
+## Step 1 — Authentication context and permission navigation
 
-### Current Backend state
+Commit:
 
-- Routes or models may remain for compatibility or future development.
-- Notification permissions are not included in the assignable permission catalog for this delivery.
+```text
+777e8ef feat(org-dashboard): enforce auth permission navigation
+```
 
-### Current Frontend state
+Implemented:
 
-- Next.js notification route files may still exist and appear in the build output.
-- Notification links are not shown in Sidebar or Tabs.
-- Direct route guards redirect users to an allowed route.
-- Normal organization dashboard usage does not trigger notification API requests.
+- Dashboard context hydration in `AuthProvider`.
+- Unified `can(permission)` checks.
+- Admin, Owner, and Staff role isolation.
+- Sidebar filtering.
+- Section-tab filtering.
+- Route guards.
+- Redirect to the first allowed route when access is missing.
+
+## Step 2 — Staff, roles, and permission catalog
+
+Commit:
+
+```text
+a51f1b1 feat(org-dashboard): connect staff roles permissions
+```
+
+Implemented:
+
+- Real Staff and Role API integration.
+- Dynamic role permission fields from the Backend catalog.
+- `organizationRoleId` mapping.
+- Owner-only Staff and Role pages.
+- Permission-aware staff and role actions.
+
+## Step 3 — Organization overview
+
+Commit:
+
+```text
+583ed2a feat(org-dashboard): connect organization overview
+```
+
+Implemented:
+
+- Shared Owner/Staff overview component.
+- Real overview API data.
+- Permission-aware statistics.
+- Loading, error, and empty states.
+
+## Step 4 — Campaign and Post lifecycle integration
+
+Commit:
+
+```text
+dfc7aa0 feat(org-dashboard): align campaign post lifecycle permissions
+```
+
+Implemented:
+
+- Canonical Campaign status updates.
+- Canonical Post publish/archive/restore updates.
+- Action-specific permission checks.
+- Organization-scoped list and mutation hooks.
+
+## Step 5 — Donors and Applicants
+
+Commit:
+
+```text
+89683aa feat(org-dashboard): gate donor applicant operations
+```
+
+Implemented:
+
+- Separate Donor and Applicant queries.
+- Permission-aware list execution.
+- Create, update, and delete integration.
+- Independent filtering and pagination behavior.
+
+## Step 6 — Reports and Audit Log integration
+
+Commit:
+
+```text
+2d95d5d feat(org-dashboard): connect organization reports audit
+```
+
+At this historical stage, the Frontend connected:
+
+- Organization Reports.
+- Organization-specific Audit Log services and hooks.
+- Report status controls.
+- Audit access through `org.audit_logs.view`.
+
+The Audit Log Frontend feature was later removed from all dashboard roles. The Backend endpoint still exists, but the current Frontend does not expose an Audit Log page or feature layer.
+
+## Step 7 — Organization settings
+
+Commit:
+
+```text
+6ec4cc2 feat(org-dashboard): connect organization settings
+```
+
+Implemented:
+
+- Organization profile settings API integration.
+- Bank-account API integration.
+- Read-only behavior without update permission.
+
+## Step 8 — Historical Owner/Staff profile split
+
+Commit:
+
+```text
+3b176eb feat(org-dashboard): separate owner staff profiles
+```
+
+Initially separated Owner organization profile behavior from Staff personal profile behavior.
+
+This was later simplified. The final Frontend state removes separate Owner and Staff personal profile pages and removes the personal profile update service from the dashboard UI. Organization Settings remain available through the organization settings routes.
+
+## Step 9 — Verification and documentation
+
+Commits:
+
+```text
+a58ea43 docs(org-dashboard): record integration verification
+9eba58d docs(org-dashboard): add implementation plan and changes
+1198e59 docs(org-dashboard): translate implementation plan to English
+0d1271c feat(org-dashboard): add organization dashboard plan and implementation changes document
+```
+
+The current file replaces those historical snapshots with the final implementation history.
+
+## Step 10 — API and dependency maintenance
+
+Commits:
+
+```text
+e4a56b4 fix(api): ensure BASE_URL is always defined by using non-null assertion
+916f59f Implement code changes to enhance functionality and improve performance
+```
+
+`916f59f` only changed `package-lock.json`; it did not introduce a separate functional dashboard feature.
+
+## Step 11 — Dedicated details/edit pages and major cleanup
+
+Commit:
+
+```text
+cb160fe feat: add organization campaign edit page and related components
+```
+
+This commit expanded far beyond its title. It introduced the following final UI direction:
+
+### Campaigns
+
+- Removed the edit action from the Campaign list table.
+- Kept the list Sheet create-only.
+- Added dedicated Owner and Staff Campaign details routes.
+- Added dedicated Owner and Staff Campaign edit routes.
+- Added permission-aware edit buttons on details pages.
+- Prevented editing closed campaigns.
+- Corrected Owner/Staff details routing.
+
+Routes:
+
+```text
+/dashboard/org-owner/campaigns/{id}
+/dashboard/org-owner/campaigns/{id}/edit
+/dashboard/org-staff/campaigns/{id}
+/dashboard/org-staff/campaigns/{id}/edit
+```
+
+### Posts
+
+- Removed the old Post details Sheet.
+- Added dedicated Owner and Staff Post details pages.
+- Added dedicated Owner and Staff Post edit pages.
+- Restored the Post update API and query mutation.
+- Displayed the post body and image grid on the details page.
+- Made the eye action navigate to the details route.
+
+Routes:
+
+```text
+/dashboard/org-owner/posts/{id}
+/dashboard/org-owner/posts/{id}/edit
+/dashboard/org-staff/posts/{id}
+/dashboard/org-staff/posts/{id}/edit
+```
+
+### Loading states
+
+- Added reusable list, card-grid, details, and form loading skeletons.
+- Applied loading skeletons across dashboard data-fetching pages.
+- Added lazy get-by-ID hooks for Campaigns, Posts, Donors, Applicants, Staff, and Roles.
+- Later updated all shared skeleton roots to use `w-full min-w-0 self-stretch` so they fill the available width.
+
+### Routing and empty states
+
+- Added a global `not-found.tsx` page using `src/assets/images/404.png`.
+- Removed the optional dashboard catch-all route.
+- Added `/dashboard` role-based redirection.
+- Kept unauthorized states explicit and permission-aware.
+
+### Audit Log removal
+
+Removed all Frontend Audit Log pages and feature code for:
+
+- Admin.
+- Organization Owner.
+- Organization Staff.
+
+This included route files, components, services, query hooks, query keys, types, route metadata, and icon references.
+
+### Profile cleanup
+
+Removed separate organization Owner and Staff profile pages and components.
+
+### User safety
+
+Prevented the currently logged-in user from deleting their own account or staff membership through the dashboard UI.
+
+## Step 12 — Organization authentication and pending approval
+
+Commit:
+
+```text
+1e605a4 feat: add OrganizationPendingApprovalPage component and related utilities
+```
+
+Implemented the full organization authentication flow against the Backend contract.
+
+### Account-type login
+
+The Login page now contains an account-type Select with:
+
+- Platform Administration.
+- Organization Account.
+
+Admin login uses:
+
+```http
+POST /api/v1/auth/login
+```
+
+Organization Owner and Staff login use:
+
+```http
+POST /api/v1/company/auth/login
+```
+
+After login, the Frontend loads:
+
+```http
+GET /api/v1/me/dashboard-context
+```
+
+It validates that the returned dashboard role matches the selected account type before completing the session.
+
+### Organization registration
+
+The registration form now submits to:
+
+```http
+POST /api/v1/company/auth/register
+```
+
+The Frontend maps its fields to the Backend contract:
+
+```ts
+{
+  companyName,
+  companyEmail,
+  companyPhone,
+  organizationType,
+  registrationNumber,
+  location,
+  ownerName,
+  ownerEmail,
+  ownerPhone,
+  password,
+  password_confirmation,
+  description,
+  website,
+  establishmentDate
+}
+```
+
+`city` and `shortAddress` are combined into `location`.
+
+Unsupported registration fields were removed from the form, including document uploads, the English organization name, and social-media fields.
+
+### Pending approval experience
+
+Added:
+
+```text
+/pending-approval
+```
+
+The page uses:
+
+```text
+src/assets/images/wait-invite.jpg
+```
+
+It provides:
+
+- A friendly pending-review message.
+- Organization and Owner context.
+- Review progress steps.
+- Refresh-status action.
+- Logout action.
+- Automatic redirect to the organization dashboard after approval.
+
+Pending organizations are redirected away from Owner/Staff dashboard routes until the organization becomes active and verified.
+
+### Refresh-token support
+
+The Frontend now:
+
+- Stores Access and Refresh tokens.
+- Stores expiration timestamps.
+- Calls `POST /api/v1/auth/refresh` after an authenticated `401`.
+- Rotates both tokens.
+- Retries the original request once.
+- Uses a single shared refresh promise to prevent concurrent refresh calls.
+- Clears the session when refresh fails.
+
+## Step 13 — Query-param overlays and shared API params
+
+Commit:
+
+```text
+8a20456 feat: refactor modal handling with useQueryModal hook
+```
+
+Implemented two shared hooks:
+
+```ts
+useQueryModal(...)
+useQueryDisclosure(...)
+```
+
+Sheets and Dialogs are opened from URL query parameters instead of local `open` boolean state.
+
+Standard query structure:
+
+```text
+?modal=<name>
+&modalId=<entity-id>
+&modalMode=<create-or-edit>
+```
+
+Nested confirmation dialogs use a separate key:
+
+```text
+?dialog=<name>
+```
+
+This preserves the parent Sheet while opening a nested Dialog.
+
+The refactor covered dashboard overlays for:
+
+- Campaigns.
+- Posts.
+- Donors and Applicants.
+- Staff and Roles.
+- Users.
+- Organizations.
+- Categories.
+- Notifications.
+- Reports.
+- Rewards.
+- Admin content and review flows.
+- Mobile Sidebar Sheet.
+
+### Shared API parameter builder
+
+Added:
+
+```text
+src/lib/build-api-params.ts
+```
+
+`buildApiParams` replaced local `buildParams` wrappers and the removed `build-list-params.ts` utility.
+
+The builder:
+
+- Removes empty values.
+- Preserves nested filters.
+- Supports pagination, sorting, includes, analytics params, and future API requests.
+- Keeps Laravel-compatible nested query serialization.
+
+### Profile and Header cleanup
+
+This refactor also:
+
+- Removed the remaining Admin Profile page and components.
+- Removed `authServices.updateProfile` and its request/response types.
+- Removed the Profile link from the Header dropdown.
+- Removed the role-switch dropdown.
+- Removed the role label from the profile dropdown.
+- Removed remaining Audit Log icon references.
+
+## Step 14 — Final permission-aware modal and Sidebar update
+
+Latest Frontend commit:
+
+```text
+38bf7c9 Refactor modal handling in donors, campaigns, notifications, posts, and staff management
+```
+
+This is the final change after returning to Frontend `main`.
+
+### Permission-aware query modal security
+
+`useQueryModal` now supports:
+
+```ts
+permission?: string
+permissionsByMode?: Record<string, string>
+roles?: DashboardRole[]
+```
+
+The hook now validates:
+
+1. The authenticated dashboard role.
+2. The dashboard scope in the current pathname.
+3. The required permission.
+4. The permission required for the selected mode.
+5. Authentication-context loading state.
+
+This protects both normal UI actions and manually edited URLs.
+
+For example, writing this manually:
+
+```text
+?modal=campaign-delete&modalId=123
+```
+
+does not open the Dialog unless the user has `org.campaigns.delete`. Unauthorized modal parameters are removed from the URL with `replaceState`.
+
+Mode-specific protection prevents invalid combinations such as opening an edit form with only create permission:
+
+```text
+modalMode=create -> *.create
+modalMode=edit   -> *.update
+```
+
+Applied organization modal permissions include:
+
+```text
+campaign-create -> org.campaigns.create
+campaign-close  -> org.campaigns.close
+campaign-delete -> org.campaigns.delete
+
+post-create     -> org.posts.create
+post-delete     -> org.posts.delete
+
+notification-details -> org.notifications.view
+
+donor/applicant details -> *.view
+donor/applicant create  -> *.create
+donor/applicant edit    -> *.update
+donor/applicant delete  -> *.delete
+
+staff member create -> org.staff.create
+staff member edit   -> org.staff.update
+staff member delete -> org.staff.delete
+
+role create -> org.roles.create
+role edit   -> org.roles.update
+role delete -> org.roles.delete
+```
+
+Staff and Role action buttons are also hidden when the permission is absent.
+
+### Sidebar ESLint and state improvements
+
+The Sidebar no longer synchronously calls `setState` inside effects to hydrate collapsed state or clear search state.
+
+Changes include:
+
+- `useSyncExternalStore` for the persisted collapse value.
+- A localStorage subscription event for collapse changes.
+- Pathname-aware derived search state.
+- Mobile Sidebar closing from the `matchMedia` callback when switching to desktop.
+
+This resolved the two reported `react-hooks/set-state-in-effect` errors in `src/components/base/side-bar.tsx`.
+
+---
+
+## 5. Current Final Frontend State
+
+## 5.1 Authentication
+
+- Admin and Organization login use different Backend endpoints.
+- Account type is selected from a dropdown.
+- Returned dashboard role is validated against the selected account type.
+- Access and Refresh tokens are stored and rotated.
+- Organization registration is connected to the Backend.
+- Pending organizations use the dedicated approval page.
+
+## 5.2 Permission enforcement layers
+
+Permissions are enforced at several Frontend layers:
+
+1. Sidebar navigation.
+2. Section tabs.
+3. Route guards.
+4. Page-level queries.
+5. Action buttons.
+6. Mutation handlers.
+7. Dedicated details/edit pages.
+8. Query-param Sheets and Dialogs.
+9. Backend policies and organization ownership checks.
+
+The Frontend remains a usability layer. Backend authorization remains the security authority.
+
+## 5.3 Campaigns
+
+- Real API list and detail data.
+- Create uses a Sheet.
+- Edit uses a dedicated page.
+- Details use a dedicated page.
+- Closing uses the canonical status endpoint.
+- Closed campaigns cannot be edited.
+- Owner/Staff routing is preserved.
+- Create, update, close, and delete actions are permission-aware.
+
+## 5.4 Posts
+
+- Real API list and detail data.
+- Create uses a Sheet.
+- Details and edit use dedicated pages.
+- Details show body content and images.
+- Publish, archive, restore, and delete actions use specific permissions.
+- Post update invalidates list and detail queries.
+
+## 5.5 Donors and Applicants
+
+- Separate Backend resources and Frontend queries.
+- Permission-aware query execution.
+- URL-driven details, form, and delete overlays.
+- Create/edit mode is stored in `modalMode` and checked against the matching permission.
+
+## 5.6 Staff and Roles
+
+- Staff and Roles use real APIs.
+- Permission catalog is loaded from the Backend.
+- Create/edit/delete overlays are URL-driven.
+- Each mode has a specific permission check.
+- Self-deletion is blocked in the UI.
+- System-role and owner safeguards remain enforced by the Backend.
+
+## 5.7 Reports
+
+- Organization report list and status updates use organization APIs.
+- Status controls are shown only with `org.reports.update`.
+- Invalid lifecycle transitions are prevented in the UI and Backend.
+
+## 5.8 Organization Notifications
+
+Notifications were deferred in the original plan, but they are now active in the Frontend.
+
+Current routes exist for Owner and Staff:
+
+```text
+/dashboard/org-owner/notifications/inbox
+/dashboard/org-owner/notifications/sent
+/dashboard/org-staff/notifications/inbox
+/dashboard/org-staff/notifications/sent
+```
+
+The current implementation includes:
+
+- Organization notification list queries.
+- Inbox and sent mailboxes.
+- Read/unread filtering.
+- Details display.
+- Read-state updates.
+- Permission-protected details modal using `org.notifications.view`.
+
+The organization notification feature layer uses:
+
+```http
+/api/v1/org/notifications
+/api/v1/org/notifications/{id}
+/api/v1/org/notifications/{id}/read-state
+```
+
+Additional Backend compatibility operations such as resend/delete may remain available in the service layer.
+
+## 5.9 Organization Settings
+
+Organization Settings remain available and connected to:
+
+```http
+GET/PATCH /api/v1/org/settings/profile
+GET/PATCH /api/v1/org/settings/bank-account
+```
+
+Fields become read-only when `org.settings.update` is missing.
+
+## 5.10 Features intentionally removed from the current Frontend
+
+### Audit Log
+
+Removed for all dashboard roles:
+
+- Admin Audit Log page.
+- Owner Audit Log page.
+- Staff Audit Log page.
+- Audit Log components.
+- Admin and organization Audit Log feature layers.
+- Audit Log routes and icon references.
+
+The Backend endpoint is not deleted by this Frontend change.
+
+### Personal Profile pages
+
+Removed:
+
+- Admin Profile page.
+- Organization Owner personal profile page.
+- Organization Staff personal profile page.
+- Shared dashboard profile components.
+- Frontend personal profile update mutation.
+- Profile link in the Header menu.
+- Role-switch dropdown and role label.
+
+Organization Settings remain separate and are not removed.
 
 ---
 
 ## 6. Main API Reference
 
-| Section | Method | Endpoint | Purpose |
+| Area | Method | Endpoint | Current Frontend use |
 |---|---|---|---|
-| Auth | GET | `/api/v1/me/dashboard-context` | User, organization, and permissions |
-| Overview | GET | `/api/v1/org/dashboard/overview` | Organization statistics and recent activity |
+| Admin login | POST | `/api/v1/auth/login` | Platform Administration login |
+| Organization login | POST | `/api/v1/company/auth/login` | Owner/Staff login |
+| Organization registration | POST | `/api/v1/company/auth/register` | Register organization and Owner |
+| Refresh token | POST | `/api/v1/auth/refresh` | Rotate Access/Refresh tokens |
+| Logout | POST | `/api/v1/auth/logout` | End authenticated session |
+| Dashboard context | GET | `/api/v1/me/dashboard-context` | Role, organization, permissions, counters |
+| Organization overview | GET | `/api/v1/org/dashboard/overview` | Owner/Staff overview |
 | Campaigns | REST | `/api/v1/org/campaigns` | Campaign CRUD |
-| Campaign Status | PATCH | `/api/v1/org/campaigns/{id}/status` | Campaign lifecycle update |
+| Campaign status | PATCH | `/api/v1/org/campaigns/{id}/status` | Close/lifecycle updates |
 | Posts | REST | `/api/v1/org/posts` | Post CRUD |
-| Post Status | PATCH | `/api/v1/org/posts/{id}/status` | Post lifecycle update |
+| Post status | PATCH | `/api/v1/org/posts/{id}/status` | Publish/archive/restore |
 | Donors | REST | `/api/v1/org/donors` | Donor CRUD |
 | Applicants | REST | `/api/v1/org/applicants` | Applicant CRUD |
 | Staff | REST | `/api/v1/org/staff` | Staff management |
-| Roles | REST | `/api/v1/org/staff/roles` | Organization role management |
-| Permissions | GET | `/api/v1/org/permissions/catalog` | Assignable permission catalog |
+| Roles | REST | `/api/v1/org/staff/roles` | Role management |
+| Permission catalog | GET | `/api/v1/org/permissions/catalog` | Dynamic role permission form |
 | Reports | GET | `/api/v1/org/reports` | Report list |
-| Report Detail | GET | `/api/v1/org/reports/{id}` | Report detail |
-| Report Status | PATCH | `/api/v1/org/reports/{id}/status` | Report lifecycle update |
-| Audit Log | GET | `/api/v1/org/audit-logs` | Organization audit log |
-| Org Profile | GET/PATCH | `/api/v1/org/settings/profile` | Organization profile data |
-| Bank Account | GET/PATCH | `/api/v1/org/settings/bank-account` | Organization bank account |
-| Staff Profile | PATCH | `/api/v1/me/profile` | Staff personal account data |
+| Report details | GET | `/api/v1/org/reports/{id}` | Report details |
+| Report status | PATCH | `/api/v1/org/reports/{id}/status` | Report lifecycle update |
+| Notifications | REST | `/api/v1/org/notifications` | Organization inbox/sent data |
+| Notification read state | PATCH | `/api/v1/org/notifications/{id}/read-state` | Read/unread update |
+| Organization profile | GET/PATCH | `/api/v1/org/settings/profile` | Organization Settings |
+| Bank account | GET/PATCH | `/api/v1/org/settings/bank-account` | Organization Settings |
+| Audit Log | GET | `/api/v1/org/audit-logs` | Backend remains; Frontend UI removed |
+| Personal profile update | PATCH | `/api/v1/me/profile` | Backend may remain; Frontend dashboard mutation removed |
 
 ---
 
 ## 7. Permission Matrix
 
-| Section | View and action permissions |
+| Area | Permissions used by the current Frontend |
 |---|---|
 | Dashboard | `dashboard.view` |
 | Campaigns | `org.campaigns.view/create/update/close/delete` |
@@ -527,87 +1009,206 @@ This section is intentionally deferred.
 | Donors | `org.donors.view/create/update/delete` |
 | Applicants | `org.applicants.view/create/update/delete` |
 | Reports | `org.reports.view/update` |
-| Audit Log | `org.audit_logs.view` |
+| Notifications | `org.notifications.view` for current details access; Backend policies still protect API operations |
 | Settings | `org.settings.view/update` |
-| Staff and Roles | Owner-only and not part of the assignable catalog |
-| Notifications | Deferred and not assignable in this delivery |
+| Staff | `org.staff.create/update/delete` plus Owner route restrictions |
+| Roles | `org.roles.create/update/delete` plus Owner route restrictions |
+| Audit Log | Backend permission may exist, but the current Frontend feature is removed |
 
-Every mutating permission logically requires the matching section view permission. The Backend permission catalog returns this dependency in `requires`.
-
----
-
-## 8. Security Rules
-
-1. Hiding a button in the Frontend is not a replacement for a Backend Policy.
-2. Every Show, Update, and Delete operation must verify `organization_id` ownership.
-3. The organization owner retains sensitive organization management capabilities.
-4. Organization staff receive only permissions assigned through their role.
-5. Organization pages must never use Admin APIs.
-6. The Frontend does not send `organizationId` to select the organization; it is resolved from the authenticated user.
-7. Lifecycle transitions are validated in Backend services/domain logic, not only in the Frontend.
-8. When route permission is missing, the user is redirected to the first allowed route instead of seeing a partially functional page.
+Every mutation must still be authorized by the Backend even when the Frontend hides or blocks the action.
 
 ---
 
-## 9. Verification and Testing
+## 8. Shared Frontend Architecture Added During This Work
 
-### Frontend
+## 8.1 AuthProvider
 
-Verified using:
+`AuthProvider` owns:
+
+- Authenticated state.
+- User profile.
+- Dashboard context.
+- Dashboard role.
+- Organization context.
+- Permission lookup.
+- Unauthorized-session handling.
+
+## 8.2 API feature structure
+
+Organization features follow the pattern:
+
+```text
+feature.types.ts
+feature.services.ts
+feature.query-keys.ts
+feature.query.ts
+```
+
+This separates:
+
+- API contracts.
+- HTTP calls.
+- React Query keys.
+- Query and mutation hooks.
+
+## 8.3 Shared API params
+
+All list services use `buildApiParams` instead of local wrappers.
+
+## 8.4 Shared loading states
+
+Shared skeletons include:
+
+- `ListLoadingSkeleton`
+- `CardGridLoadingSkeleton`
+- `DetailsLoadingSkeleton`
+- `FormLoadingSkeleton`
+
+Each root fills the parent width using:
+
+```text
+w-full min-w-0 self-stretch
+```
+
+## 8.5 URL-driven overlays
+
+`useQueryModal` and `useQueryDisclosure` make overlay state:
+
+- Linkable.
+- Refresh-safe.
+- Consistent across pages.
+- Compatible with nested dialogs.
+- Protected by role and permission.
+
+---
+
+## 9. Security Rules
+
+1. Frontend visibility is not a replacement for Backend authorization.
+2. Every organization resource must be scoped by the authenticated user's organization.
+3. The Frontend must not send an arbitrary organization ID to choose data ownership.
+4. Owner and Staff routes must stay isolated from Admin routes.
+5. Staff permissions come from the assigned organization role.
+6. The Backend validates lifecycle transitions.
+7. Direct route access must be guarded.
+8. Direct query-param access to a Sheet or Dialog must be guarded.
+9. `modalMode=create` and `modalMode=edit` must use different permissions when the operation differs.
+10. Unauthorized query params must be removed without opening the overlay.
+11. The current user must not be able to delete their own active account or staff membership from the UI.
+12. Pending organizations must not enter the organization dashboard until active and verified.
+13. Access tokens and refresh tokens must not be treated as interchangeable.
+14. A failed refresh operation must clear the session.
+
+---
+
+## 10. Verification Status
+
+## 10.1 Frontend production build
+
+The latest implementation was verified with:
 
 ```bash
-npm run lint
 npm run build
 ```
 
-Current result:
+Result at `38bf7c9`:
 
-- Lint passed with zero errors.
-- Existing non-blocking warnings remain.
-- Production build passed.
+- Next.js compilation passed.
 - TypeScript validation passed.
-- Next.js reports the existing `middleware` to `proxy` deprecation warning.
-- No Frontend test runner is currently configured in `package.json`.
+- 63 application pages were generated.
+- Exit code was `0`.
 
-### Backend
+The only build warning was the existing Next.js notice that the `middleware` file convention is deprecated in favor of `proxy`.
 
-Feature tests cover:
+## 10.2 Targeted ESLint verification
 
-- Organization scoping.
-- Campaign and Post lifecycle contracts.
-- Report status contract.
-- Owner audit log access.
-- Staff audit log access with permission.
-- Rejection of staff without audit log permission.
-- Organization Profile and Bank Settings.
-
-Run with:
+The two files involved in the latest Sidebar/query-modal fix were checked with:
 
 ```bash
-php artisan test tests/Feature/Org
+npx eslint src/components/base/side-bar.tsx src/hooks/use-query-modal.ts
 ```
 
-The tests could not be executed in the current environment because `php` is not installed. The environment returned:
+Result:
 
-```text
-spawn php ENOENT
-```
+- Zero errors.
+- Zero warnings.
+
+The repository-wide lint command still reports pre-existing `react-hooks/set-state-in-effect` issues in unrelated components. Therefore this document does not claim that the entire repository lint is currently clean.
+
+## 10.3 Backend tests
+
+The Backend feature branch contains organization feature and regression tests covering areas such as:
+
+- Organization scoping.
+- Owner and Staff permissions.
+- Staff and Role safeguards.
+- Campaign and Post lifecycle behavior.
+- Donor and Applicant isolation.
+- Report transitions and assignment scope.
+- Audit access.
+- Settings contracts.
+- Final-owner and membership regressions.
+
+This Frontend documentation update did not rerun the Backend test suite.
 
 ---
 
-## 10. Main Commit Map
+## 11. Commit Timeline
 
-### Backend
+## 11.1 Backend feature branch
 
 ```text
+8ca8c19 feat(org-auth): add owner staff dashboard context
+e73bcfe feat(org-staff): enforce role assignment safeguards
+5131908 feat(org-overview): add scoped dashboard data
+24f3374 feat(org-content): enforce campaign post lifecycle
+4a4f4dd feat(org-data): scope donors applicants reports audit
+c7136ac feat(org-settings): secure profile and password flows
 abe3781 feat(org-dashboard): finalize auth context permissions
 6a5ac1d feat(org-dashboard): align staff role contracts
 4a2d304 feat(org-dashboard): expose overview activity contract
 7b5bb61 feat(org-dashboard): connect reports audit permissions
 2e75132 test(org-dashboard): cover reports audit integration
+b3a4394 docs(org-dashboard): add implementation plan and changes
+39aa42b docs(org-dashboard): translate implementation plan to English
+b9a1795 fix: scope report assignees to organization
+55723b3 style: add explicit role index return type
+c7ba407 style: add explicit staff index return type
+7ccf73d fix: validate campaign date ordering
+6279c45 fix: default campaign status to draft
+beb319d fix: keep campaign DTO default parameter valid
+96b804a fix: default post status to draft
+151bb0d fix: allow partial role updates
+6bf21a7 fix: scope active staff membership to user organization
+f3608b9 fix: ignore all sentinel in campaign search
+ad0a6ea fix: support permissions count sorting across databases
+1f4483a fix: serialize final owner transitions
+ad49450 test: align organization overview response assertions
+fa22174 Fix organization role management test routes
+95769c3 Fix staff deletion assertion and add organization scope regression
+d338753 Restore organization report permission actions
 ```
 
-### Frontend
+Backend merge:
+
+```text
+3c951c4 Merge pull request #8 from feature/org-owner-staff-permissions-backend
+```
+
+## 11.2 Backend company authentication on `main`
+
+```text
+32fdc6f add company registration validation
+c58577b add company registration service
+e87bebc add company auth endpoints
+5c5e3d3 register company auth routes
+ca2078d load company auth routes
+b457035 add company account seeds
+65f2e0d run company account seeds
+ea5d1d9 Merge pull request #9 from MustafaFares445/agent/company-auth-endpoints
+```
+
+## 11.3 Frontend implementation through `main`
 
 ```text
 777e8ef feat(org-dashboard): enforce auth permission navigation
@@ -619,33 +1220,58 @@ dfc7aa0 feat(org-dashboard): align campaign post lifecycle permissions
 6ec4cc2 feat(org-dashboard): connect organization settings
 3b176eb feat(org-dashboard): separate owner staff profiles
 a58ea43 docs(org-dashboard): record integration verification
+9eba58d docs(org-dashboard): add implementation plan and changes
+1198e59 docs(org-dashboard): translate implementation plan to English
+e4a56b4 fix(api): ensure BASE_URL is always defined by using non-null assertion
+0d1271c feat(org-dashboard): add organization dashboard plan and implementation changes document
+916f59f Implement code changes to enhance functionality and improve performance
+cb160fe feat: add organization campaign edit page and related components
+1e605a4 feat: add OrganizationPendingApprovalPage component and related utilities
+8a20456 feat: refactor modal handling with useQueryModal hook
+38bf7c9 Refactor modal handling in donors, campaigns, notifications, posts, and staff management
 ```
 
 ---
 
-## 11. Rules for Adding a New Organization Section
+## 12. Rules for Future Organization Dashboard Work
 
-When adding a new section to the organization dashboard:
+When adding or changing an organization feature:
 
-1. Define the Backend Permission Group and actions.
-2. Add permissions to the catalog when they are assignable.
-3. Create a Policy and enforce organization scoping.
-4. Create a clear camelCase API Resource contract.
-5. Create Frontend types, services, query keys, and query hooks.
-6. Protect Route, Sidebar, and Tabs using the view permission.
-7. Protect every action with its specific permission.
-8. Disable unauthorized queries instead of relying only on a `403` response.
-9. Add Feature tests for the contract, permissions, and cross-organization access.
-10. Update this file in both Backend and Frontend repositories.
+1. Define or confirm the Backend permission names first.
+2. Add Backend policies and organization ownership checks.
+3. Define a camelCase API contract.
+4. Add Backend tests for cross-organization access.
+5. Add Frontend types, services, query keys, and hooks.
+6. Use `buildApiParams` for list/query parameters.
+7. Gate the route and navigation with the view permission.
+8. Gate each action with its exact permission.
+9. Disable unauthorized queries where possible.
+10. Protect direct URL routes.
+11. Protect query-driven Sheets and Dialogs through `useQueryModal`.
+12. Use `permissionsByMode` when create and edit require different permissions.
+13. Use dedicated details/edit pages for complex resources instead of overloading list Sheets.
+14. Use shared loading skeletons.
+15. Keep Owner and Staff routing correct when they share a component.
+16. Verify the production build.
+17. Record whether lint/test issues are new or pre-existing.
+18. Update this document when the final behavior changes.
 
 ---
 
-## 12. Final Status
+## 13. Final Status
 
-- Core Backend and Frontend integration is complete.
-- Owner and Staff use the same organization APIs.
-- Permission names are aligned across both repositories.
-- Organization scoping is enforced in the Backend.
-- Completed sections use real API data.
-- Notifications and Mobile integration are explicitly deferred.
-- Future work must preserve the canonical contracts and permission rules documented here.
+- The Backend organization permission feature was completed on `feature/org-owner-staff-permissions-backend` and merged through PR #8.
+- Backend `main` later added company authentication through PR #9.
+- The Frontend organization dashboard implementation was completed on `feature/org-owner-staff-permissions-frontend` and continued on `main`.
+- Admin, Owner, and Staff authentication paths are separated.
+- Organization registration and pending approval are implemented.
+- Owner and Staff use organization-scoped APIs.
+- Permission-aware navigation, routes, actions, queries, Sheets, and Dialogs are implemented.
+- Campaign and Post details/edit flows use dedicated pages.
+- Donor, Applicant, Staff, and Role overlays are query-driven and permission-aware.
+- Organization Notifications are now integrated; they are no longer deferred.
+- Audit Log UI and personal Profile pages were removed from the current Frontend.
+- Organization Settings remain active.
+- Shared API parameter building and loading skeletons are in place.
+- The latest production build passes.
+- Mobile application integration remains outside this Frontend dashboard delivery.
