@@ -21,8 +21,8 @@ export type StaffRoleRow = StaffRoleItem & {
 
 type RolesTableProps = {
   rows: StaffRoleRow[];
-  onEditRole: (id: string) => void;
-  onDeleteRole: (id: string) => void;
+  onEditRole?: (id: string) => void;
+  onDeleteRole?: (id: string) => void;
 };
 
 const statusLabels = {
@@ -96,27 +96,31 @@ export function RolesTable({
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      title="تعديل صلاحيات الدور"
-                      onClick={() => onEditRole(row.id)}
-                    >
-                      <AppIcons.PencilLine className="size-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      title={canDelete ? "حذف الدور" : "دور أساسي لا يمكن حذفه"}
-                      disabled={!canDelete}
-                      onClick={() => onDeleteRole(row.id)}
-                    >
-                      <AppIcons.Trash className="size-4 text-destructive" />
-                    </Button>
+                    {onEditRole ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        title="تعديل صلاحيات الدور"
+                        onClick={() => onEditRole(row.id)}
+                      >
+                        <AppIcons.PencilLine className="size-4" />
+                      </Button>
+                    ) : null}
+                    {onDeleteRole ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        title={canDelete ? "حذف الدور" : "دور أساسي لا يمكن حذفه"}
+                        disabled={!canDelete}
+                        onClick={() => onDeleteRole(row.id)}
+                      >
+                        <AppIcons.Trash className="size-4 text-destructive" />
+                      </Button>
+                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>

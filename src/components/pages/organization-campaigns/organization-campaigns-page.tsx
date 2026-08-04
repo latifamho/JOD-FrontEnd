@@ -61,9 +61,15 @@ export function OrganizationCampaignsPage({
   >("all");
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
-  const formModal = useQueryModal("campaign-create");
-  const closeModal = useQueryModal("campaign-close");
-  const deleteModal = useQueryModal("campaign-delete");
+  const formModal = useQueryModal("campaign-create", {
+    permission: "org.campaigns.create",
+  });
+  const closeModal = useQueryModal("campaign-close", {
+    permission: "org.campaigns.close",
+  });
+  const deleteModal = useQueryModal("campaign-delete", {
+    permission: "org.campaigns.delete",
+  });
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;

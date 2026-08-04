@@ -85,7 +85,10 @@ export function PostFormSheet({
   onSubmit,
 }: PostFormSheetProps) {
   const [formValues, setFormValues] = React.useState<PostFormValues>(initialValues);
-  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure("post-discard-changes", { queryKey: "dialog" });
+  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
+    "post-discard-changes",
+    { queryKey: "dialog", permission: "org.posts.create" },
+  );
 
   React.useEffect(() => {
     if (open) {

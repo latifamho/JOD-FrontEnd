@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQueryDisclosure } from "@/hooks/use-query-modal";
+import { useQueryDisclosure, useQueryModal } from "@/hooks/use-query-modal";
 
 import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
 import { DonorEntryDetailsSheet } from "@/components/pages/donors-management/donor-entry-details-sheet";
@@ -63,19 +63,29 @@ export function DonorsManagementPage({
   const [apiTotal, setApiTotal] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<DonorSortOption>("date_newest");
 
-  const [detailsOpen, setDetailsOpen] = useQueryDisclosure("donor-details");
+  const [detailsOpen, setDetailsOpen] = useQueryDisclosure("donor-details", {
+    permission: `${permissionPrefix}.view`,
+  });
   const [detailsEntry, setDetailsEntry] = React.useState<DonorEntryItem | null>(null);
   const [detailsView, setDetailsView] = React.useState<"donors" | "applicants">(view);
 
-  const [formOpen, setFormOpen] = useQueryDisclosure("donor-form");
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const formModal = useQueryModal("donor-form", {
+    permissionsByMode: {
+      create: `${permissionPrefix}.create`,
+      edit: `${permissionPrefix}.update`,
+    },
+  });
+  const formOpen = formModal.isOpen;
+  const formMode = formModal.mode === "edit" ? "edit" : "create";
+  const editingEntryId = formMode === "edit" ? formModal.id : null;
   const [formInitialValues, setFormInitialValues] =
     React.useState<DonorEntryFormValues>(EMPTY_DONOR_ENTRY_FORM_VALUES);
-  const [editingEntryId, setEditingEntryId] = React.useState<string | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useQueryDisclosure("donor-delete");
-  const [deleteEntryId, setDeleteEntryId] = React.useState<string | null>(null);
-  const [deleteEntryName, setDeleteEntryName] = React.useState("");
+  const deleteModal = useQueryModal("donor-delete", {
+    permission: `${permissionPrefix}.delete`,
+  });
+  const deleteDialogOpen = deleteModal.isOpen;
+  const deleteEntryId = deleteModal.id;
 
   React.useEffect(() => {
     setDetailsView(view);
@@ -123,27 +133,22 @@ export function DonorsManagementPage({
   const deleteApplicantMutation = useDeleteOrgApplicant();
 
   const openCreate = React.useCallback(() => {
-    setFormMode("create");
-    setEditingEntryId(null);
+
     setFormInitialValues({
       ...EMPTY_DONOR_ENTRY_FORM_VALUES,
       donatedAt: new Date().toISOString(),
     });
-    setFormOpen(true);
-  }, []);
+    formModal.open({ mode: "create" });
+  }, [formModal]);
 
   const openEdit = React.useCallback((row: DonorEntryItem) => {
-    setFormMode("edit");
-    setEditingEntryId(row.id);
     setFormInitialValues(donorEntryToFormValues(row));
-    setFormOpen(true);
-  }, []);
+    formModal.open({ id: row.id, mode: "edit" });
+  }, [formModal]);
 
   const openDelete = React.useCallback((row: DonorEntryItem) => {
-    setDeleteEntryId(row.id);
-    setDeleteEntryName(row.name);
-    setDeleteDialogOpen(true);
-  }, []);
+    deleteModal.open({ id: row.id });
+  }, [deleteModal]);
 
   const handleDetailsOpenChange = React.useCallback((open: boolean) => {
     setDetailsOpen(open);
@@ -167,15 +172,14 @@ export function DonorsManagementPage({
       if (view === "donors") {
         if (formMode === "create") {
           createDonorMutation.mutate(body, {
-            onSuccess: () => setFormOpen(false),
+            onSuccess: () => formModal.close(),
           });
         } else if (editingEntryId) {
           updateDonorMutation.mutate(
             { donorId: editingEntryId, body },
             {
               onSuccess: () => {
-                setFormOpen(false);
-                setEditingEntryId(null);
+                formModal.close();
               },
             },
           );
@@ -190,15 +194,14 @@ export function DonorsManagementPage({
 
       if (formMode === "create") {
         createApplicantMutation.mutate(applicantBody, {
-          onSuccess: () => setFormOpen(false),
+          onSuccess: () => formModal.close(),
         });
       } else if (editingEntryId) {
         updateApplicantMutation.mutate(
           { applicantId: editingEntryId, body: applicantBody },
           {
             onSuccess: () => {
-              setFormOpen(false);
-              setEditingEntryId(null);
+              formModal.close();
             },
           },
         );
@@ -208,6 +211,7 @@ export function DonorsManagementPage({
       view,
       formMode,
       editingEntryId,
+      formModal,
       createDonorMutation,
       updateDonorMutation,
       createApplicantMutation,
@@ -217,7 +221,7 @@ export function DonorsManagementPage({
 
   const handleConfirmDelete = React.useCallback(() => {
     if (!deleteEntryId) {
-      setDeleteDialogOpen(false);
+      deleteModal.close();
       return;
     }
 
@@ -228,9 +232,7 @@ export function DonorsManagementPage({
             setDetailsOpen(false);
             setDetailsEntry(null);
           }
-          setDeleteDialogOpen(false);
-          setDeleteEntryId(null);
-          setDeleteEntryName("");
+          deleteModal.close();
         },
       });
     } else {
@@ -240,9 +242,7 @@ export function DonorsManagementPage({
             setDetailsOpen(false);
             setDetailsEntry(null);
           }
-          setDeleteDialogOpen(false);
-          setDeleteEntryId(null);
-          setDeleteEntryName("");
+          deleteModal.close();
         },
       });
     }
@@ -252,6 +252,8 @@ export function DonorsManagementPage({
     view,
     deleteDonorMutation,
     deleteApplicantMutation,
+    deleteModal,
+    setDetailsOpen,
   ]);
 
   const pageTitle = view === "applicants" ? "إدارة المتقدمين" : "إدارة المتبرعين";
@@ -364,15 +366,15 @@ export function DonorsManagementPage({
         mode={formMode}
         view={view}
         initialValues={formInitialValues}
-        onOpenChange={setFormOpen}
+        onOpenChange={formModal.onOpenChange}
         onSubmit={handleFormSubmit}
       />
 
       <DonorEntryDeleteDialog
         open={deleteDialogOpen}
-        entryName={deleteEntryName}
+        entryName={rows.find((row) => row.id === deleteEntryId)?.name ?? ""}
         view={view}
-        onOpenChange={setDeleteDialogOpen}
+        onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleConfirmDelete}
       />
     </section>

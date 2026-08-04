@@ -103,7 +103,10 @@ export function CampaignFormSheet({
 }: CampaignFormSheetProps) {
   const [formValues, setFormValues] =
     React.useState<CampaignFormValues>(initialValues);
-  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure("campaign-discard-changes", { queryKey: "dialog" });
+  const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
+    "campaign-discard-changes",
+    { queryKey: "dialog", permission: "org.campaigns.create" },
+  );
 
   React.useEffect(() => {
     if (open) {

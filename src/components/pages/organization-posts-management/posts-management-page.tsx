@@ -83,8 +83,12 @@ function OrganizationPostsManagementPageContent({
   >("all");
   const [sortBy, setSortBy] = React.useState<PostsSortOption>("updated_newest");
 
-  const formModal = useQueryModal("post-create");
-  const deleteModal = useQueryModal("post-delete");
+  const formModal = useQueryModal("post-create", {
+    permission: "org.posts.create",
+  });
+  const deleteModal = useQueryModal("post-delete", {
+    permission: "org.posts.delete",
+  });
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;

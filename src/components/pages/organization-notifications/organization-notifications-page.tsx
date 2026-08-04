@@ -42,7 +42,9 @@ const filterLabels: Record<Filter, string> = {
 
 export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?: Mailbox }) {
   const [filter, setFilter] = React.useState<Filter>("all");
-  const detailsModal = useQueryModal("notification-details");
+  const detailsModal = useQueryModal("notification-details", {
+    permission: "org.notifications.view",
+  });
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const pagination = usePagination({ totalItems: apiTotal, pageSize });

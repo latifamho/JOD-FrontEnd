@@ -23,6 +23,67 @@ import { useAuth } from "@/providers/AuthProvider";
 
 const DESKTOP_BREAKPOINT = 1024;
 const COLLAPSE_STORAGE_KEY = "jod:sidebar-collapsed";
+const SIDEBAR_COLLAPSE_CHANGE_EVENT = "jod:sidebar-collapse-change";
+
+function getCollapsedSnapshot(): boolean {
+  if (typeof window === "undefined") return true;
+
+  try {
+    const persisted = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    return persisted === null ? true : persisted === "true";
+  } catch {
+    return true;
+  }
+}
+
+function subscribeToCollapsedChanges(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === COLLAPSE_STORAGE_KEY) callback();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(SIDEBAR_COLLAPSE_CHANGE_EVENT, callback);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(SIDEBAR_COLLAPSE_CHANGE_EVENT, callback);
+  };
+}
+
+function usePersistedCollapsed(): readonly [
+  boolean,
+  React.Dispatch<React.SetStateAction<boolean>>,
+] {
+  const collapsed = React.useSyncExternalStore(
+    subscribeToCollapsedChanges,
+    getCollapsedSnapshot,
+    () => true,
+  );
+
+  const setCollapsed = React.useCallback<
+    React.Dispatch<React.SetStateAction<boolean>>
+  >((nextValue) => {
+    if (typeof window === "undefined") return;
+
+    const nextCollapsed =
+      typeof nextValue === "function"
+        ? nextValue(getCollapsedSnapshot())
+        : nextValue;
+
+    try {
+      window.localStorage.setItem(
+        COLLAPSE_STORAGE_KEY,
+        String(nextCollapsed),
+      );
+    } finally {
+      window.dispatchEvent(new Event(SIDEBAR_COLLAPSE_CHANGE_EVENT));
+    }
+  }, []);
+
+  return [collapsed, setCollapsed] as const;
+}
 
 function normalizePathname(pathname: string): string {
   const normalized = pathname.trim().replace(/\/+$/, "");
@@ -345,42 +406,33 @@ function SideBarContent({
 export function SideBar() {
   const pathname = usePathname();
   const [isDesktop, setIsDesktop] = React.useState(false);
-  const [collapsed, setCollapsed] = React.useState(true);
+  const [collapsed, setCollapsed] = usePersistedCollapsed();
   const [hoverExpanded, setHoverExpanded] = React.useState(false);
   const [mobileOpen, setMobileOpen] = useQueryDisclosure("mobile-sidebar");
-  const [searchValue, setSearchValue] = React.useState("");
+  const [searchState, setSearchState] = React.useState(() => ({
+    pathname,
+    value: "",
+  }));
+  const searchValue = searchState.pathname === pathname ? searchState.value : "";
+
+  const handleSearchChange = React.useCallback(
+    (value: string) => setSearchState({ pathname, value }),
+    [pathname],
+  );
 
   React.useEffect(() => {
     const media = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
 
     const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
       setIsDesktop(event.matches);
+      if (event.matches) setMobileOpen(false);
     };
 
     handleChange(media);
     media.addEventListener("change", handleChange);
 
     return () => media.removeEventListener("change", handleChange);
-  }, []);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const persistedCollapsed = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
-    if (persistedCollapsed !== null) {
-      setCollapsed(persistedCollapsed === "true");
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(COLLAPSE_STORAGE_KEY, String(collapsed));
-  }, [collapsed]);
+  }, [setMobileOpen]);
 
   React.useEffect(() => {
     const handleToggle = () => {
@@ -393,17 +445,7 @@ export function SideBar() {
 
     window.addEventListener(SIDEBAR_TOGGLE_EVENT, handleToggle);
     return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, handleToggle);
-  }, [isDesktop, setMobileOpen]);
-
-  React.useEffect(() => {
-    setSearchValue("");
-  }, [pathname]);
-
-  React.useEffect(() => {
-    if (isDesktop && mobileOpen) {
-      setMobileOpen(false);
-    }
-  }, [isDesktop, mobileOpen, setMobileOpen]);
+  }, [isDesktop, setCollapsed, setMobileOpen]);
 
   const visualExpanded = !collapsed || hoverExpanded;
 
@@ -431,7 +473,7 @@ export function SideBar() {
           pathname={pathname}
           visualExpanded={visualExpanded}
           searchValue={searchValue}
-          onSearchChange={setSearchValue}
+          onSearchChange={handleSearchChange}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         />
@@ -446,7 +488,7 @@ export function SideBar() {
             pathname={pathname}
             visualExpanded
             searchValue={searchValue}
-            onSearchChange={setSearchValue}
+            onSearchChange={handleSearchChange}
             onLinkClick={() => setMobileOpen(false)}
           />
         </SheetContent>

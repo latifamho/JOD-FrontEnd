@@ -19,8 +19,8 @@ type StaffTableProps = {
   rows: StaffMemberItem[];
   currentUserId: string | null;
   currentUserEmail: string | null;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 };
 
 export function StaffTable({
@@ -68,17 +68,19 @@ export function StaffTable({
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    title="تعديل دور الموظف"
-                    onClick={() => onEdit(row.id)}
-                  >
-                    <AppIcons.PencilLine className="size-4 text-warning" />
-                  </Button>
-                  {row.id !== currentUserId &&
+                  {onEdit ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      title="تعديل دور الموظف"
+                      onClick={() => onEdit(row.id)}
+                    >
+                      <AppIcons.PencilLine className="size-4 text-warning" />
+                    </Button>
+                  ) : null}
+                  {onDelete && row.id !== currentUserId &&
                   row.email.trim().toLowerCase() !== currentUserEmail?.trim().toLowerCase() ? (
                     <Button
                       type="button"
