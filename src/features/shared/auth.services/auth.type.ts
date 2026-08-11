@@ -65,6 +65,9 @@ export interface AuthTokenData {
   refreshExpiresAt: string;
 }
 
+/** Alias matching the refresh-token API contract. */
+export type TokenPair = AuthTokenData;
+
 export interface LoginData extends AuthTokenData {
   user: LoginUser;
   permissions: UserPermissions;
@@ -80,7 +83,7 @@ export interface RefreshTokenRequest {
 }
 
 export interface RefreshTokenResponse {
-  data: AuthTokenData;
+  data: TokenPair;
   message: string;
 }
 

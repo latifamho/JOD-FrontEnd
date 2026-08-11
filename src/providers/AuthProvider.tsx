@@ -12,11 +12,17 @@ import type {
 import {
   clearAuthData,
   getAuthToken,
+  getRefreshToken,
   getUser,
   setDashboardRole,
   setUser,
 } from '@/lib/cookies'
-import { clearUnauthorizedHandler, resetUnauthorizedState, setUnauthorizedHandler } from '@/services/api'
+import {
+  clearUnauthorizedHandler,
+  getRefreshedAccessToken,
+  resetUnauthorizedState,
+  setUnauthorizedHandler,
+} from '@/services/api'
 
 interface AuthContextValue {
   user: MeProfile | null
@@ -47,16 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true
 
     const hydrate = async () => {
-      const token = getAuthToken()
-      setUserState(getUser<MeProfile>())
-      setIsAuthenticated(Boolean(token))
-
-      if (!token) {
-        if (active) setIsLoading(false)
-        return
-      }
-
       try {
+        // Access cookie may have expired while refresh is still valid.
+        if (!getAuthToken() && getRefreshToken()) {
+          await getRefreshedAccessToken()
+        }
+
+        const token = getAuthToken()
+        setUserState(getUser<MeProfile>())
+        setIsAuthenticated(Boolean(token))
+
+        if (!token) {
+          if (active) setIsLoading(false)
+          return
+        }
+
         const response = await authServices.getDashboardContext()
         if (!active) return
         const context = response.data
@@ -64,6 +75,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserState(context.profile)
         setUser(context.profile)
         if (context.profile.dashboardRole) setDashboardRole(context.profile.dashboardRole)
+      } catch {
+        clearAuthData()
+        if (!active) return
+        setUserState(null)
+        setDashboardContextState(null)
+        setIsAuthenticated(false)
+        if (window.location.pathname.startsWith('/dashboard')) {
+          router.replace('/login')
+        }
       } finally {
         if (active) setIsLoading(false)
       }
@@ -71,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void hydrate()
     return () => { active = false }
-  }, [])
+  }, [router])
 
   const logout = useCallback(() => {
     clearAuthData()

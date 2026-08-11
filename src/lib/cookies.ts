@@ -16,7 +16,11 @@ const AUTH_FREE_URLS = [
 type CookieAttributes = NonNullable<Parameters<typeof Cookies.set>[2]>;
 
 const BASE_COOKIE_OPTIONS: CookieAttributes = {
-  secure: true,
+  // `secure: true` drops cookies on http://localhost and breaks refresh locally.
+  secure:
+    typeof window === "undefined"
+      ? process.env.NODE_ENV === "production"
+      : window.location.protocol === "https:",
   sameSite: "Strict",
 };
 

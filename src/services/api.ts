@@ -131,12 +131,19 @@ async function refreshAccessToken(): Promise<string> {
     },
   );
 
-  setAuthTokens(response.data.data);
+  const pair = response.data?.data;
+  if (!pair?.token || !pair?.refreshToken) {
+    throw new Error("Invalid refresh response.");
+  }
+
+  // Atomically replace both tokens (refresh tokens are single-use).
+  setAuthTokens(pair);
   hasHandledUnauthorized = false;
-  return response.data.data.token;
+  return pair.token;
 }
 
-function getRefreshedAccessToken(): Promise<string> {
+/** Single-flight refresh — shared by the 401 interceptor and session hydrate. */
+export function getRefreshedAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = refreshAccessToken().finally(() => {
       refreshPromise = null;
@@ -198,7 +205,8 @@ api.interceptors.response.use(
 
     const normalized = normalizeApiError(error, { isLogin });
 
-    if (status === 401 && !isLogin) {
+    // Do not treat failed login/refresh/register as an expired dashboard session.
+    if (status === 401 && !isLogin && !isPublicAuthRequest) {
       handleUnauthorized(config);
       return Promise.reject(error);
     }

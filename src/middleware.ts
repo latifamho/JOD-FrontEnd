@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const ACCESS_TOKEN_COOKIE = 'access_token'
+const REFRESH_TOKEN_COOKIE = 'refresh_token'
 const DASHBOARD_ROLE_COOKIE = 'dashboard_role'
 
 type DashboardRoleCookie = 'admin' | 'org_owner' | 'org_staff'
@@ -21,12 +22,14 @@ function getDashboardHome(role: DashboardRoleCookie): string {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value
   const dashboardRole = request.cookies.get(DASHBOARD_ROLE_COOKIE)?.value as
     | DashboardRoleCookie
     | undefined
 
-  const isAuthenticated = Boolean(token)
+  // Access may expire while refresh is still valid — allow the client to rotate.
+  const isAuthenticated = Boolean(accessToken || refreshToken)
   const isProtectedRoute = pathname.startsWith('/dashboard')
   const isAuthRoute = pathname === '/login' || pathname === '/register'
 
