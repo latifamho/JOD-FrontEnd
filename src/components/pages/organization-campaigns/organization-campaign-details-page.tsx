@@ -20,7 +20,6 @@ import {
 import {
   organizationCampaignCategoryLabels,
   organizationCampaignStatusLabels,
-  type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
 import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
 import { useAuth } from "@/providers/AuthProvider";
@@ -62,22 +61,6 @@ export function OrganizationCampaignDetailsPage({
   }
 
   const progress = getProgress(campaign.goalAmount, campaign.raisedAmount);
-  const campaignsRoot =
-    scope === "staff"
-      ? routePaths.organizationStaffScope.campaigns
-      : routePaths.organizationOwnerScope.campaigns;
-  const statusRouteMap: Record<OrganizationCampaignStatus, string> =
-    scope === "staff"
-      ? {
-          draft: routePaths.organizationStaffScope.campaigns,
-          active: routePaths.organizationStaffScope.campaignsActive,
-          closed: routePaths.organizationStaffScope.campaignsClosed,
-        }
-      : {
-          draft: routePaths.organizationOwnerScope.campaignsDraft,
-          active: routePaths.organizationOwnerScope.campaignsActive,
-          closed: routePaths.organizationOwnerScope.campaignsClosed,
-        };
   const editRoute =
     scope === "staff"
       ? routePaths.organizationStaffScope.campaignEdit(campaign.id)
@@ -110,14 +93,6 @@ export function OrganizationCampaignDetailsPage({
                 <Link href={editRoute}>تعديل الحملة</Link>
               </Button>
             ) : null}
-            <Button asChild variant="outline">
-              <Link href={statusRouteMap[campaign.status]}>
-                الرجوع إلى قائمة {organizationCampaignStatusLabels[campaign.status]}
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={campaignsRoot}>كل الحملات</Link>
-            </Button>
           </div>
         </div>
       </div>
