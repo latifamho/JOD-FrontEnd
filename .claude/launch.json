@@ -1,0 +1,9 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jod-frontend-dev",
+      "url": "http://localhost:3100"
+    }
+  ]
+}
