@@ -77,7 +77,8 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async ({ accountType, email, password }: LoginMutationInput) => {
-      const response = await authServices.login({ email, password }, accountType);
+      const userType = accountType === "admin" ? "admin" : "companies";
+      const response = await authServices.login({ email, password, userType });
       return completeAuthentication(response, accountType);
     },
     onSuccess: ({ context }) => {

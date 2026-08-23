@@ -1,11 +1,21 @@
 "use client";
 
 import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -13,36 +23,30 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
+import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
+import {
+  applicantStatusOptions,
+  type DonorEntryItem,
+} from "@/components/pages/donors-management/static-data";
 
 export type DonorEntryFormValues = {
   name: string;
   email: string;
   phone: string;
-  campaignTitle: string;
-  amountOrType: string;
-  donatedAt: string;
   city: string;
-  source: string;
-  paymentMethod: string;
-  requestType: string;
-  assignedTo: string;
-  internalNotes: string;
+  campaignTitle: string;
+  applicantStatus: string;
+  appliedAt: string;
 };
 
 export const EMPTY_DONOR_ENTRY_FORM_VALUES: DonorEntryFormValues = {
   name: "",
   email: "",
   phone: "",
-  campaignTitle: "",
-  amountOrType: "",
-  donatedAt: "",
   city: "",
-  source: "",
-  paymentMethod: "",
-  requestType: "",
-  assignedTo: "",
-  internalNotes: "",
+  campaignTitle: "",
+  applicantStatus: "pending",
+  appliedAt: "",
 };
 
 type DonorEntryFormSheetProps = {
@@ -50,90 +54,85 @@ type DonorEntryFormSheetProps = {
   mode: "create" | "edit";
   view: "donors" | "applicants";
   initialValues: DonorEntryFormValues;
+  isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: DonorEntryFormValues) => void;
 };
 
+const phonePattern = /^09\d{8}$/;
+
+function createSchema(view: "donors" | "applicants") {
+  return z
+    .object({
+      name: z.string(),
+      email: z.string(),
+      phone: z.string(),
+      city: z.string(),
+      campaignTitle: z.string(),
+      applicantStatus: z.string(),
+      appliedAt: z.string(),
+    })
+    .superRefine((values, context) => {
+      if (!values.name.trim()) {
+        context.addIssue({ code: "custom", path: ["name"], message: "الاسم الكامل مطلوب" });
+      }
+
+      if (!phonePattern.test(values.phone.trim())) {
+        context.addIssue({
+          code: "custom",
+          path: ["phone"],
+          message: "رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 09",
+        });
+      }
+
+      if (view === "donors") {
+        if (!values.email.trim()) {
+          context.addIssue({ code: "custom", path: ["email"], message: "البريد الإلكتروني مطلوب" });
+        } else if (!z.string().email().safeParse(values.email.trim()).success) {
+          context.addIssue({ code: "custom", path: ["email"], message: "أدخل بريدًا إلكترونيًا صحيحًا" });
+        }
+
+        if (!syrianGovernorateOptions.some((option) => option.value === values.city)) {
+          context.addIssue({ code: "custom", path: ["city"], message: "المحافظة مطلوبة" });
+        }
+        return;
+      }
+
+      if (!values.campaignTitle.trim()) {
+        context.addIssue({ code: "custom", path: ["campaignTitle"], message: "اسم الحملة مطلوب" });
+      }
+      if (!values.applicantStatus) {
+        context.addIssue({ code: "custom", path: ["applicantStatus"], message: "حالة المتقدم مطلوبة" });
+      }
+      if (!values.appliedAt) {
+        context.addIssue({ code: "custom", path: ["appliedAt"], message: "تاريخ التقديم مطلوب" });
+      }
+    });
+}
+
 function toDatetimeLocalValue(isoString: string): string {
-  if (!isoString) {
-    return "";
-  }
-
+  if (!isoString) return "";
   const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
+  if (Number.isNaN(date.getTime())) return "";
   const pad = (value: number) => String(value).padStart(2, "0");
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function fromDatetimeLocalValue(value: string): string {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return date.toISOString();
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
-export function donorEntryToFormValues(
-  entry: DonorEntryItem,
-): DonorEntryFormValues {
+export function donorEntryToFormValues(entry: DonorEntryItem): DonorEntryFormValues {
   return {
     name: entry.name ?? "",
     email: entry.email ?? "",
     phone: entry.phone ?? "",
-    campaignTitle: entry.campaignTitle ?? "",
-    amountOrType: entry.amountOrType ?? "",
-    donatedAt: entry.donatedAt ?? "",
     city: entry.city ?? "",
-    source: entry.source ?? "",
-    paymentMethod: entry.paymentMethod ?? "",
-    requestType: entry.requestType ?? "",
-    assignedTo: entry.assignedTo ?? "",
-    internalNotes: entry.internalNotes ?? "",
-  };
-}
-
-export function donorEntryFromFormValues({
-  id,
-  view,
-  values,
-}: {
-  id: string;
-  view: "donors" | "applicants";
-  values: DonorEntryFormValues;
-}): DonorEntryItem {
-  const isApplicants = view === "applicants";
-
-  const clean = (value: string): string => value.trim();
-  const optional = (value: string): string | undefined => {
-    const trimmed = value.trim();
-    return trimmed === "" ? undefined : trimmed;
-  };
-
-  return {
-    id,
-    name: clean(values.name),
-    email: clean(values.email),
-    phone: clean(values.phone),
-    campaignTitle: clean(values.campaignTitle),
-    amountOrType: clean(values.amountOrType),
-    donatedAt: values.donatedAt,
-    city: optional(values.city),
-    source: optional(values.source),
-    paymentMethod: isApplicants ? undefined : optional(values.paymentMethod),
-    requestType: isApplicants ? optional(values.requestType) : undefined,
-    assignedTo: optional(values.assignedTo),
-    internalNotes: optional(values.internalNotes),
+    campaignTitle: entry.campaignTitle ?? "",
+    applicantStatus: entry.applicantStatus ?? "pending",
+    appliedAt: entry.appliedAt ?? "",
   };
 }
 
@@ -142,52 +141,49 @@ export function DonorEntryFormSheet({
   mode,
   view,
   initialValues,
+  isSubmitting = false,
   onOpenChange,
   onSubmit,
 }: DonorEntryFormSheetProps) {
-  const [formValues, setFormValues] =
-    React.useState<DonorEntryFormValues>(initialValues);
+  const schema = React.useMemo(() => createSchema(view), [view]);
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DonorEntryFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: initialValues,
+  });
 
   React.useEffect(() => {
-    if (open) {
-      setFormValues(initialValues);
-    }
-  }, [initialValues, open]);
+    if (open) reset(initialValues);
+  }, [initialValues, open, reset]);
 
   const isApplicants = view === "applicants";
-  const title =
-    mode === "create"
-      ? isApplicants
-        ? "إضافة متقدم"
-        : "إضافة متبرع"
-      : isApplicants
-        ? "تعديل بيانات المتقدم"
-        : "تعديل بيانات المتبرع";
+  const title = mode === "create"
+    ? isApplicants ? "إضافة متقدم" : "إضافة متبرع"
+    : isApplicants ? "تعديل بيانات المتقدم" : "تعديل بيانات المتبرع";
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isSubmitting) onOpenChange(nextOpen);
+      }}
+    >
       <SheetContent side="right" dir="rtl" className="w-[95vw] border-border p-0 sm:max-w-lg">
         <form
+          noValidate
           className="flex h-full flex-col"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit({
-              ...formValues,
-              donatedAt: formValues.donatedAt,
-              name: formValues.name.trim(),
-              email: formValues.email.trim(),
-              phone: formValues.phone.trim(),
-              campaignTitle: formValues.campaignTitle.trim(),
-              amountOrType: formValues.amountOrType.trim(),
-              city: formValues.city.trim(),
-              source: formValues.source.trim(),
-              paymentMethod: formValues.paymentMethod.trim(),
-              requestType: formValues.requestType.trim(),
-              assignedTo: formValues.assignedTo.trim(),
-              internalNotes: formValues.internalNotes.trim(),
-            });
-            onOpenChange(false);
-          }}
+          onSubmit={handleSubmit((values) => onSubmit({
+            ...values,
+            name: values.name.trim(),
+            email: values.email.trim(),
+            phone: values.phone.trim(),
+            campaignTitle: values.campaignTitle.trim(),
+          }))}
         >
           <SheetHeader className="border-b border-border pe-12 text-right">
             <SheetTitle className="text-right text-lg">{title}</SheetTitle>
@@ -196,192 +192,115 @@ export function DonorEntryFormSheet({
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             <div className="space-y-2">
               <Label htmlFor="entry-name">الاسم الكامل</Label>
-              <Input
-                id="entry-name"
-                required
-                value={formValues.name}
-                onChange={(event) =>
-                  setFormValues((current) => ({ ...current, name: event.target.value }))
-                }
-                placeholder="أدخل الاسم"
-              />
+              <Input id="entry-name" disabled={isSubmitting} aria-invalid={Boolean(errors.name)} {...register("name")} />
+              {errors.name ? <p className="text-xs text-destructive">{errors.name.message}</p> : null}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            {isApplicants ? null : (
               <div className="space-y-2">
                 <Label htmlFor="entry-email">البريد الإلكتروني</Label>
-                <Input
-                  id="entry-email"
-                  type="email"
-                  required
-                  value={formValues.email}
-                  onChange={(event) =>
-                    setFormValues((current) => ({ ...current, email: event.target.value }))
-                  }
-                  placeholder="name@example.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entry-phone">رقم الهاتف</Label>
-                <Input
-                  id="entry-phone"
-                  required
-                  value={formValues.phone}
-                  onChange={(event) =>
-                    setFormValues((current) => ({ ...current, phone: event.target.value }))
-                  }
-                  placeholder="+9665XXXXXXXX"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="entry-campaign">اسم الحملة / الفرصة</Label>
-              <Input
-                id="entry-campaign"
-                required
-                value={formValues.campaignTitle}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    campaignTitle: event.target.value,
-                  }))
-                }
-                placeholder="مثال: كسوة الشتاء"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="entry-amount">
-                  {isApplicants ? "الحالة" : "المبلغ / النوع"}
-                </Label>
-                <Input
-                  id="entry-amount"
-                  required
-                  value={formValues.amountOrType}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      amountOrType: event.target.value,
-                    }))
-                  }
-                  placeholder={isApplicants ? "قيد المراجعة" : "500 ر.س أو تبرع عيني"}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entry-date">
-                  {isApplicants ? "تاريخ التقديم" : "تاريخ التبرع"}
-                </Label>
-                <Input
-                  id="entry-date"
-                  type="datetime-local"
-                  required
-                  value={toDatetimeLocalValue(formValues.donatedAt)}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      donatedAt: fromDatetimeLocalValue(event.target.value),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="entry-city">المدينة / المنطقة</Label>
-                <Input
-                  id="entry-city"
-                  value={formValues.city}
-                  onChange={(event) =>
-                    setFormValues((current) => ({ ...current, city: event.target.value }))
-                  }
-                  placeholder="اختياري"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entry-assigned">مسؤول المتابعة</Label>
-                <Input
-                  id="entry-assigned"
-                  value={formValues.assignedTo}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      assignedTo: event.target.value,
-                    }))
-                  }
-                  placeholder="اختياري"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="entry-source">مصدر التسجيل</Label>
-              <Input
-                id="entry-source"
-                value={formValues.source}
-                onChange={(event) =>
-                  setFormValues((current) => ({ ...current, source: event.target.value }))
-                }
-                placeholder="اختياري"
-              />
-            </div>
-
-            {isApplicants ? (
-              <div className="space-y-2">
-                <Label htmlFor="entry-request">نوع الطلب</Label>
-                <Input
-                  id="entry-request"
-                  value={formValues.requestType}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      requestType: event.target.value,
-                    }))
-                  }
-                  placeholder="اختياري"
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="entry-payment">وسيلة الدفع</Label>
-                <Input
-                  id="entry-payment"
-                  value={formValues.paymentMethod}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      paymentMethod: event.target.value,
-                    }))
-                  }
-                  placeholder="اختياري"
-                />
+                <Input id="entry-email" type="email" disabled={isSubmitting} aria-invalid={Boolean(errors.email)} {...register("email")} />
+                {errors.email ? <p className="text-xs text-destructive">{errors.email.message}</p> : null}
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="entry-notes">ملاحظات داخلية</Label>
-              <Textarea
-                id="entry-notes"
-                value={formValues.internalNotes}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    internalNotes: event.target.value,
-                  }))
-                }
-                placeholder="اختياري"
+              <Label htmlFor="entry-phone">رقم الهاتف</Label>
+              <Input
+                id="entry-phone"
+                inputMode="numeric"
+                maxLength={10}
+                dir="ltr"
+                disabled={isSubmitting}
+                aria-invalid={Boolean(errors.phone)}
+                placeholder="09XXXXXXXX"
+                {...register("phone")}
               />
+              {errors.phone ? <p className="text-xs text-destructive">{errors.phone.message}</p> : null}
             </div>
+
+            {isApplicants ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="entry-campaign">اسم الحملة</Label>
+                  <Input id="entry-campaign" disabled={isSubmitting} aria-invalid={Boolean(errors.campaignTitle)} {...register("campaignTitle")} />
+                  {errors.campaignTitle ? <p className="text-xs text-destructive">{errors.campaignTitle.message}</p> : null}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>الحالة</Label>
+                  <Controller
+                    control={control}
+                    name="applicantStatus"
+                    render={({ field }) => (
+                      <Select dir="rtl" value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
+                        <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.applicantStatus)}>
+                          <SelectValue placeholder="اختر الحالة" />
+                        </SelectTrigger>
+                        <SelectContent align="start" className="text-right">
+                          {applicantStatusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value} className="text-right">
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.applicantStatus ? <p className="text-xs text-destructive">{errors.applicantStatus.message}</p> : null}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="entry-applied-at">تاريخ التقديم</Label>
+                  <Controller
+                    control={control}
+                    name="appliedAt"
+                    render={({ field }) => (
+                      <Input
+                        id="entry-applied-at"
+                        type="datetime-local"
+                        disabled={isSubmitting}
+                        aria-invalid={Boolean(errors.appliedAt)}
+                        value={toDatetimeLocalValue(field.value)}
+                        onChange={(event) => field.onChange(fromDatetimeLocalValue(event.target.value))}
+                      />
+                    )}
+                  />
+                  {errors.appliedAt ? <p className="text-xs text-destructive">{errors.appliedAt.message}</p> : null}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <Label>المحافظة</Label>
+                <Controller
+                  control={control}
+                  name="city"
+                  render={({ field }) => (
+                    <Select dir="rtl" value={field.value || undefined} onValueChange={field.onChange} disabled={isSubmitting}>
+                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.city)}>
+                        <SelectValue placeholder="اختر المحافظة" />
+                      </SelectTrigger>
+                      <SelectContent align="start" className="text-right">
+                        {syrianGovernorateOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value} className="text-right">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.city ? <p className="text-xs text-destructive">{errors.city.message}</p> : null}
+              </div>
+            )}
           </div>
 
           <SheetFooter className="flex-row-reverse gap-2 border-t border-border p-4">
-            <Button type="submit">{mode === "create" ? "إضافة" : "حفظ التعديلات"}</Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+              {isSubmitting ? "جاري الحفظ..." : mode === "create" ? "إضافة" : "حفظ التعديلات"}
+            </Button>
+            <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
           </SheetFooter>
@@ -390,4 +309,3 @@ export function DonorEntryFormSheet({
     </Sheet>
   );
 }
-

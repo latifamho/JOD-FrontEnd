@@ -16,7 +16,6 @@ import type {
 const ENDPOINTS = {
   CAMPAIGNS: '/org/campaigns',
   CAMPAIGN: (id: string) => `/org/campaigns/${id}`,
-  CAMPAIGN_STATUS: (id: string) => `/org/campaigns/${id}/status`,
 } as const
 
 export const orgCampaignsServices = {
@@ -43,7 +42,7 @@ export const orgCampaignsServices = {
   },
 
   async closeCampaign(campaignId: string, body: CloseCampaignRequest): Promise<CloseCampaignResponse> {
-    const response = await api.patch<CloseCampaignResponse>(ENDPOINTS.CAMPAIGN_STATUS(campaignId), {
+    const response = await api.patch<CloseCampaignResponse>(ENDPOINTS.CAMPAIGN(campaignId), {
       status: 'closed',
       closedReason: body.reason,
     })

@@ -81,7 +81,6 @@ export function OrganizationCampaignDetailsPage({
               <Badge variant="outline">
                 {organizationCampaignCategoryLabels[campaign.category]}
               </Badge>
-              <Badge variant="outline">{campaign.id}</Badge>
             </div>
             <h2 className="text-xl font-semibold text-foreground">{campaign.title}</h2>
             <p className="text-sm text-muted-foreground">{campaign.summary}</p>

@@ -5,7 +5,6 @@ export const END_POINTS = {
     LOGOUT: "/auth/logout",
   },
   COMPANY_AUTH: {
-    LOGIN: "/company/auth/login",
     REGISTER: "/company/auth/register",
   },
   ME: {

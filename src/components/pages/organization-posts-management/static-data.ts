@@ -16,7 +16,6 @@ export type OrganizationPostItem = {
   summary: string;
   type: OrganizationPostType;
   status: OrganizationPostStatus;
-  authorName: string;
   location: string;
   campaignTitle?: string;
   createdAt: string;
@@ -32,7 +31,7 @@ export type OrganizationPostItem = {
 export const organizationPostStatusLabels: Record<OrganizationPostStatus, string> =
   {
     draft: "مسودة",
-    published: "منشور",
+    published: "نشط",
     archived: "مؤرشف",
   };
 
@@ -52,7 +51,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "نعلن بدء حملة جديدة لدعم مرضى القصور الكلوي عبر توفير الأجهزة والمستلزمات المنزلية.",
     type: "campaign_teaser",
     status: "published",
-    authorName: "مالك المنظمة",
     location: "الرياض",
     campaignTitle: "حملة دعم جلسات الغسيل الكلوي المنزلي",
     createdAt: "2026-02-24T09:20:00",
@@ -69,7 +67,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "مطلوب منسق برامج ميدانية بخبرة سنة على الأقل لمتابعة تنفيذ الأنشطة المجتمعية.",
     type: "job_opportunity",
     status: "published",
-    authorName: "رئيس فريق الموارد",
     location: "جدة",
     createdAt: "2026-02-20T10:00:00",
     updatedAt: "2026-02-21T14:05:00",
@@ -85,7 +82,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "وصلت حملة دعم الغسيل الكلوي إلى 45% من الهدف مع استمرار استقبال التبرعات.",
     type: "campaign_update",
     status: "draft",
-    authorName: "مدير الحملات",
     location: "الرياض",
     campaignTitle: "حملة دعم جلسات الغسيل الكلوي المنزلي",
     createdAt: "2026-03-02T08:10:00",
@@ -101,7 +97,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "ملخص نتائج الشهر الأول من الحملة وعدد الأسر المستفيدة ونسب التوزيع الجغرافي.",
     type: "campaign_summary",
     status: "draft",
-    authorName: "مشرف العمليات",
     location: "الدمام",
     campaignTitle: "مشروع السلال الغذائية الموسمية",
     createdAt: "2026-03-01T12:00:00",
@@ -117,7 +112,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "دليل مبسط لخطوات التسجيل والمتطلبات الأساسية للانضمام إلى فرق التطوع.",
     type: "general",
     status: "published",
-    authorName: "منسق المتطوعين",
     location: "مكة",
     createdAt: "2026-02-15T16:15:00",
     updatedAt: "2026-02-16T08:30:00",
@@ -133,7 +127,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "نبحث عن متطوعين للمساعدة في تنظيم المواعيد واستقبال المستفيدين خلال الفعالية الصحية.",
     type: "job_opportunity",
     status: "draft",
-    authorName: "منسق المتطوعين",
     location: "الرياض",
     createdAt: "2026-02-28T09:35:00",
     updatedAt: "2026-03-01T10:50:00",
@@ -148,7 +141,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "إطلاق محتوى تمهيدي يوضح أهداف حملة التدريب المهني وخطة التنفيذ القادمة.",
     type: "campaign_teaser",
     status: "published",
-    authorName: "مدير البرامج",
     location: "جدة",
     campaignTitle: "حملة تدريب مهني للشباب الباحثين عن عمل",
     createdAt: "2026-02-12T11:40:00",
@@ -165,7 +157,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "عرض نسبة الإنجاز الحالية وأبرز الأعمال المنفذة في مشروع ترميم منازل الأسر المتضررة.",
     type: "campaign_update",
     status: "archived",
-    authorName: "مدير الحملات",
     location: "أبها",
     campaignTitle: "حملة ترميم منازل الأسر المتضررة",
     createdAt: "2026-01-20T10:05:00",
@@ -182,7 +173,6 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
       "مراجعة شاملة لنتائج حملة فرص العمل مع عرض عدد المقبولين والتحديات والدروس المستفادة.",
     type: "campaign_summary",
     status: "draft",
-    authorName: "مدير البرامج",
     location: "جدة",
     campaignTitle: "حملة تدريب مهني للشباب الباحثين عن عمل",
     createdAt: "2026-03-04T08:30:00",

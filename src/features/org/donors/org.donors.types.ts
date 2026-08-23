@@ -2,7 +2,6 @@ import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/
 import type { DonorEntryItem } from '@/components/pages/donors-management/static-data'
 
 export interface OrgDonorsFilter {
-  campaignId?: string
   city?: string
   search?: string
 }
@@ -31,50 +30,20 @@ export interface DonorCreateRequest {
   name: string
   email: string
   phone: string
-  campaignTitle: string
-  amountOrType: string
-  city?: string
-  paymentMethod?: string
-  assignedTo?: string
-  internalNotes?: string
+  city: string
 }
 
-export interface DonorUpdateRequest {
-  name?: string
-  email?: string
-  phone?: string
-  campaignTitle?: string
-  amountOrType?: string
-  city?: string
-  paymentMethod?: string
-  assignedTo?: string
-  internalNotes?: string
-}
+export type DonorUpdateRequest = DonorCreateRequest
 
 export interface ApplicantCreateRequest {
   name: string
-  email: string
   phone: string
   campaignTitle: string
-  amountOrType: string
-  city?: string
-  requestType?: string
-  campaignRef?: string
-  assignedTo?: string
-  internalNotes?: string
+  applicantStatus: string
+  appliedAt: string
 }
 
-export interface ApplicantUpdateRequest {
-  name?: string
-  email?: string
-  phone?: string
-  campaignTitle?: string
-  amountOrType?: string
-  city?: string
-  requestType?: string
-  assignedTo?: string
-  internalNotes?: string
-}
+export type ApplicantUpdateRequest = ApplicantCreateRequest
 
 export type OrgDonorsResponse = ApiListResponse<DonorEntryItem>
 export type OrgDonorDetailResponse = ApiSingleResponse<DonorEntryItem>

@@ -7,6 +7,23 @@ export type OrganizationCampaignCategory =
   | "shelter"
   | "employment";
 
+export const syrianGovernorateOptions = [
+  { label: "دمشق", value: "دمشق" },
+  { label: "ريف دمشق", value: "ريف دمشق" },
+  { label: "حلب", value: "حلب" },
+  { label: "حمص", value: "حمص" },
+  { label: "حماة", value: "حماة" },
+  { label: "اللاذقية", value: "اللاذقية" },
+  { label: "طرطوس", value: "طرطوس" },
+  { label: "إدلب", value: "إدلب" },
+  { label: "درعا", value: "درعا" },
+  { label: "السويداء", value: "السويداء" },
+  { label: "القنيطرة", value: "القنيطرة" },
+  { label: "دير الزور", value: "دير الزور" },
+  { label: "الرقة", value: "الرقة" },
+  { label: "الحسكة", value: "الحسكة" },
+] as const;
+
 export type OrganizationCampaignItem = {
   id: string;
   title: string;

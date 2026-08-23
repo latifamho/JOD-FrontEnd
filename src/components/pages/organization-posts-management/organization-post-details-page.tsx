@@ -104,7 +104,6 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-foreground">بيانات المنشور</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <DetailItem label="الكاتب" value={displayOrDash(post.authorName)} />
             <DetailItem label="الموقع" value={displayOrDash(post.location)} />
             <DetailItem label="تاريخ الإنشاء" value={formatUtcDateTime(post.createdAt)} />
             <DetailItem label="آخر تحديث" value={formatUtcDateTime(post.updatedAt)} />

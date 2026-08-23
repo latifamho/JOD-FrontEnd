@@ -22,7 +22,6 @@ export interface PostCreateRequest {
   summary: string
   type: OrganizationPostType
   status: OrganizationPostStatus
-  authorName: string
   location: string
   campaignTitle?: string
 }
@@ -31,8 +30,6 @@ export interface PostUpdateRequest {
   title?: string
   summary?: string
   type?: OrganizationPostType
-  status?: OrganizationPostStatus
-  authorName?: string
   location?: string
   campaignTitle?: string
 }

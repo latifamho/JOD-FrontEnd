@@ -124,6 +124,12 @@ function OrganizationPostsManagementPageContent({
   const restoreMutation = useRestoreOrgPost();
   const deleteMutation = useDeleteOrgPost();
 
+  const workflowPendingPostIds = [
+    publishMutation.isPending ? publishMutation.variables : undefined,
+    archiveMutation.isPending ? archiveMutation.variables : undefined,
+    restoreMutation.isPending ? restoreMutation.variables : undefined,
+  ].filter((postId): postId is string => typeof postId === "string");
+
   const openCreateSheet = React.useCallback(() => {
     formModal.open();
   }, [formModal]);
@@ -151,14 +157,13 @@ function OrganizationPostsManagementPageContent({
           summary: values.summary,
           type: values.type,
           status: values.status,
-          authorName: values.authorName,
           location: values.location,
           campaignTitle,
         },
         { onSuccess: () => formModal.close() },
       );
     },
-    [createMutation],
+    [createMutation, formModal],
   );
 
   const handleWorkflowAction = React.useCallback(
@@ -184,7 +189,7 @@ function OrganizationPostsManagementPageContent({
     deleteMutation.mutate(deletePostId, {
       onSuccess: () => deleteModal.close(),
     });
-  }, [deletePostId, deleteMutation]);
+  }, [deletePostId, deleteMutation, deleteModal]);
 
   const pageTitle =
     status === "all"
@@ -245,6 +250,7 @@ function OrganizationPostsManagementPageContent({
           onOpenDetails={openDetails}
           onWorkflowAction={handleWorkflowAction}
           onDeletePost={openDeleteDialog}
+          workflowPendingPostIds={workflowPendingPostIds}
           canPublish={canPublish}
           canArchive={canArchive}
           canRestore={canRestore}
@@ -270,6 +276,7 @@ function OrganizationPostsManagementPageContent({
         open={formModal.isOpen}
         mode="create"
         initialValues={EMPTY_POST_FORM_VALUES}
+        isSubmitting={createMutation.isPending}
         onOpenChange={formModal.onOpenChange}
         onSubmit={handleSaveForm}
       />
@@ -278,6 +285,7 @@ function OrganizationPostsManagementPageContent({
       <DeletePostDialog
         open={deleteModal.isOpen}
         postTitle={deletePostTitle}
+        isDeleting={deleteMutation.isPending}
         onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeletePost}
       />

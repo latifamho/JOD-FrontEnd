@@ -67,7 +67,6 @@ export function DonorsManagementPage({
     permission: `${permissionPrefix}.view`,
   });
   const [detailsEntry, setDetailsEntry] = React.useState<DonorEntryItem | null>(null);
-  const [detailsView, setDetailsView] = React.useState<"donors" | "applicants">(view);
 
   const formModal = useQueryModal("donor-form", {
     permissionsByMode: {
@@ -86,15 +85,6 @@ export function DonorsManagementPage({
   });
   const deleteDialogOpen = deleteModal.isOpen;
   const deleteEntryId = deleteModal.id;
-
-  React.useEffect(() => {
-    setDetailsView(view);
-  }, [view]);
-
-  React.useEffect(() => {
-    setSortBy("date_newest");
-    setApiTotal(0);
-  }, [view]);
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
@@ -133,13 +123,13 @@ export function DonorsManagementPage({
   const deleteApplicantMutation = useDeleteOrgApplicant();
 
   const openCreate = React.useCallback(() => {
-
     setFormInitialValues({
       ...EMPTY_DONOR_ENTRY_FORM_VALUES,
-      donatedAt: new Date().toISOString(),
+      applicantStatus: "pending",
+      appliedAt: view === "applicants" ? new Date().toISOString() : "",
     });
     formModal.open({ mode: "create" });
-  }, [formModal]);
+  }, [formModal, view]);
 
   const openEdit = React.useCallback((row: DonorEntryItem) => {
     setFormInitialValues(donorEntryToFormValues(row));
@@ -153,23 +143,18 @@ export function DonorsManagementPage({
   const handleDetailsOpenChange = React.useCallback((open: boolean) => {
     setDetailsOpen(open);
     if (!open) setDetailsEntry(null);
-  }, []);
+  }, [setDetailsOpen]);
 
   const handleFormSubmit = React.useCallback(
     (values: DonorEntryFormValues) => {
-      const body = {
-        name: values.name.trim(),
-        email: values.email.trim(),
-        phone: values.phone.trim(),
-        campaignTitle: values.campaignTitle.trim(),
-        amountOrType: values.amountOrType.trim(),
-        city: values.city.trim() || undefined,
-        paymentMethod: values.paymentMethod.trim() || undefined,
-        assignedTo: values.assignedTo.trim() || undefined,
-        internalNotes: values.internalNotes.trim() || undefined,
-      };
-
       if (view === "donors") {
+        const body = {
+          name: values.name.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          city: values.city,
+        };
+
         if (formMode === "create") {
           createDonorMutation.mutate(body, {
             onSuccess: () => formModal.close(),
@@ -177,19 +162,18 @@ export function DonorsManagementPage({
         } else if (editingEntryId) {
           updateDonorMutation.mutate(
             { donorId: editingEntryId, body },
-            {
-              onSuccess: () => {
-                formModal.close();
-              },
-            },
+            { onSuccess: () => formModal.close() },
           );
         }
         return;
       }
 
       const applicantBody = {
-        ...body,
-        requestType: values.requestType.trim() || undefined,
+        name: values.name.trim(),
+        phone: values.phone.trim(),
+        campaignTitle: values.campaignTitle.trim(),
+        applicantStatus: values.applicantStatus,
+        appliedAt: values.appliedAt,
       };
 
       if (formMode === "create") {
@@ -199,11 +183,7 @@ export function DonorsManagementPage({
       } else if (editingEntryId) {
         updateApplicantMutation.mutate(
           { applicantId: editingEntryId, body: applicantBody },
-          {
-            onSuccess: () => {
-              formModal.close();
-            },
-          },
+          { onSuccess: () => formModal.close() },
         );
       }
     },
@@ -255,6 +235,18 @@ export function DonorsManagementPage({
     deleteModal,
     setDetailsOpen,
   ]);
+
+  const isFormSubmitting =
+    view === "donors"
+      ? formMode === "create"
+        ? createDonorMutation.isPending
+        : updateDonorMutation.isPending
+      : formMode === "create"
+        ? createApplicantMutation.isPending
+        : updateApplicantMutation.isPending;
+
+  const isDeleting =
+    view === "donors" ? deleteDonorMutation.isPending : deleteApplicantMutation.isPending;
 
   const pageTitle = view === "applicants" ? "إدارة المتقدمين" : "إدارة المتبرعين";
   const pageDescription =
@@ -358,7 +350,7 @@ export function DonorsManagementPage({
         open={detailsOpen}
         onOpenChange={handleDetailsOpenChange}
         entry={detailsEntry}
-        view={detailsView}
+        view={view}
       />
 
       <DonorEntryFormSheet
@@ -366,6 +358,7 @@ export function DonorsManagementPage({
         mode={formMode}
         view={view}
         initialValues={formInitialValues}
+        isSubmitting={isFormSubmitting}
         onOpenChange={formModal.onOpenChange}
         onSubmit={handleFormSubmit}
       />
@@ -374,6 +367,7 @@ export function DonorsManagementPage({
         open={deleteDialogOpen}
         entryName={rows.find((row) => row.id === deleteEntryId)?.name ?? ""}
         view={view}
+        isDeleting={isDeleting}
         onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleConfirmDelete}
       />

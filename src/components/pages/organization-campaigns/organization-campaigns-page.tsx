@@ -246,13 +246,16 @@ export function OrganizationCampaignsPage({
         open={formModal.isOpen}
         mode="create"
         initialValues={EMPTY_CAMPAIGN_FORM_VALUES}
+        isSubmitting={createMutation.isPending}
         onOpenChange={formModal.onOpenChange}
         onSubmit={handleSaveForm}
       />
 
       <CloseCampaignDialog
+        key={closeTargetCampaignId ?? "campaign-close"}
         open={closeModal.isOpen}
         campaignTitle={closeTargetTitle}
+        isClosing={closeMutation.isPending}
         onOpenChange={closeModal.onOpenChange}
         onConfirm={handleCloseCampaign}
       />
@@ -260,6 +263,7 @@ export function OrganizationCampaignsPage({
       <DeleteCampaignDialog
         open={deleteModal.isOpen}
         campaignTitle={deleteTargetTitle}
+        isDeleting={deleteMutation.isPending}
         onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeleteCampaign}
       />

@@ -4,7 +4,6 @@ import type {
   CompanyRegisterRequest,
   CompanyRegisterResponse,
   DashboardContextResponse,
-  LoginAccountType,
   LoginRequest,
   LoginResponse,
   MeResponse,
@@ -13,15 +12,8 @@ import type {
 } from "./auth.type";
 
 export const authServices = {
-  async login(
-    data: LoginRequest,
-    accountType: LoginAccountType,
-  ): Promise<LoginResponse> {
-    const endpoint =
-      accountType === "admin"
-        ? END_POINTS.AUTH.LOGIN
-        : END_POINTS.COMPANY_AUTH.LOGIN;
-    const response = await api.post<LoginResponse>(endpoint, data, {
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>(END_POINTS.AUTH.LOGIN, data, {
       skipSuccessToast: true,
       skipErrorToast: true,
     });

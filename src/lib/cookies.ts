@@ -9,7 +9,6 @@ const DASHBOARD_ROLE_KEY = "dashboard_role";
 const AUTH_FREE_URLS = [
   "/auth/login",
   "/auth/refresh",
-  "/company/auth/login",
   "/company/auth/register",
 ];
 

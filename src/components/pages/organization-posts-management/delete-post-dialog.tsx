@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +16,7 @@ import { displayOrDash } from "@/lib/text";
 type DeletePostDialogProps = {
   open: boolean;
   postTitle: string;
+  isDeleting: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 };
@@ -21,11 +24,19 @@ type DeletePostDialogProps = {
 export function DeletePostDialog({
   open,
   postTitle,
+  isDeleting,
   onOpenChange,
   onConfirm,
 }: DeletePostDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isDeleting) {
+          onOpenChange(nextOpen);
+        }
+      }}
+    >
       <DialogContent dir="rtl" className="sm:max-w-md">
         <DialogHeader className="pe-12 text-right sm:text-right">
           <DialogTitle>حذف البوست</DialogTitle>
@@ -42,6 +53,7 @@ export function DeletePostDialog({
           <Button
             type="button"
             variant="outline"
+            disabled={isDeleting}
             onClick={() => onOpenChange(false)}
           >
             إلغاء
@@ -49,12 +61,11 @@ export function DeletePostDialog({
           <Button
             type="button"
             variant="destructive"
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
+            disabled={isDeleting}
+            onClick={onConfirm}
           >
-            تأكيد الحذف
+            {isDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
+            {isDeleting ? "جاري الحذف..." : "تأكيد الحذف"}
           </Button>
         </DialogFooter>
       </DialogContent>

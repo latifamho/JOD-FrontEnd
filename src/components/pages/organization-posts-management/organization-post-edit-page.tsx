@@ -1,8 +1,11 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import { EmptyState, FormLoadingSkeleton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -16,13 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
-import {
-  organizationPostStatusLabels,
-  organizationPostTypeLabels,
-  type OrganizationPostStatus,
-  type OrganizationPostType,
-} from "@/components/pages/organization-posts-management/static-data";
+import { organizationPostTypeLabels } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
 import {
   useOrgPost,
@@ -30,19 +29,51 @@ import {
 } from "@/features/org/posts/org.posts.query";
 import { useAuth } from "@/providers/AuthProvider";
 
+const postEditSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "عنوان المنشور مطلوب")
+      .max(255, "عنوان المنشور يجب ألا يتجاوز 255 حرفًا")
+      .refine((value) => value.trim().length > 0, "عنوان المنشور مطلوب"),
+    summary: z
+      .string()
+      .min(1, "محتوى المنشور مطلوب")
+      .refine((value) => value.trim().length > 0, "محتوى المنشور مطلوب"),
+    type: z.enum([
+      "general",
+      "job_opportunity",
+      "campaign_teaser",
+      "campaign_update",
+      "campaign_summary",
+    ]),
+    location: z
+      .string()
+      .min(1, "المحافظة مطلوبة")
+      .refine(
+        (value) => syrianGovernorateOptions.some((option) => option.value === value),
+        "اختر محافظة سورية صحيحة",
+      ),
+    campaignTitle: z.string(),
+  })
+  .superRefine((values, context) => {
+    if (
+      isCampaignRelatedPostType(values.type) &&
+      values.campaignTitle.trim().length === 0
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["campaignTitle"],
+        message: "الحملة المرتبطة مطلوبة لهذا النوع من المنشورات",
+      });
+    }
+  });
+
+type PostEditValues = z.infer<typeof postEditSchema>;
+
 type OrganizationPostEditPageProps = {
   postId: string;
   scope: "owner" | "staff";
-};
-
-type PostEditValues = {
-  title: string;
-  summary: string;
-  type: OrganizationPostType;
-  status: OrganizationPostStatus;
-  authorName: string;
-  location: string;
-  campaignTitle: string;
 };
 
 export function OrganizationPostEditPage({
@@ -64,7 +95,7 @@ export function OrganizationPostEditPage({
   if (postQuery.isLoading) {
     return (
       <FormLoadingSkeleton
-        count={7}
+        count={6}
         className="rounded-xl border border-border bg-card p-4 sm:p-6"
       />
     );
@@ -109,8 +140,6 @@ export function OrganizationPostEditPage({
     title: post.title,
     summary: post.summary,
     type: post.type,
-    status: post.status,
-    authorName: post.authorName,
     location: post.location,
     campaignTitle: post.campaignTitle ?? "",
   };
@@ -136,22 +165,32 @@ function PostEditForm({
 }) {
   const router = useRouter();
   const updateMutation = useUpdateOrgPost();
-  const [values, setValues] = React.useState<PostEditValues>(initialValues);
-  const campaignRelated = isCampaignRelatedPostType(values.type);
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PostEditValues>({
+    resolver: zodResolver(postEditSchema),
+    defaultValues: initialValues,
+  });
+  const selectedType = useWatch({ control, name: "type" });
+  const campaignRelated = isCampaignRelatedPostType(selectedType);
+  const isSubmitting = updateMutation.isPending;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div>
         <h2 className="text-lg font-semibold text-foreground">تعديل المنشور</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          حدّث بيانات المنشور ثم احفظ التغييرات.
+          حدّث بيانات المنشور ثم احفظ التغييرات. حالة المنشور تُدار من إجراءات قائمة المنشورات.
         </p>
       </div>
 
       <form
+        noValidate
         className="space-y-5 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6"
-        onSubmit={(event) => {
-          event.preventDefault();
+        onSubmit={handleSubmit((values) => {
           updateMutation.mutate(
             {
               postId,
@@ -159,112 +198,109 @@ function PostEditForm({
                 title: values.title.trim(),
                 summary: values.summary.trim(),
                 type: values.type,
-                status: values.status,
-                authorName: values.authorName.trim(),
-                location: values.location.trim(),
-                campaignTitle: campaignRelated ? values.campaignTitle.trim() : undefined,
+                location: values.location,
+                campaignTitle: isCampaignRelatedPostType(values.type)
+                  ? values.campaignTitle.trim()
+                  : undefined,
               },
             },
             { onSuccess: () => router.push(detailsRoute) },
           );
-        }}
+        })}
       >
         <div className="space-y-2">
           <Label htmlFor="post-edit-title">عنوان المنشور</Label>
           <Input
             id="post-edit-title"
-            required
-            value={values.title}
-            disabled={updateMutation.isPending}
-            onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.title)}
+            {...register("title")}
           />
+          {errors.title ? (
+            <p className="text-xs text-destructive">{errors.title.message}</p>
+          ) : null}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="post-edit-summary">محتوى مختصر</Label>
           <Textarea
             id="post-edit-summary"
-            required
             className="min-h-32"
-            value={values.summary}
-            disabled={updateMutation.isPending}
-            onChange={(event) =>
-              setValues((current) => ({ ...current, summary: event.target.value }))
-            }
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.summary)}
+            {...register("summary")}
           />
+          {errors.summary ? (
+            <p className="text-xs text-destructive">{errors.summary.message}</p>
+          ) : null}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>نوع المنشور</Label>
-            <Select
-              dir="rtl"
-              value={values.type}
-              disabled={updateMutation.isPending}
-              onValueChange={(value) =>
-                setValues((current) => ({
-                  ...current,
-                  type: value as OrganizationPostType,
-                }))
-              }
-            >
-              <SelectTrigger className="w-full text-right"><SelectValue /></SelectTrigger>
-              <SelectContent align="start">
-                {Object.entries(organizationPostTypeLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>الحالة</Label>
-            <Select
-              dir="rtl"
-              value={values.status}
-              disabled={updateMutation.isPending}
-              onValueChange={(value) =>
-                setValues((current) => ({
-                  ...current,
-                  status: value as OrganizationPostStatus,
-                }))
-              }
-            >
-              <SelectTrigger className="w-full text-right"><SelectValue /></SelectTrigger>
-              <SelectContent align="start">
-                {Object.entries(organizationPostStatusLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="post-edit-author">الكاتب</Label>
-            <Input
-              id="post-edit-author"
-              required
-              value={values.authorName}
-              disabled={updateMutation.isPending}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, authorName: event.target.value }))
-              }
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select
+                  dir="rtl"
+                  value={field.value}
+                  disabled={isSubmitting}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    className="w-full text-right"
+                    aria-invalid={Boolean(errors.type)}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="start" position="popper" className="text-right">
+                    {Object.entries(organizationPostTypeLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value} className="text-right text-xs">
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post-edit-location">الموقع</Label>
-            <Input
-              id="post-edit-location"
-              required
-              value={values.location}
-              disabled={updateMutation.isPending}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, location: event.target.value }))
-              }
+            <Label>المحافظة</Label>
+            <Controller
+              control={control}
+              name="location"
+              render={({ field }) => (
+                <Select
+                  dir="rtl"
+                  value={field.value || undefined}
+                  disabled={isSubmitting}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    className="w-full text-right"
+                    aria-invalid={Boolean(errors.location)}
+                  >
+                    <SelectValue placeholder="اختر المحافظة" />
+                  </SelectTrigger>
+                  <SelectContent align="start" position="popper" className="text-right">
+                    {syrianGovernorateOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="text-right text-xs"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
+            {errors.location ? (
+              <p className="text-xs text-destructive">{errors.location.message}</p>
+            ) : null}
           </div>
         </div>
 
@@ -273,22 +309,28 @@ function PostEditForm({
             <Label htmlFor="post-edit-campaign">الحملة المرتبطة</Label>
             <Input
               id="post-edit-campaign"
-              required
-              value={values.campaignTitle}
-              disabled={updateMutation.isPending}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, campaignTitle: event.target.value }))
-              }
+              disabled={isSubmitting}
+              aria-invalid={Boolean(errors.campaignTitle)}
+              {...register("campaignTitle")}
             />
+            {errors.campaignTitle ? (
+              <p className="text-xs text-destructive">{errors.campaignTitle.message}</p>
+            ) : null}
           </div>
         ) : null}
 
         <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-          <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "جاري الحفظ..." : "حفظ التعديلات"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+            {isSubmitting ? "جاري الحفظ..." : "حفظ التعديلات"}
           </Button>
-          <Button asChild type="button" variant="outline">
-            <Link href={detailsRoute}>إلغاء</Link>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={() => router.push(detailsRoute)}
+          >
+            إلغاء
           </Button>
         </div>
       </form>

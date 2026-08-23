@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
 type DeleteCampaignDialogProps = {
   open: boolean;
   campaignTitle: string;
+  isDeleting: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 };
@@ -20,11 +22,17 @@ type DeleteCampaignDialogProps = {
 export function DeleteCampaignDialog({
   open,
   campaignTitle,
+  isDeleting,
   onOpenChange,
   onConfirm,
 }: DeleteCampaignDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isDeleting) onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent dir="rtl" className="sm:max-w-md">
         <DialogHeader className="pe-12 text-right sm:text-right">
           <DialogTitle>حذف الحملة</DialogTitle>
@@ -41,6 +49,7 @@ export function DeleteCampaignDialog({
           <Button
             type="button"
             variant="outline"
+            disabled={isDeleting}
             onClick={() => onOpenChange(false)}
           >
             إلغاء
@@ -48,12 +57,11 @@ export function DeleteCampaignDialog({
           <Button
             type="button"
             variant="destructive"
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
+            disabled={isDeleting}
+            onClick={onConfirm}
           >
-            تأكيد الحذف
+            {isDeleting && <Loader2 className="size-4 animate-spin" />}
+            {isDeleting ? "جاري الحذف..." : "تأكيد الحذف"}
           </Button>
         </DialogFooter>
       </DialogContent>

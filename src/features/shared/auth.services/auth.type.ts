@@ -1,12 +1,16 @@
 export type LoginAccountType = "admin" | "organization";
+export type DashboardLoginUserType = "admin" | "companies";
 
 export interface LoginRequest {
   email: string;
   password: string;
+  userType: DashboardLoginUserType;
 }
 
-export interface LoginMutationInput extends LoginRequest {
+export interface LoginMutationInput {
   accountType: LoginAccountType;
+  email: string;
+  password: string;
 }
 
 export interface PermissionItem {

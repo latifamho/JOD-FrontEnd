@@ -260,9 +260,11 @@ function CampaignEditForm({
             >
               <SelectTrigger className="w-full text-right"><SelectValue /></SelectTrigger>
               <SelectContent align="start">
-                {Object.entries(organizationCampaignStatusLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
+                {Object.entries(organizationCampaignStatusLabels)
+                  .filter(([value]) => value !== "closed")
+                  .map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

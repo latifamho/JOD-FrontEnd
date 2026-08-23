@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 type CloseCampaignDialogProps = {
   open: boolean;
   campaignTitle: string;
+  isClosing: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (reason: string) => void;
 };
@@ -24,21 +26,21 @@ type CloseCampaignDialogProps = {
 export function CloseCampaignDialog({
   open,
   campaignTitle,
+  isClosing,
   onOpenChange,
   onConfirm,
 }: CloseCampaignDialogProps) {
   const [reason, setReason] = React.useState("");
 
-  React.useEffect(() => {
-    if (!open) {
-      setReason("");
-    }
-  }, [open]);
-
   const canSubmit = reason.trim().length >= 8;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isClosing) onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent dir="rtl" className="sm:max-w-xl">
         <DialogHeader className="pe-12 text-right sm:text-right">
           <DialogTitle>إغلاق الحملة</DialogTitle>
@@ -57,6 +59,7 @@ export function CloseCampaignDialog({
             <Textarea
               id="campaign-close-reason"
               value={reason}
+              disabled={isClosing}
               onChange={(event) => setReason(event.target.value)}
               placeholder="مثال: تم إغلاق الحملة بعد انتهاء المدة وعدم توفر موارد إضافية..."
               className="min-h-28 text-sm"
@@ -69,6 +72,7 @@ export function CloseCampaignDialog({
           <Button
             type="button"
             variant="outline"
+            disabled={isClosing}
             onClick={() => onOpenChange(false)}
           >
             إلغاء
@@ -76,16 +80,16 @@ export function CloseCampaignDialog({
           <Button
             type="button"
             variant="destructive"
-            disabled={!canSubmit}
+            disabled={!canSubmit || isClosing}
             onClick={() => {
-              if (!canSubmit) {
+              if (!canSubmit || isClosing) {
                 return;
               }
               onConfirm(reason.trim());
-              onOpenChange(false);
             }}
           >
-            تأكيد الإغلاق
+            {isClosing && <Loader2 className="size-4 animate-spin" />}
+            {isClosing ? "جاري الإغلاق..." : "تأكيد الإغلاق"}
           </Button>
         </DialogFooter>
       </DialogContent>

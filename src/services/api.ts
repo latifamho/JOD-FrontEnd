@@ -23,7 +23,7 @@ import type { ApiError } from "@/types/api.types";
 import type { ToastPosition } from "@/types/toast.types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
-const LOGIN_URLS = [END_POINTS.AUTH.LOGIN, END_POINTS.COMPANY_AUTH.LOGIN];
+const LOGIN_URLS = [END_POINTS.AUTH.LOGIN];
 const PUBLIC_AUTH_URLS = [
   ...LOGIN_URLS,
   END_POINTS.AUTH.REFRESH,

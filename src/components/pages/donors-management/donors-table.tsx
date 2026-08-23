@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
-import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
+import {
+  applicantStatusLabels,
+  type DonorEntryItem,
+} from "@/components/pages/donors-management/static-data";
 
 type DonorsTableProps = {
   rows: DonorEntryItem[];
@@ -21,82 +24,60 @@ type DonorsTableProps = {
   onDeleteRow?: (row: DonorEntryItem) => void;
 };
 
-export function DonorsTable({
-  rows,
-  view = "donors",
-  onEditRow,
-  onDeleteRow,
-}: DonorsTableProps) {
+export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: DonorsTableProps) {
   const isApplicants = view === "applicants";
-  const colPerson = isApplicants ? "المتقدم" : "المتبرع";
-  const colAmountOrStatus = isApplicants ? "الحالة" : "المبلغ / النوع";
-  const colDate = isApplicants ? "تاريخ التقديم" : "تاريخ التبرع";
 
   return (
     <div className="flex-1 rounded-md border border-border bg-card shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-right font-semibold text-muted-foreground">
-              {colPerson}
-            </TableHead>
-            <TableHead className="text-right font-semibold text-muted-foreground">
-              الحملة
-            </TableHead>
-            <TableHead className="text-right font-semibold text-muted-foreground">
-              {colAmountOrStatus}
-            </TableHead>
-            <TableHead className="text-right font-semibold text-muted-foreground">
-              {colDate}
-            </TableHead>
-            <TableHead className="w-14 text-right font-semibold text-muted-foreground">
-              إجراءات
-            </TableHead>
+            <TableHead className="text-right font-semibold text-muted-foreground">{isApplicants ? "المتقدم" : "المتبرع"}</TableHead>
+            {isApplicants ? (
+              <>
+                <TableHead className="text-right font-semibold text-muted-foreground">اسم الحملة</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">الحالة</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">تاريخ التقديم</TableHead>
+              </>
+            ) : (
+              <>
+                <TableHead className="text-right font-semibold text-muted-foreground">رقم الهاتف</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">المحافظة</TableHead>
+              </>
+            )}
+            <TableHead className="w-14 text-right font-semibold text-muted-foreground">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="text-right">
-                <p className="font-medium text-foreground">
-                  {displayOrDash(row.name)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {displayOrDash(row.email)}
+                <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
+                <p className="text-xs text-muted-foreground" dir="ltr">
+                  {isApplicants ? displayOrDash(row.phone) : displayOrDash(row.email)}
                 </p>
               </TableCell>
-              <TableCell className="text-right text-sm">
-                {displayOrDash(row.campaignTitle)}
-              </TableCell>
-              <TableCell className="text-right text-sm">
-                {displayOrDash(row.amountOrType)}
-              </TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">
-                {formatUtcDateOrDash(row.donatedAt)}
-              </TableCell>
+              {isApplicants ? (
+                <>
+                  <TableCell className="text-right text-sm">{displayOrDash(row.campaignTitle)}</TableCell>
+                  <TableCell className="text-right text-sm">{row.applicantStatus ? applicantStatusLabels[row.applicantStatus] ?? row.applicantStatus : "—"}</TableCell>
+                  <TableCell className="text-right text-xs text-muted-foreground">{formatUtcDateOrDash(row.appliedAt)}</TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell className="text-right text-sm" dir="ltr">{displayOrDash(row.phone)}</TableCell>
+                  <TableCell className="text-right text-sm">{displayOrDash(row.city)}</TableCell>
+                </>
+              )}
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">
                   {onEditRow ? (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="تعديل"
-                      className="shadow-sm"
-                      onClick={() => onEditRow(row)}
-                    >
+                    <Button type="button" size="icon" variant="ghost" title="تعديل" className="shadow-sm" onClick={() => onEditRow(row)}>
                       <AppIcons.PencilLine className="size-4 text-warning" />
                     </Button>
                   ) : null}
                   {onDeleteRow ? (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="حذف"
-                      className="shadow-sm"
-                      onClick={() => onDeleteRow(row)}
-                    >
+                    <Button type="button" size="icon" variant="ghost" title="حذف" className="shadow-sm" onClick={() => onDeleteRow(row)}>
                       <AppIcons.Trash className="size-4 text-destructive" />
                     </Button>
                   ) : null}
