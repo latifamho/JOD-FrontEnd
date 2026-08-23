@@ -25,6 +25,7 @@ import {
 import { OrganizationCampaignsTable } from "@/components/pages/organization-campaigns/organization-campaigns-table";
 import {
   organizationCampaignStatusLabels,
+  syrianGovernorateOptions,
   type OrganizationCampaignCategory,
   type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
@@ -59,6 +60,7 @@ export function OrganizationCampaignsPage({
   const [categoryFilter, setCategoryFilter] = React.useState<
     "all" | OrganizationCampaignCategory
   >("all");
+  const [locationFilter, setLocationFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
   const formModal = useQueryModal("campaign-create", {
@@ -81,6 +83,7 @@ export function OrganizationCampaignsPage({
     filter: {
       status: status !== "all" ? status : undefined,
       category: categoryFilter !== "all" ? categoryFilter : undefined,
+      location: locationFilter !== "all" ? locationFilter : undefined,
     },
   });
 
@@ -92,7 +95,7 @@ export function OrganizationCampaignsPage({
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [categoryFilter, pageSize, sortBy, status, setCurrentPage]);
+  }, [categoryFilter, locationFilter, pageSize, sortBy, status, setCurrentPage]);
 
   const campaigns = data?.data ?? [];
   const closeTargetCampaignId = closeModal.id;
@@ -114,21 +117,19 @@ export function OrganizationCampaignsPage({
 
 
   const handleSaveForm = React.useCallback(
-    (values: CampaignFormValues) => {
-      createMutation.mutate(
-        {
-          title: values.title,
-          summary: values.summary,
-          category: values.category,
-          status: values.status,
-          location: values.location,
-          goalAmount: values.goalAmount,
-          beneficiariesCount: values.beneficiariesCount,
-          startDate: toDateTimeFromInput(values.startDate),
-          endDate: toDateTimeFromInput(values.endDate),
-        },
-        { onSuccess: () => formModal.close() },
-      );
+    async (values: CampaignFormValues) => {
+      const response = await createMutation.mutateAsync({
+        title: values.title,
+        summary: values.summary,
+        category: values.category,
+        status: values.status,
+        location: values.location,
+        goalAmount: values.goalAmount,
+        beneficiariesCount: values.beneficiariesCount,
+        startDate: toDateTimeFromInput(values.startDate),
+        endDate: toDateTimeFromInput(values.endDate),
+      });
+      return response.data?.id ?? null;
     },
     [createMutation],
   );
@@ -192,9 +193,9 @@ export function OrganizationCampaignsPage({
       <OrganizationCampaignsFilters
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
-        locationFilter="all"
-        locationOptions={[]}
-        onLocationFilterChange={() => undefined}
+        locationFilter={locationFilter}
+        locationOptions={syrianGovernorateOptions.map((option) => option.value)}
+        onLocationFilterChange={setLocationFilter}
         sortBy={sortBy}
         onSortByChange={setSortBy}
       />

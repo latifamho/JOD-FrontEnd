@@ -93,19 +93,16 @@ export interface RefreshTokenResponse {
 
 export interface CompanyRegisterRequest {
   companyName: string;
+  ownerName: string;
+  organizationNumber: string;
+  registrationNumber: string;
+  bankAccountNumber: string;
   companyEmail: string;
   companyPhone: string;
-  organizationType: string;
-  registrationNumber: string;
   location: string;
-  ownerName: string;
-  ownerEmail: string;
-  ownerPhone: string;
+  website?: string;
   password: string;
   password_confirmation: string;
-  description?: string;
-  website?: string;
-  establishmentDate?: string;
 }
 
 export type CompanyRegisterResponse = LoginResponse;

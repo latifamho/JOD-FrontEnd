@@ -1,3 +1,5 @@
+import type { MediaItem } from "@/features/shared/media/media.types";
+
 export type OrganizationPostStatus =
   | "draft"
   | "published"
@@ -26,6 +28,7 @@ export type OrganizationPostItem = {
   applicationsCount: number;
   body?: string | null;
   images?: string[] | null;
+  media?: MediaItem[];
 };
 
 export const organizationPostStatusLabels: Record<OrganizationPostStatus, string> =

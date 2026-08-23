@@ -42,7 +42,7 @@ export function StaffRoleDeleteDialog({
           <DialogTitle>حذف الدور</DialogTitle>
           <DialogDescription>
             سيتم حذف الدور <span className="font-semibold text-foreground">{roleName}</span> من قائمة الأدوار.
-            {membersCount > 0 ? " إذا كان الدور مرتبطًا بموظفين نشطين فلن يسمح النظام بحذفه." : ""}
+            {membersCount > 0 ? " هذا الدور مرتبط بموظفين ولا يمكن حذفه قبل إزالة جميع التعيينات، بما فيها الموظفون غير النشطين." : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,11 +58,11 @@ export function StaffRoleDeleteDialog({
           <Button
             type="button"
             variant="destructive"
-            disabled={isDeleting}
+            disabled={isDeleting || membersCount > 0}
             onClick={onConfirm}
           >
             {isDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
-            {isDeleting ? "جاري الحذف..." : "تأكيد الحذف"}
+            {isDeleting ? "جاري الحذف..." : membersCount > 0 ? "الدور مستخدم" : "تأكيد الحذف"}
           </Button>
         </DialogFooter>
       </DialogContent>

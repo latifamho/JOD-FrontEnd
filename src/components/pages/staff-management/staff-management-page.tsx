@@ -35,6 +35,8 @@ import {
   useUpdateOrgStaff,
 } from "@/features/org/staff/org.staff.query";
 import { usePagination } from "@/hooks/use-pagination";
+import { normalizeApiError } from "@/lib/api-errors";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function StaffManagementPage({ view = "employees" }: { view?: "employees" | "roles" }) {
@@ -380,6 +382,14 @@ export function StaffManagementPage({ view = "employees" }: { view?: "employees"
           if (!roleDeleteId || deleteRole.isPending) return;
           deleteRole.mutate(roleDeleteId, {
             onSuccess: () => roleDeleteModal.close(),
+            onError: (error) => {
+              const normalized = normalizeApiError(error);
+              if (normalized.status === 409) {
+                toast.error("لا يمكن حذف هذا الدور لأنه ما زال معيّنًا لموظفين، بما في ذلك الموظفون غير النشطين. أزل جميع التعيينات أولاً.");
+                return;
+              }
+              toast.error(normalized.message);
+            },
           });
         }}
       />

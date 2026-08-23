@@ -1,21 +1,22 @@
 ﻿import { api } from '@/services/api'
-import type { OrganizationBankAccount, OrganizationBankAccountResponse, OrganizationProfile, OrganizationProfileResponse } from './org.settings.types'
+import type {
+  OrganizationPasswordUpdateRequest,
+  OrganizationPasswordUpdateResponse,
+  OrganizationProfileResponse,
+  OrganizationProfileUpdateRequest,
+} from './org.settings.types'
 
 export const orgSettingsServices = {
   async getProfile(): Promise<OrganizationProfileResponse> {
     const response = await api.get<OrganizationProfileResponse>('/org/settings/profile')
     return response.data
   },
-  async updateProfile(body: Pick<OrganizationProfile, 'name' | 'email' | 'phone'>): Promise<OrganizationProfileResponse> {
+  async updateProfile(body: OrganizationProfileUpdateRequest): Promise<OrganizationProfileResponse> {
     const response = await api.patch<OrganizationProfileResponse>('/org/settings/profile', body)
     return response.data
   },
-  async getBankAccount(): Promise<OrganizationBankAccountResponse> {
-    const response = await api.get<OrganizationBankAccountResponse>('/org/settings/bank-account')
-    return response.data
-  },
-  async updateBankAccount(body: OrganizationBankAccount): Promise<OrganizationBankAccountResponse> {
-    const response = await api.patch<OrganizationBankAccountResponse>('/org/settings/bank-account', body)
+  async updatePassword(body: OrganizationPasswordUpdateRequest): Promise<OrganizationPasswordUpdateResponse> {
+    const response = await api.patch<OrganizationPasswordUpdateResponse>('/org/settings/password', body)
     return response.data
   },
 }

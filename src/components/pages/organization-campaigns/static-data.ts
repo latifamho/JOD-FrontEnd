@@ -1,3 +1,5 @@
+import type { MediaItem } from "@/features/shared/media/media.types";
+
 export type OrganizationCampaignStatus = "draft" | "active" | "closed";
 
 export type OrganizationCampaignCategory =
@@ -5,23 +7,27 @@ export type OrganizationCampaignCategory =
   | "education"
   | "food"
   | "shelter"
-  | "employment";
+  | "employment"
+  | "emergency"
+  | "donation"
+  | "volunteer"
+  | "community";
 
 export const syrianGovernorateOptions = [
-  { label: "دمشق", value: "دمشق" },
-  { label: "ريف دمشق", value: "ريف دمشق" },
-  { label: "حلب", value: "حلب" },
-  { label: "حمص", value: "حمص" },
-  { label: "حماة", value: "حماة" },
-  { label: "اللاذقية", value: "اللاذقية" },
-  { label: "طرطوس", value: "طرطوس" },
-  { label: "إدلب", value: "إدلب" },
-  { label: "درعا", value: "درعا" },
-  { label: "السويداء", value: "السويداء" },
-  { label: "القنيطرة", value: "القنيطرة" },
-  { label: "دير الزور", value: "دير الزور" },
-  { label: "الرقة", value: "الرقة" },
-  { label: "الحسكة", value: "الحسكة" },
+  { label: "دمشق", value: "Damascus" },
+  { label: "ريف دمشق", value: "Rif Dimashq" },
+  { label: "حلب", value: "Aleppo" },
+  { label: "حمص", value: "Homs" },
+  { label: "حماة", value: "Hama" },
+  { label: "اللاذقية", value: "Latakia" },
+  { label: "طرطوس", value: "Tartus" },
+  { label: "إدلب", value: "Idlib" },
+  { label: "دير الزور", value: "Deir ez-Zor" },
+  { label: "الرقة", value: "Raqqa" },
+  { label: "الحسكة", value: "Hasakah" },
+  { label: "درعا", value: "Daraa" },
+  { label: "السويداء", value: "As-Suwayda" },
+  { label: "القنيطرة", value: "Quneitra" },
 ] as const;
 
 export type OrganizationCampaignItem = {
@@ -40,6 +46,8 @@ export type OrganizationCampaignItem = {
   endDate: string;
   createdAt: string;
   updatedAt: string;
+  images?: string[] | null;
+  media?: MediaItem[];
   closedAt?: string;
   closedReason?: string;
 };
@@ -62,6 +70,10 @@ export const organizationCampaignCategoryLabels: Record<
   food: "غذائية",
   shelter: "إسكان",
   employment: "تمكين وفرص",
+  emergency: "طوارئ",
+  donation: "تبرعات",
+  volunteer: "تطوع",
+  community: "مجتمعية",
 };
 
 export const organizationCampaignsStaticData: OrganizationCampaignItem[] = [

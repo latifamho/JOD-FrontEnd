@@ -30,7 +30,6 @@ export interface DonorCreateRequest {
   name: string
   email: string
   phone: string
-  city: string
 }
 
 export type DonorUpdateRequest = DonorCreateRequest

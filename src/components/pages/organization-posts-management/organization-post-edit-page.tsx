@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -7,333 +8,159 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
-import { EmptyState, FormLoadingSkeleton } from "@/components/shared";
+import { EmptyState, FormLoadingSkeleton, MediaUploadField } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
-import { organizationPostTypeLabels } from "@/components/pages/organization-posts-management/static-data";
+import { organizationPostTypeLabels, type OrganizationPostItem } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
-import {
-  useOrgPost,
-  useUpdateOrgPost,
-} from "@/features/org/posts/org.posts.query";
+import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgPost, useUpdateOrgPost } from "@/features/org/posts/org.posts.query";
+import { mediaServices } from "@/features/shared/media/media.services";
+import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/providers/AuthProvider";
 
-const postEditSchema = z
-  .object({
-    title: z
-      .string()
-      .min(1, "عنوان المنشور مطلوب")
-      .max(255, "عنوان المنشور يجب ألا يتجاوز 255 حرفًا")
-      .refine((value) => value.trim().length > 0, "عنوان المنشور مطلوب"),
-    summary: z
-      .string()
-      .min(1, "محتوى المنشور مطلوب")
-      .refine((value) => value.trim().length > 0, "محتوى المنشور مطلوب"),
-    type: z.enum([
-      "general",
-      "job_opportunity",
-      "campaign_teaser",
-      "campaign_update",
-      "campaign_summary",
-    ]),
-    location: z
-      .string()
-      .min(1, "المحافظة مطلوبة")
-      .refine(
-        (value) => syrianGovernorateOptions.some((option) => option.value === value),
-        "اختر محافظة سورية صحيحة",
-      ),
-    campaignTitle: z.string(),
-  })
-  .superRefine((values, context) => {
-    if (
-      isCampaignRelatedPostType(values.type) &&
-      values.campaignTitle.trim().length === 0
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["campaignTitle"],
-        message: "الحملة المرتبطة مطلوبة لهذا النوع من المنشورات",
-      });
-    }
-  });
+const schema = z.object({
+  title: z.string().trim().min(1, "عنوان المنشور مطلوب"),
+  summary: z.string().trim().min(1, "محتوى المنشور مطلوب"),
+  type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
+  location: z.string().refine((value) => syrianGovernorateOptions.some((option) => option.value === value), "اختر محافظة سورية صحيحة"),
+  campaignTitle: z.string(),
+}).superRefine((values, context) => {
+  if (isCampaignRelatedPostType(values.type) && !values.campaignTitle.trim()) {
+    context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة" });
+  }
+});
 
-type PostEditValues = z.infer<typeof postEditSchema>;
+type FormValues = z.infer<typeof schema>;
+type Props = { postId: string; scope: "owner" | "staff" };
 
-type OrganizationPostEditPageProps = {
-  postId: string;
-  scope: "owner" | "staff";
-};
-
-export function OrganizationPostEditPage({
-  postId,
-  scope,
-}: OrganizationPostEditPageProps) {
+export function OrganizationPostEditPage({ postId, scope }: Props) {
   const { can } = useAuth();
-  const postQuery = useOrgPost(postId);
-  const post = postQuery.data?.data;
-  const detailsRoute =
-    scope === "staff"
-      ? routePaths.organizationStaffScope.postDetails(postId)
-      : routePaths.organizationOwnerScope.postDetails(postId);
-  const postsRoute =
-    scope === "staff"
-      ? routePaths.organizationStaffScope.posts
-      : routePaths.organizationOwnerScope.posts;
+  const query = useOrgPost(postId);
+  const post = query.data?.data;
+  const detailsRoute = scope === "staff" ? routePaths.organizationStaffScope.postDetails(postId) : routePaths.organizationOwnerScope.postDetails(postId);
+  const listRoute = scope === "staff" ? routePaths.organizationStaffScope.posts : routePaths.organizationOwnerScope.posts;
 
-  if (postQuery.isLoading) {
-    return (
-      <FormLoadingSkeleton
-        count={6}
-        className="rounded-xl border border-border bg-card p-4 sm:p-6"
-      />
-    );
-  }
+  if (query.isLoading) return <FormLoadingSkeleton count={7} className="rounded-xl border border-border bg-card p-4 sm:p-6" />;
+  if (!can("org.posts.update")) return <section className="space-y-4"><EmptyState icon="ShieldOff" title="لا تملك صلاحية تعديل المنشورات" description="يمكنك الرجوع إلى تفاصيل المنشور." /><Button asChild variant="outline"><Link href={detailsRoute}>الرجوع</Link></Button></section>;
+  if (!post || query.isError) return <section className="space-y-4"><EmptyState icon="posts" title="تعذر تحميل المنشور" description="حاول إعادة تحميل البيانات." /><Button asChild variant="outline"><Link href={listRoute}>الرجوع إلى المنشورات</Link></Button></section>;
 
-  if (!can("org.posts.update")) {
-    return (
-      <section className="flex flex-1 flex-col gap-4">
-        <EmptyState
-          icon="ShieldOff"
-          title="لا تملك صلاحية تعديل المنشورات"
-          description="يمكنك الرجوع إلى تفاصيل المنشور أو قائمة المنشورات."
-        />
-        <Button asChild variant="outline" className="w-fit">
-          <Link href={detailsRoute}>الرجوع إلى تفاصيل المنشور</Link>
-        </Button>
-      </section>
-    );
-  }
-
-  if (!post || postQuery.isError) {
-    return (
-      <section className="flex flex-1 flex-col gap-4">
-        <EmptyState
-          icon="posts"
-          title="تعذّر تحميل المنشور"
-          description="تأكد من معرّف المنشور أو حاول إعادة تحميل البيانات."
-        />
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => postQuery.refetch()}>
-            إعادة المحاولة
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={postsRoute}>الرجوع إلى المنشورات</Link>
-          </Button>
-        </div>
-      </section>
-    );
-  }
-
-  const initialValues: PostEditValues = {
-    title: post.title,
-    summary: post.summary,
-    type: post.type,
-    location: post.location,
-    campaignTitle: post.campaignTitle ?? "",
-  };
-
-  return (
-    <PostEditForm
-      key={`${post.id}-${post.updatedAt}`}
-      postId={post.id}
-      detailsRoute={detailsRoute}
-      initialValues={initialValues}
-    />
-  );
+  return <PostEditForm post={post} detailsRoute={detailsRoute} refetch={query.refetch} />;
 }
 
-function PostEditForm({
-  postId,
-  detailsRoute,
-  initialValues,
-}: {
-  postId: string;
-  detailsRoute: string;
-  initialValues: PostEditValues;
-}) {
+function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostItem; detailsRoute: string; refetch: () => Promise<unknown> }) {
   const router = useRouter();
   const updateMutation = useUpdateOrgPost();
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<PostEditValues>({
-    resolver: zodResolver(postEditSchema),
-    defaultValues: initialValues,
+  const mediaQueue = useMediaUploadQueue(10);
+  const [pendingDeleteIds, setPendingDeleteIds] = React.useState<Set<string>>(new Set());
+  const [pendingReplacements, setPendingReplacements] = React.useState<Map<string, File>>(new Map());
+  const [processingMedia, setProcessingMedia] = React.useState(false);
+  const { register, control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: post.title, summary: post.summary, type: post.type, location: post.location, campaignTitle: post.campaignTitle ?? "" },
   });
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
-  const isSubmitting = updateMutation.isPending;
+  const campaignsBrief = useOrgCampaignsBrief(campaignRelated);
+  const target = { model: "post" as const, modelId: post.id, prop: "images" as const };
+  const existingMedia = (post.media ?? []).filter((media) => !pendingDeleteIds.has(media.id));
+  const pendingMediaIds = new Set([...pendingDeleteIds, ...pendingReplacements.keys()]);
+  const isBusy = updateMutation.isPending || mediaQueue.isUploading || processingMedia;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">تعديل المنشور</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          حدّث بيانات المنشور ثم احفظ التغييرات. حالة المنشور تُدار من إجراءات قائمة المنشورات.
-        </p>
-      </div>
+      <div><h2 className="text-lg font-semibold">تعديل المنشور</h2><p className="mt-1 text-sm text-muted-foreground">حدّث بيانات المنشور والصور ثم احفظ التغييرات.</p></div>
+      <form noValidate className="space-y-5 rounded-xl border bg-card p-4 sm:p-6" onSubmit={handleSubmit(async (values) => {
+        await updateMutation.mutateAsync({ postId: post.id, body: {
+          title: values.title.trim(), summary: values.summary.trim(), type: values.type, location: values.location,
+          campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : undefined,
+        }});
+        setProcessingMedia(true);
+        const failedOperations: string[] = [];
+        try {
+          for (const mediaId of pendingDeleteIds) {
+            try {
+              await mediaServices.remove(target, mediaId);
+              setPendingDeleteIds((current) => { const next = new Set(current); next.delete(mediaId); return next; });
+            } catch {
+              failedOperations.push(`حذف صورة ${mediaId}`);
+            }
+          }
 
-      <form
-        noValidate
-        className="space-y-5 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6"
-        onSubmit={handleSubmit((values) => {
-          updateMutation.mutate(
-            {
-              postId,
-              body: {
-                title: values.title.trim(),
-                summary: values.summary.trim(),
-                type: values.type,
-                location: values.location,
-                campaignTitle: isCampaignRelatedPostType(values.type)
-                  ? values.campaignTitle.trim()
-                  : undefined,
-              },
-            },
-            { onSuccess: () => router.push(detailsRoute) },
-          );
-        })}
-      >
-        <div className="space-y-2">
-          <Label htmlFor="post-edit-title">عنوان المنشور</Label>
-          <Input
-            id="post-edit-title"
-            disabled={isSubmitting}
-            aria-invalid={Boolean(errors.title)}
-            {...register("title")}
-          />
-          {errors.title ? (
-            <p className="text-xs text-destructive">{errors.title.message}</p>
-          ) : null}
-        </div>
+          for (const [mediaId, file] of pendingReplacements) {
+            try {
+              await mediaServices.replace(target, mediaId, file);
+              setPendingReplacements((current) => { const next = new Map(current); next.delete(mediaId); return next; });
+            } catch {
+              failedOperations.push(`استبدال ${file.name}`);
+            }
+          }
 
-        <div className="space-y-2">
-          <Label htmlFor="post-edit-summary">محتوى مختصر</Label>
-          <Textarea
-            id="post-edit-summary"
-            className="min-h-32"
-            disabled={isSubmitting}
-            aria-invalid={Boolean(errors.summary)}
-            {...register("summary")}
-          />
-          {errors.summary ? (
-            <p className="text-xs text-destructive">{errors.summary.message}</p>
-          ) : null}
-        </div>
+          if (mediaQueue.hasQueued) {
+            const result = await mediaQueue.uploadAll(target);
+            failedOperations.push(...result.failedFileNames.map((name) => `رفع ${name}`));
+          }
+        } finally {
+          setProcessingMedia(false);
+        }
 
+        if (failedOperations.length > 0) {
+          await refetch();
+          toast.error(`تم حفظ المنشور، لكن تعذر: ${failedOperations.join("، ")}. يمكنك إعادة الحفظ للمحاولة مجددًا.`);
+          return;
+        }
+        router.push(detailsRoute);
+      })}>
+        <Field label="عنوان المنشور" error={errors.title?.message}><Input disabled={isBusy} aria-invalid={Boolean(errors.title)} {...register("title")} /></Field>
+        <Field label="محتوى مختصر" error={errors.summary?.message}><Textarea className="min-h-32" disabled={isBusy} aria-invalid={Boolean(errors.summary)} {...register("summary")} /></Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>نوع المنشور</Label>
-            <Controller
-              control={control}
-              name="type"
-              render={({ field }) => (
-                <Select
-                  dir="rtl"
-                  value={field.value}
-                  disabled={isSubmitting}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger
-                    className="w-full text-right"
-                    aria-invalid={Boolean(errors.type)}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent align="start" position="popper" className="text-right">
-                    {Object.entries(organizationPostTypeLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value} className="text-right text-xs">
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>المحافظة</Label>
-            <Controller
-              control={control}
-              name="location"
-              render={({ field }) => (
-                <Select
-                  dir="rtl"
-                  value={field.value || undefined}
-                  disabled={isSubmitting}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger
-                    className="w-full text-right"
-                    aria-invalid={Boolean(errors.location)}
-                  >
-                    <SelectValue placeholder="اختر المحافظة" />
-                  </SelectTrigger>
-                  <SelectContent align="start" position="popper" className="text-right">
-                    {syrianGovernorateOptions.map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        className="text-right text-xs"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.location ? (
-              <p className="text-xs text-destructive">{errors.location.message}</p>
-            ) : null}
-          </div>
+          <Field label="نوع المنشور"><Controller control={control} name="type" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(organizationPostTypeLabels).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
+          <Field label="المحافظة" error={errors.location?.message}><Controller control={control} name="location" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger aria-invalid={Boolean(errors.location)}><SelectValue placeholder="اختر المحافظة" /></SelectTrigger><SelectContent>{syrianGovernorateOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>} /></Field>
         </div>
-
         {campaignRelated ? (
-          <div className="space-y-2">
-            <Label htmlFor="post-edit-campaign">الحملة المرتبطة</Label>
-            <Input
-              id="post-edit-campaign"
-              disabled={isSubmitting}
-              aria-invalid={Boolean(errors.campaignTitle)}
-              {...register("campaignTitle")}
-            />
-            {errors.campaignTitle ? (
-              <p className="text-xs text-destructive">{errors.campaignTitle.message}</p>
-            ) : null}
-          </div>
+          <Field label="الحملة المرتبطة" error={errors.campaignTitle?.message}>
+            <Controller control={control} name="campaignTitle" render={({ field }) => (
+              <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isBusy || campaignsBrief.isLoading}>
+                <SelectTrigger aria-invalid={Boolean(errors.campaignTitle)}><SelectValue placeholder={campaignsBrief.isLoading ? "جاري تحميل الحملات..." : "اختر الحملة"} /></SelectTrigger>
+                <SelectContent>{(campaignsBrief.data?.data ?? []).map((campaign) => <SelectItem key={campaign.id} value={campaign.name}>{campaign.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
+          </Field>
         ) : null}
-
-        <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-            {isSubmitting ? "جاري الحفظ..." : "حفظ التعديلات"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => router.push(detailsRoute)}
-          >
-            إلغاء
-          </Button>
+        <MediaUploadField
+          label="صور المنشور"
+          items={mediaQueue.items}
+          existingMedia={existingMedia}
+          busyMediaIds={pendingMediaIds}
+          maxItems={10}
+          disabled={isBusy}
+          onFilesSelected={mediaQueue.addFiles}
+          onRemoveQueued={mediaQueue.removeItem}
+          onRetry={(id) => void mediaQueue.retryItem(target, id)}
+          onDeleteExisting={(media) => {
+            setPendingReplacements((current) => { const next = new Map(current); next.delete(media.id); return next; });
+            setPendingDeleteIds((current) => new Set(current).add(media.id));
+          }}
+          onReplaceExisting={(media, file) => {
+            setPendingDeleteIds((current) => { const next = new Set(current); next.delete(media.id); return next; });
+            setPendingReplacements((current) => new Map(current).set(media.id, file));
+          }}
+        />
+        <div className="flex gap-2 border-t pt-4">
+          <Button type="submit" disabled={isBusy}>{updateMutation.isPending || mediaQueue.isUploading ? <Loader2 className="size-4 animate-spin" /> : null}حفظ التعديلات</Button>
+          <Button type="button" variant="outline" disabled={isBusy} onClick={() => router.push(detailsRoute)}>إلغاء</Button>
         </div>
       </form>
     </section>
   );
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return <div className="space-y-2"><Label>{label}</Label>{children}{error ? <p className="text-xs text-destructive">{error}</p> : null}</div>;
 }

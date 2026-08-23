@@ -123,6 +123,17 @@ export function OrganizationCampaignDetailsPage({
         </div>
       </div>
 
+      {(campaign.images?.length ?? 0) > 0 ? (
+        <div className="rounded-md border border-border bg-background p-4 shadow-xs">
+          <h3 className="text-sm font-semibold text-foreground">صور الحملة</h3>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {(campaign.images ?? []).map((image, index) => (
+              <img key={`${image}-${index}`} src={image} alt={`صورة الحملة ${index + 1}`} className="aspect-square w-full rounded-lg border border-border object-cover" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-md border border-border bg-background p-4 shadow-xs">
           <h3 className="text-sm font-semibold text-foreground">بيانات الحملة</h3>

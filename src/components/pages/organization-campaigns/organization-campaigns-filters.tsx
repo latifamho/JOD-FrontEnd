@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import {
   organizationCampaignCategoryLabels,
+  syrianGovernorateOptions,
   type OrganizationCampaignCategory,
 } from "@/components/pages/organization-campaigns/static-data";
 
@@ -79,7 +80,7 @@ export function OrganizationCampaignsFilters({
           </SelectItem>
           {locationOptions.map((location) => (
             <SelectItem key={location} value={location} className="text-right text-xs">
-              {location}
+              {syrianGovernorateOptions.find((option) => option.value === location)?.label ?? location}
             </SelectItem>
           ))}
         </SelectContent>

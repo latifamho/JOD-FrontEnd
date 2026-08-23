@@ -6,31 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
+import { MediaUploadField } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
@@ -40,46 +22,26 @@ import {
   type OrganizationPostStatus,
   type OrganizationPostType,
 } from "@/components/pages/organization-posts-management/static-data";
+import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
+import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
+import { toast } from "@/lib/toast";
 
 const postFormSchema = z
   .object({
-    title: z
-      .string()
-      .min(1, "عنوان البوست مطلوب")
-      .max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا")
-      .refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
-    summary: z
-      .string()
-      .min(1, "محتوى البوست مطلوب")
-      .refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
-    type: z.enum([
-      "general",
-      "job_opportunity",
-      "campaign_teaser",
-      "campaign_update",
-      "campaign_summary",
-    ]),
+    title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
+    summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
+    type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
     status: z.enum(["draft", "published", "archived"]),
-    location: z
-      .string()
-      .min(1, "المحافظة مطلوبة")
-      .refine(
-        (value) => syrianGovernorateOptions.some((option) => option.value === value),
-        "اختر محافظة سورية صحيحة",
-      ),
+    location: z.string().min(1, "المحافظة مطلوبة").refine(
+      (value) => syrianGovernorateOptions.some((option) => option.value === value),
+      "اختر محافظة سورية صحيحة",
+    ),
     campaignTitle: z.string(),
   })
   .superRefine((values, context) => {
-    if (
-      isCampaignRelatedPostType(values.type) &&
-      values.campaignTitle.trim().length === 0
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["campaignTitle"],
-        message: "الحملة المرتبطة مطلوبة لهذا النوع من البوستات",
-      });
+    if (isCampaignRelatedPostType(values.type) && values.campaignTitle.trim().length === 0) {
+      context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة لهذا النوع من البوستات" });
     }
   });
 
@@ -109,38 +71,23 @@ type PostFormSheetProps = {
   initialValues: PostFormValues;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: PostFormValues) => void;
+  onSubmit: (values: PostFormValues) => Promise<string | null | undefined>;
 };
 
 function toPostFormFields(values: PostFormValues): PostFormFields {
-  return {
-    title: values.title,
-    summary: values.summary,
-    type: values.type,
-    status: values.status,
-    location: values.location,
-    campaignTitle: values.campaignTitle,
-  };
+  return { ...values };
 }
 
-export function PostFormSheet({
-  open,
-  mode,
-  initialValues,
-  isSubmitting = false,
-  onOpenChange,
-  onSubmit,
-}: PostFormSheetProps) {
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors, isDirty },
-  } = useForm<PostFormFields>({
+export function PostFormSheet({ open, mode, initialValues, isSubmitting = false, onOpenChange, onSubmit }: PostFormSheetProps) {
+  const { register, control, handleSubmit, reset, formState: { errors, isDirty } } = useForm<PostFormFields>({
     resolver: zodResolver(postFormSchema),
     defaultValues: toPostFormFields(initialValues),
   });
+  const selectedType = useWatch({ control, name: "type" });
+  const campaignRelated = isCampaignRelatedPostType(selectedType);
+  const campaignsBrief = useOrgCampaignsBrief(open && campaignRelated);
+  const mediaQueue = useMediaUploadQueue(10);
+  const [createdPostId, setCreatedPostId] = React.useState<string | null>(null);
   const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
     "post-discard-changes",
     { queryKey: "dialog", permission: "org.posts.create" },
@@ -149,227 +96,166 @@ export function PostFormSheet({
   React.useEffect(() => {
     if (open) {
       reset(toPostFormFields(initialValues));
+      mediaQueue.reset();
+      setCreatedPostId(null);
     }
   }, [initialValues, open, reset]);
 
-  const selectedType = useWatch({ control, name: "type" });
-  const campaignRelated = isCampaignRelatedPostType(selectedType);
+  const isBusy = isSubmitting || mediaQueue.isUploading;
+  const formLocked = isBusy || Boolean(createdPostId);
   const hasUnsavedEditChanges = mode === "edit" && isDirty;
+  const target = createdPostId ? { model: "post" as const, modelId: createdPostId, prop: "images" as const } : null;
 
   const closeSheetSafely = React.useCallback(() => {
-    if (isSubmitting) {
-      return;
-    }
-
+    if (isBusy) return;
     if (hasUnsavedEditChanges) {
       setDiscardDialogOpen(true);
       return;
     }
-
     onOpenChange(false);
-  }, [hasUnsavedEditChanges, isSubmitting, onOpenChange, setDiscardDialogOpen]);
+  }, [hasUnsavedEditChanges, isBusy, onOpenChange, setDiscardDialogOpen]);
 
   return (
     <>
-      <Sheet
-        open={open}
-        onOpenChange={(nextOpen) => {
-          if (nextOpen) {
-            onOpenChange(true);
-            return;
-          }
-
-          closeSheetSafely();
-        }}
-      >
+      <Sheet open={open} onOpenChange={(nextOpen) => {
+        if (!nextOpen && isBusy) return;
+        if (nextOpen) onOpenChange(true);
+        else closeSheetSafely();
+      }}>
         <SheetContent side="right" dir="rtl" className="w-[95vw] border-border p-0 sm:max-w-xl">
           <form
             noValidate
             className="flex h-full flex-col"
-            onSubmit={handleSubmit((values) => {
-              onSubmit({
+            onSubmit={handleSubmit(async (values) => {
+              if (createdPostId) return;
+              const postId = await onSubmit({
                 title: values.title.trim(),
                 summary: values.summary.trim(),
                 type: values.type,
                 status: values.status,
                 location: values.location,
-                campaignTitle: isCampaignRelatedPostType(values.type)
-                  ? values.campaignTitle.trim()
-                  : "",
+                campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : "",
               });
+              if (!postId) return;
+              setCreatedPostId(postId);
+
+              if (!mediaQueue.hasQueued) {
+                onOpenChange(false);
+                return;
+              }
+
+              const result = await mediaQueue.uploadAll({ model: "post", modelId: postId, prop: "images" });
+              if (result.failed === 0) {
+                onOpenChange(false);
+                return;
+              }
+              toast.error(`تم إنشاء البوست، لكن فشل رفع: ${result.failedFileNames.join("، ")}`);
             })}
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
-              <SheetTitle className="text-right text-lg">
-                {mode === "create" ? "إضافة بوست جديد" : "تعديل البوست"}
-              </SheetTitle>
+              <SheetTitle className="text-right text-lg">{mode === "create" ? "إضافة بوست جديد" : "تعديل البوست"}</SheetTitle>
             </SheetHeader>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
               <div className="space-y-2">
                 <Label htmlFor="post-title">عنوان البوست</Label>
-                <Input
-                  id="post-title"
-                  disabled={isSubmitting}
-                  aria-invalid={Boolean(errors.title)}
-                  placeholder="أدخل عنوان البوست"
-                  {...register("title")}
-                />
-                {errors.title ? (
-                  <p className="text-xs text-destructive">{errors.title.message}</p>
-                ) : null}
+                <Input id="post-title" disabled={formLocked} aria-invalid={Boolean(errors.title)} placeholder="أدخل عنوان البوست" {...register("title")} />
+                {errors.title ? <p className="text-xs text-destructive">{errors.title.message}</p> : null}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="post-summary">محتوى مختصر</Label>
-                <Textarea
-                  id="post-summary"
-                  disabled={isSubmitting}
-                  aria-invalid={Boolean(errors.summary)}
-                  placeholder="اكتب ملخص محتوى البوست"
-                  className="min-h-30 text-sm"
-                  {...register("summary")}
-                />
-                {errors.summary ? (
-                  <p className="text-xs text-destructive">{errors.summary.message}</p>
-                ) : null}
+                <Textarea id="post-summary" disabled={formLocked} aria-invalid={Boolean(errors.summary)} placeholder="اكتب ملخص محتوى البوست" className="min-h-30 text-sm" {...register("summary")} />
+                {errors.summary ? <p className="text-xs text-destructive">{errors.summary.message}</p> : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>نوع البوست</Label>
-                  <Controller
-                    control={control}
-                    name="type"
-                    render={({ field }) => (
-                      <Select
-                        dir="rtl"
-                        disabled={isSubmitting}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          className="w-full text-right"
-                          aria-invalid={Boolean(errors.type)}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent align="start" position="popper" className="text-right">
-                          {Object.entries(organizationPostTypeLabels).map(([type, label]) => (
-                            <SelectItem key={type} value={type} className="text-right text-xs">
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <Controller control={control} name="type" render={({ field }) => (
+                    <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.type)}><SelectValue /></SelectTrigger>
+                      <SelectContent align="start" position="popper" className="text-right">
+                        {Object.entries(organizationPostTypeLabels).map(([type, label]) => <SelectItem key={type} value={type} className="text-right text-xs">{label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
                 </div>
-
                 <div className="space-y-2">
                   <Label>الحالة</Label>
-                  <Controller
-                    control={control}
-                    name="status"
-                    render={({ field }) => (
-                      <Select
-                        dir="rtl"
-                        disabled={isSubmitting}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          className="w-full text-right"
-                          aria-invalid={Boolean(errors.status)}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent align="start" position="popper" className="text-right">
-                          {Object.entries(organizationPostStatusLabels)
-                            .filter(([status]) => mode === "edit" || status !== "archived")
-                            .map(([status, label]) => (
-                              <SelectItem key={status} value={status} className="text-right text-xs">
-                                {label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <Controller control={control} name="status" render={({ field }) => (
+                    <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.status)}><SelectValue /></SelectTrigger>
+                      <SelectContent align="start" position="popper" className="text-right">
+                        {Object.entries(organizationPostStatusLabels)
+                          .filter(([status]) => mode === "edit" || status !== "archived")
+                          .map(([status, label]) => <SelectItem key={status} value={status} className="text-right text-xs">{label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>المحافظة</Label>
-                <Controller
-                  control={control}
-                  name="location"
-                  render={({ field }) => (
-                    <Select
-                      dir="rtl"
-                      disabled={isSubmitting}
-                      value={field.value || undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        className="w-full text-right"
-                        aria-invalid={Boolean(errors.location)}
-                      >
-                        <SelectValue placeholder="اختر المحافظة" />
-                      </SelectTrigger>
-                      <SelectContent align="start" position="popper" className="text-right">
-                        {syrianGovernorateOptions.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            className="text-right text-xs"
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.location ? (
-                  <p className="text-xs text-destructive">{errors.location.message}</p>
-                ) : null}
+                <Controller control={control} name="location" render={({ field }) => (
+                  <Select dir="rtl" disabled={formLocked} value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.location)}><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
+                    <SelectContent align="start" position="popper" className="text-right">
+                      {syrianGovernorateOptions.map((option) => <SelectItem key={option.value} value={option.value} className="text-right text-xs">{option.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )} />
+                {errors.location ? <p className="text-xs text-destructive">{errors.location.message}</p> : null}
               </div>
 
               {campaignRelated ? (
                 <div className="space-y-2">
-                  <Label htmlFor="post-campaign">الحملة المرتبطة</Label>
-                  <Input
-                    id="post-campaign"
-                    disabled={isSubmitting}
-                    aria-invalid={Boolean(errors.campaignTitle)}
-                    placeholder="اسم الحملة المرتبطة"
-                    {...register("campaignTitle")}
-                  />
-                  {errors.campaignTitle ? (
-                    <p className="text-xs text-destructive">{errors.campaignTitle.message}</p>
-                  ) : null}
+                  <Label>الحملة المرتبطة</Label>
+                  <Controller control={control} name="campaignTitle" render={({ field }) => (
+                    <Select dir="rtl" disabled={formLocked || campaignsBrief.isLoading} value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.campaignTitle)}>
+                        <SelectValue placeholder={campaignsBrief.isLoading ? "جاري تحميل الحملات..." : "اختر الحملة"} />
+                      </SelectTrigger>
+                      <SelectContent align="start" position="popper" className="text-right">
+                        {(campaignsBrief.data?.data ?? []).map((campaign) => <SelectItem key={campaign.id} value={campaign.name} className="text-right text-xs">{campaign.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                  {errors.campaignTitle ? <p className="text-xs text-destructive">{errors.campaignTitle.message}</p> : null}
+                  {campaignsBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل الحملات المتاحة.</p> : null}
                 </div>
+              ) : null}
+
+              <MediaUploadField
+                label="صور البوست - اختياري"
+                items={mediaQueue.items}
+                maxItems={10}
+                disabled={isBusy || Boolean(createdPostId && mediaQueue.failedItems.length === 0)}
+                onFilesSelected={mediaQueue.addFiles}
+                onRemoveQueued={mediaQueue.removeItem}
+                onRetry={target ? async (id) => {
+                  const item = mediaQueue.items.find((candidate) => candidate.id === id);
+                  const succeeded = await mediaQueue.retryItem(target, id);
+                  if (!succeeded) toast.error(`تعذر رفع الصورة ${item?.file.name ?? ""}`);
+                } : undefined}
+              />
+
+              {createdPostId && mediaQueue.failedItems.length > 0 ? (
+                <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  تم إنشاء البوست. أعد محاولة الصور الفاشلة أو أغلق النافذة للمتابعة بالصور التي نجحت.
+                </p>
               ) : null}
             </div>
 
             <SheetFooter className="border-t border-border pt-4 sm:flex-row sm:justify-start">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSubmitting}
-                onClick={closeSheetSafely}
-              >
-                إلغاء
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-                {isSubmitting
-                  ? "جاري الحفظ..."
-                  : mode === "create"
-                    ? "إضافة البوست"
-                    : "حفظ التعديلات"}
-              </Button>
+              <Button type="button" variant="outline" disabled={isBusy} onClick={closeSheetSafely}>{createdPostId ? "إنهاء" : "إلغاء"}</Button>
+              {!createdPostId ? (
+                <Button type="submit" disabled={isBusy}>
+                  {isBusy ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {isBusy ? "جاري الحفظ والرفع..." : mode === "create" ? "إضافة البوست" : "حفظ التعديلات"}
+                </Button>
+              ) : null}
             </SheetFooter>
           </form>
         </SheetContent>
@@ -379,25 +265,11 @@ export function PostFormSheet({
         <DialogContent dir="rtl" className="sm:max-w-md">
           <DialogHeader className="pe-12 text-right sm:text-right">
             <DialogTitle>تجاهل التعديلات؟</DialogTitle>
-            <DialogDescription>
-              لديك تغييرات غير محفوظة، هل تريد إغلاق نموذج التعديل دون حفظ؟
-            </DialogDescription>
+            <DialogDescription>لديك تغييرات غير محفوظة، هل تريد إغلاق نموذج التعديل دون حفظ؟</DialogDescription>
           </DialogHeader>
-
           <DialogFooter className="sm:justify-start">
-            <Button type="button" variant="outline" onClick={() => setDiscardDialogOpen(false)}>
-              متابعة التعديل
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                setDiscardDialogOpen(false);
-                onOpenChange(false);
-              }}
-            >
-              تجاهل التغييرات
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setDiscardDialogOpen(false)}>متابعة التعديل</Button>
+            <Button type="button" variant="destructive" onClick={() => { setDiscardDialogOpen(false); onOpenChange(false); }}>تجاهل التغييرات</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

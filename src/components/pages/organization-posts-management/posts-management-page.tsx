@@ -146,24 +146,22 @@ function OrganizationPostsManagementPageContent({
   );
 
   const handleSaveForm = React.useCallback(
-    (values: PostFormValues) => {
+    async (values: PostFormValues) => {
       const campaignTitle = isCampaignRelatedPostType(values.type)
         ? values.campaignTitle || undefined
         : undefined;
 
-      createMutation.mutate(
-        {
-          title: values.title,
-          summary: values.summary,
-          type: values.type,
-          status: values.status,
-          location: values.location,
-          campaignTitle,
-        },
-        { onSuccess: () => formModal.close() },
-      );
+      const response = await createMutation.mutateAsync({
+        title: values.title,
+        summary: values.summary,
+        type: values.type,
+        status: values.status,
+        location: values.location,
+        campaignTitle,
+      });
+      return response.data?.id ?? null;
     },
-    [createMutation, formModal],
+    [createMutation],
   );
 
   const handleWorkflowAction = React.useCallback(

@@ -46,6 +46,13 @@ export interface CloseCampaignRequest {
   reason: string
 }
 
+export interface OrgCampaignBriefItem {
+  id: string
+  name: string
+}
+
+export type OrgCampaignBriefResponse = { data: OrgCampaignBriefItem[] }
+
 export type OrgCampaignsResponse = ApiListResponse<OrganizationCampaignItem>
 export type OrgCampaignDetailResponse = ApiSingleResponse<OrganizationCampaignItem>
 export type CreateCampaignResponse = ApiMutationResponse<OrganizationCampaignItem>

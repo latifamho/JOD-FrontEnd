@@ -23,7 +23,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import {
   applicantStatusOptions,
   type DonorEntryItem,
@@ -92,9 +91,6 @@ function createSchema(view: "donors" | "applicants") {
           context.addIssue({ code: "custom", path: ["email"], message: "أدخل بريدًا إلكترونيًا صحيحًا" });
         }
 
-        if (!syrianGovernorateOptions.some((option) => option.value === values.city)) {
-          context.addIssue({ code: "custom", path: ["city"], message: "المحافظة مطلوبة" });
-        }
         return;
       }
 
@@ -269,30 +265,7 @@ export function DonorEntryFormSheet({
                   {errors.appliedAt ? <p className="text-xs text-destructive">{errors.appliedAt.message}</p> : null}
                 </div>
               </>
-            ) : (
-              <div className="space-y-2">
-                <Label>المحافظة</Label>
-                <Controller
-                  control={control}
-                  name="city"
-                  render={({ field }) => (
-                    <Select dir="rtl" value={field.value || undefined} onValueChange={field.onChange} disabled={isSubmitting}>
-                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.city)}>
-                        <SelectValue placeholder="اختر المحافظة" />
-                      </SelectTrigger>
-                      <SelectContent align="start" className="text-right">
-                        {syrianGovernorateOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-right">
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.city ? <p className="text-xs text-destructive">{errors.city.message}</p> : null}
-              </div>
-            )}
+            ) : null}
           </div>
 
           <SheetFooter className="flex-row-reverse gap-2 border-t border-border p-4">

@@ -11,11 +11,13 @@ import type {
   CloseCampaignRequest,
   CloseCampaignResponse,
   DeleteCampaignResponse,
+  OrgCampaignBriefResponse,
 } from './org.campaigns.types'
 
 const ENDPOINTS = {
   CAMPAIGNS: '/org/campaigns',
   CAMPAIGN: (id: string) => `/org/campaigns/${id}`,
+  BRIEF: '/org/campaigns/brief',
 } as const
 
 export const orgCampaignsServices = {
@@ -28,6 +30,11 @@ export const orgCampaignsServices = {
 
   async getCampaignById(campaignId: string): Promise<OrgCampaignDetailResponse> {
     const response = await api.get<OrgCampaignDetailResponse>(ENDPOINTS.CAMPAIGN(campaignId))
+    return response.data
+  },
+
+  async getCampaignsBrief(): Promise<OrgCampaignBriefResponse> {
+    const response = await api.get<OrgCampaignBriefResponse>(ENDPOINTS.BRIEF)
     return response.data
   },
 

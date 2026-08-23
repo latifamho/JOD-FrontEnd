@@ -10,4 +10,5 @@ export {
   FormLoadingSkeleton,
   ListLoadingSkeleton,
 } from "@/components/shared/loading-skeletons";
+export { MediaUploadField } from "@/components/shared/media-upload/media-upload-field";
 

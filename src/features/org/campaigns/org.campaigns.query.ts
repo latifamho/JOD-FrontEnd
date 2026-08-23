@@ -26,6 +26,15 @@ export function useOrgCampaign(campaignId: string | null) {
   })
 }
 
+export function useOrgCampaignsBrief(enabled = true) {
+  return useQuery({
+    queryKey: orgCampaignsKeys.brief(),
+    queryFn: () => orgCampaignsServices.getCampaignsBrief(),
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
 export function useCreateOrgCampaign() {
   const queryClient = useQueryClient()
   return useMutation({

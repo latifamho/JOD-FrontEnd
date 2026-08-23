@@ -152,7 +152,6 @@ export function DonorsManagementPage({
           name: values.name.trim(),
           email: values.email.trim(),
           phone: values.phone.trim(),
-          city: values.city,
         };
 
         if (formMode === "create") {
