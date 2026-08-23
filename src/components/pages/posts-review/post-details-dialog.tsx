@@ -45,10 +45,33 @@ export function PostDetailsDialog({
         </SheetHeader>
 
         <div className="space-y-4 overflow-y-auto p-4">
+          {isLoading ? (
+            <div className="space-y-4" aria-label="جاري تحميل تفاصيل المنشور">
+              <div className="flex gap-2">
+                <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+                <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
+              </div>
+              <div className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 sm:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+                    <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3 rounded-lg border border-border p-4">
+                <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                <div className="h-4 w-5/6 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          ) : null}
+
+          <div className={isLoading ? "hidden" : "contents"}>
           <div className="flex flex-wrap items-center gap-2">
             <ReviewStatusBadge status={post.status} />
             <Badge variant="outline">{postTypeLabels[post.type]}</Badge>
-            <Badge variant="outline">{post.id}</Badge>
           </div>
 
           <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-2">
@@ -191,6 +214,7 @@ export function PostDetailsDialog({
               </p>
             </div>
           )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

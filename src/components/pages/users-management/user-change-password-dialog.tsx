@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +17,21 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+
+const changePasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(1, "كلمة المرور الجديدة مطلوبة")
+      .min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
+    confirmPassword: z.string().min(1, "تأكيد كلمة المرور مطلوب"),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: "كلمتا المرور غير متطابقتين",
+    path: ["confirmPassword"],
+  });
+
+type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 type UserChangePasswordDialogProps = {
   open: boolean;
@@ -32,18 +50,19 @@ export function UserChangePasswordDialog({
   onOpenChange,
   onConfirm,
 }: UserChangePasswordDialogProps) {
-  const [newPassword, setNewPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { newPassword: "", confirmPassword: "" },
+  });
 
   React.useEffect(() => {
-    if (!open) {
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-  }, [open]);
-
-  const canSubmit =
-    newPassword.trim().length >= 8 && newPassword === confirmPassword;
+    if (!open) reset({ newPassword: "", confirmPassword: "" });
+  }, [open, reset]);
 
   return (
     <Dialog
@@ -52,7 +71,12 @@ export function UserChangePasswordDialog({
         if (!isSubmitting) onOpenChange(nextOpen);
       }}
     >
-      <DialogContent dir="rtl" className="gap-6 sm:max-w-md">
+      <DialogContent dir="rtl" className="gap-0 p-0 sm:max-w-md">
+        <form
+          className="space-y-6 p-6"
+          noValidate
+          onSubmit={handleSubmit(({ newPassword }) => onConfirm(newPassword.trim()))}
+        >
         <DialogHeader className="space-y-2 pe-12 text-right sm:text-right">
           <DialogTitle>تغيير كلمة المرور</DialogTitle>
           <DialogDescription>
@@ -68,10 +92,13 @@ export function UserChangePasswordDialog({
               id="new-password"
               autoComplete="new-password"
               disabled={isSubmitting}
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
+              aria-invalid={Boolean(errors.newPassword)}
               placeholder="أدخل كلمة المرور الجديدة"
+              {...register("newPassword")}
             />
+            {errors.newPassword ? (
+              <p className="text-xs text-destructive">{errors.newPassword.message}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -80,13 +107,17 @@ export function UserChangePasswordDialog({
               id="confirm-password"
               autoComplete="new-password"
               disabled={isSubmitting}
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              aria-invalid={Boolean(errors.confirmPassword)}
               placeholder="أعد كتابة كلمة المرور"
+              {...register("confirmPassword")}
             />
-            <p className="text-[11px] text-muted-foreground">
-              الحد الأدنى 8 أحرف ويجب أن تتطابق القيمتان.
-            </p>
+            {errors.confirmPassword ? (
+              <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                الحد الأدنى 8 أحرف ويجب أن تتطابق القيمتان.
+              </p>
+            )}
           </div>
         </div>
 
@@ -103,15 +134,12 @@ export function UserChangePasswordDialog({
           >
             إلغاء
           </Button>
-          <Button
-            type="button"
-            disabled={!canSubmit || isSubmitting}
-            onClick={() => onConfirm(newPassword.trim())}
-          >
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
             حفظ
           </Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

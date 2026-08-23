@@ -1,5 +1,5 @@
-import { ContentEditorPage } from "@/components/pages/content-management/content-editor-page";
+import { ContentCreatePage } from "@/components/pages/content-management/content-create-page";
 
 export default function AdminContentCreatePage() {
-  return <ContentEditorPage mode="create" />;
+  return <ContentCreatePage />;
 }

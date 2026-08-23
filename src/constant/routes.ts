@@ -36,7 +36,6 @@ export const routePaths = {
     contentEdit: (id = ":id") => `/dashboard/admin/content/${id}/edit`,
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
-    settings: "/dashboard/admin/settings",
   },
   organizationOwnerScope: {
     overview: "/dashboard/org-owner",
@@ -296,19 +295,6 @@ const adminLinks: AppNavLink[] = [
       },
     ],
   },
-  {
-    label: "الإعدادات",
-    href: routePaths.adminScope.settings,
-    icon: "settings",
-    section: "الحساب",
-    tabs: [
-      {
-        label: "الإعدادات",
-        href: routePaths.adminScope.settings,
-        icon: "settings",
-      },
-    ],
-  },
 ];
 
 const organizationOwnerLinks: AppNavLink[] = [
@@ -564,8 +550,7 @@ const roleBaseRoute: Record<DashboardRole, string> = {
   organization_staff: routePaths.dashboardScope.orgStaffRoot,
 };
 
-const roleSettingsRoute: Record<DashboardRole, string> = {
-  admin: routePaths.adminScope.settings,
+const roleSettingsRoute: Partial<Record<DashboardRole, string>> = {
   organization_owner: routePaths.organizationOwnerScope.settings,
   organization_staff: routePaths.organizationStaffScope.settings,
 };
@@ -630,8 +615,8 @@ export function getDashboardHomeByRole(role: DashboardRole): string {
   return roleBaseRoute[role];
 }
 
-export function getRoleSettingsRoute(role: DashboardRole): string {
-  return roleSettingsRoute[role];
+export function getRoleSettingsRoute(role: DashboardRole): string | null {
+  return roleSettingsRoute[role] ?? null;
 }
 
 const segmentLabels: Record<string, string> = {

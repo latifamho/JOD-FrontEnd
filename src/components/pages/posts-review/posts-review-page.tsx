@@ -135,6 +135,12 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
       ) : (
         <ReviewPostsTable
           posts={posts}
+          approvingPostId={
+            approveMutation.isPending ? approveMutation.variables?.postId : undefined
+          }
+          rejectingPostId={
+            rejectMutation.isPending ? rejectMutation.variables?.postId : undefined
+          }
           onApprove={handleApprove}
           onReject={handleReject}
           onOpenDetails={(post) => detailsModal.open({ id: post.id })}

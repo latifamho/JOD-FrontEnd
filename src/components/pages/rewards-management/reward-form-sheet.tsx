@@ -48,8 +48,8 @@ const rewardIconValues = rewardIconOptions.map((o) => o.value) as [
 
 const rewardFormSchema = z.object({
   name: z.string().min(1, "اسم الشارة مطلوب"),
-  description: z.string().optional(),
-  criteria: z.string().optional(),
+  description: z.string().min(1, "وصف الشارة مطلوب"),
+  criteria: z.string().min(1, "معايير الشارة مطلوبة"),
   iconName: z.enum(rewardIconValues),
   isActive: z.boolean(),
 });
@@ -142,6 +142,7 @@ export function RewardFormSheet({
         >
           <form
             className="flex h-full flex-col"
+            noValidate
             onSubmit={handleSubmit((values) => {
               onSubmit({
                 name: values.name.trim(),
@@ -171,6 +172,7 @@ export function RewardFormSheet({
                     <Input
                       id="reward-name"
                       disabled={isFormLocked}
+                      aria-invalid={Boolean(errors.name)}
                       placeholder="مثال: متبرع نشط"
                       {...register("name")}
                     />
@@ -185,9 +187,13 @@ export function RewardFormSheet({
                       id="reward-description"
                       disabled={isFormLocked}
                       rows={3}
-                      placeholder="اكتب وصف الشارة (اختياري)"
+                      aria-invalid={Boolean(errors.description)}
+                      placeholder="اكتب وصف الشارة"
                       {...register("description")}
                     />
+                    {errors.description ? (
+                      <p className="text-xs text-destructive">{errors.description.message}</p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -195,9 +201,13 @@ export function RewardFormSheet({
                     <Input
                       id="reward-criteria"
                       disabled={isFormLocked}
-                      placeholder="مثال: 10 منشورات مقبولة (اختياري)"
+                      aria-invalid={Boolean(errors.criteria)}
+                      placeholder="مثال: 10 منشورات مقبولة"
                       {...register("criteria")}
                     />
+                    {errors.criteria ? (
+                      <p className="text-xs text-destructive">{errors.criteria.message}</p>
+                    ) : null}
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -213,7 +223,10 @@ export function RewardFormSheet({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger className="w-full text-right">
+                            <SelectTrigger
+                              className="w-full text-right"
+                              aria-invalid={Boolean(errors.iconName)}
+                            >
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent
@@ -256,7 +269,10 @@ export function RewardFormSheet({
                               field.onChange(value === "active")
                             }
                           >
-                            <SelectTrigger className="w-full text-right">
+                            <SelectTrigger
+                              className="w-full text-right"
+                              aria-invalid={Boolean(errors.isActive)}
+                            >
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent

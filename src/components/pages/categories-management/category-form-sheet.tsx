@@ -108,6 +108,7 @@ export function CategoryFormSheet({
       <SheetContent side="right" dir="rtl" className="w-[95vw] border-border p-0 sm:max-w-lg">
         <form
           className="flex h-full flex-col"
+          noValidate
           onSubmit={handleSubmit((values) => {
             onSubmit({
               name: values.name.trim(),
@@ -136,6 +137,7 @@ export function CategoryFormSheet({
                   <Input
                     id="category-name"
                     disabled={isFormLocked}
+                    aria-invalid={Boolean(errors.name)}
                     placeholder="مثال: أخبار المنظمة"
                     {...register("name")}
                   />
@@ -151,6 +153,7 @@ export function CategoryFormSheet({
                     disabled={isFormLocked}
                     rows={5}
                     maxLength={1000}
+                    aria-invalid={Boolean(errors.description)}
                     placeholder="اكتب وصفًا واضحًا للتصنيف"
                     {...register("description")}
                   />
@@ -173,7 +176,10 @@ export function CategoryFormSheet({
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="w-full text-right">
+                        <SelectTrigger
+                          className="w-full text-right"
+                          aria-invalid={Boolean(errors.target)}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent align="start" position="popper" className="text-right">
@@ -200,7 +206,10 @@ export function CategoryFormSheet({
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="w-full text-right">
+                        <SelectTrigger
+                          className="w-full text-right"
+                          aria-invalid={Boolean(errors.status)}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent align="start" position="popper" className="text-right">

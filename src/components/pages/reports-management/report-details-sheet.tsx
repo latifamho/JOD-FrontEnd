@@ -27,11 +27,7 @@ import {
   toDisplayName,
 } from "@/components/pages/reports-management/helpers";
 import { formatUtcDateTime } from "@/lib/date";
-import {
-  useAdminReportDetail,
-  useWaitReport,
-} from "@/features/admin/reports.services/admin.reports.query";
-import { RequestInfoDialog } from "@/components/pages/reports-management/request-info-dialog";
+import { useAdminReportDetail } from "@/features/admin/reports.services/admin.reports.query";
 import { CloseReportDialog } from "@/components/pages/reports-management/close-report-dialog";
 
 type ReportDetailsSheetProps = {
@@ -57,17 +53,12 @@ export function ReportDetailsSheet({
   isClosing,
   closingReportId,
 }: ReportDetailsSheetProps) {
-  const [requestInfoOpen, setRequestInfoOpen] = useQueryDisclosure(
-    "report-request-info",
-    { queryKey: "dialog" },
-  );
   const [closeDialogOpen, setCloseDialogOpen] = useQueryDisclosure(
     "report-close",
     { queryKey: "dialog" },
   );
   const { data: detailData } = useAdminReportDetail(open ? report?.id ?? null : null);
   const activeReport = detailData?.data ?? report;
-  const waitMutation = useWaitReport();
   const isClaimingThis =
     !!activeReport && isClaiming && claimingReportId === activeReport.id;
   const isClosingThis =
@@ -94,7 +85,6 @@ export function ReportDetailsSheet({
                   {reportSeverityLabels[activeReport.severity]}
                 </Badge>
                 <Badge variant="outline">{reportEntityTypeLabels[activeReport.entityType]}</Badge>
-                <Badge variant="outline">{activeReport.id}</Badge>
               </div>
               <SheetTitle className="text-right text-lg">{activeReport.title}</SheetTitle>
               <SheetDescription className="text-right">
@@ -215,16 +205,6 @@ export function ReportDetailsSheet({
                   استلام البلاغ
                 </Button>
               )}
-              {activeReport.status === "in_progress" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={waitMutation.isPending}
-                  onClick={() => setRequestInfoOpen(true)}
-                >
-                  طلب معلومات إضافية
-                </Button>
-              )}
               {(activeReport.status === "in_progress" ||
                 activeReport.status === "waiting_response") && (
                 <Button
@@ -238,17 +218,6 @@ export function ReportDetailsSheet({
                 </Button>
               )}
             </SheetFooter>
-            <RequestInfoDialog
-              open={requestInfoOpen}
-              onOpenChange={setRequestInfoOpen}
-              reportTitle={activeReport.title}
-              onConfirm={async (note) => {
-                await waitMutation.mutateAsync({
-                  reportId: activeReport.id,
-                  body: { note },
-                });
-              }}
-            />
             <CloseReportDialog
               open={closeDialogOpen}
               onOpenChange={setCloseDialogOpen}

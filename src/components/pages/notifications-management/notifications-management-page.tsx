@@ -251,6 +251,7 @@ export function NotificationsManagementPage({
         open={createModal.isOpen}
         onOpenChange={createModal.onOpenChange}
         onSubmit={handleCreateNotification}
+        isSubmitting={createMutation.isPending}
       />
     </section>
   );

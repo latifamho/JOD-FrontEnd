@@ -67,6 +67,7 @@ export function Header() {
   const displayName = user?.name ?? dashboardRoleLabels[role];
   const displayEmail = user?.email ?? "";
   const avatarLetter = displayName.charAt(0);
+  const settingsRoute = getRoleSettingsRoute(role);
 
   const ThemeIcon =
     THEME_CHOICES.find((t) => t.mode === themeMode)?.Icon ?? AppIcons.themeSystem;
@@ -177,19 +178,19 @@ export function Header() {
             </div>
 
             <div className="p-1">
-              <DropdownMenuItem asChild>
-                <Link
-                  href={getRoleSettingsRoute(role)}
-                  className="cursor-pointer py-2"
-                >
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                    <AppIcons.settings className="size-3.5 text-muted-foreground" />
-                  </div>
-                  الإعدادات
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
+              {settingsRoute ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href={settingsRoute} className="cursor-pointer py-2">
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
+                        <AppIcons.settings className="size-3.5 text-muted-foreground" />
+                      </div>
+                      الإعدادات
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              ) : null}
 
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="cursor-pointer py-2">

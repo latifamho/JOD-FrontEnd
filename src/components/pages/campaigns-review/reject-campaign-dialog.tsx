@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+const rejectCampaignSchema = z.object({
+  reason: z.string().trim().min(8, "سبب الرفض يجب أن يكون 8 أحرف على الأقل"),
+});
+
+type RejectCampaignFormValues = z.infer<typeof rejectCampaignSchema>;
 
 type RejectCampaignDialogProps = {
   open: boolean;
@@ -27,15 +36,19 @@ export function RejectCampaignDialog({
   campaignTitle,
   onConfirm,
 }: RejectCampaignDialogProps) {
-  const [reason, setReason] = React.useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RejectCampaignFormValues>({
+    resolver: zodResolver(rejectCampaignSchema),
+    defaultValues: { reason: "" },
+  });
 
   React.useEffect(() => {
-    if (!open) {
-      setReason("");
-    }
-  }, [open]);
-
-  const canSubmit = reason.trim().length >= 8;
+    if (!open) reset({ reason: "" });
+  }, [open, reset]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,7 +60,14 @@ export function RejectCampaignDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <form
+          className="space-y-3"
+          noValidate
+          onSubmit={handleSubmit(({ reason }) => {
+            onConfirm(reason.trim());
+            onOpenChange(false);
+          })}
+        >
           <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
             الحملة: {campaignTitle}
           </p>
@@ -56,14 +76,17 @@ export function RejectCampaignDialog({
             <Label htmlFor="campaign-rejection-reason">سبب الرفض</Label>
             <Textarea
               id="campaign-rejection-reason"
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              aria-invalid={Boolean(errors.reason)}
               placeholder="مثال: يرجى إرفاق خطة تنفيذ أو مستندات توثيقية قبل إعادة الإرسال..."
               className="min-h-28 text-sm"
+              {...register("reason")}
             />
-            <p className="text-[11px] text-muted-foreground">الحد الأدنى: 8 أحرف</p>
+            {errors.reason ? (
+              <p className="text-xs text-destructive">{errors.reason.message}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">الحد الأدنى: 8 أحرف</p>
+            )}
           </div>
-        </div>
 
         <DialogFooter className="sm:justify-start">
           <Button
@@ -73,21 +96,11 @@ export function RejectCampaignDialog({
           >
             إلغاء
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={!canSubmit}
-            onClick={() => {
-              if (!canSubmit) {
-                return;
-              }
-              onConfirm(reason.trim());
-              onOpenChange(false);
-            }}
-          >
+          <Button type="submit" variant="destructive">
             تأكيد الرفض
           </Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

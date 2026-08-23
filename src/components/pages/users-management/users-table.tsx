@@ -70,8 +70,7 @@ export function UsersTable({
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
               <TableRow key={i}>
                 <TableCell>
-                  <SkeletonPulse className="h-3.5 w-28 mb-1.5" />
-                  <SkeletonPulse className="h-3 w-16" />
+                  <SkeletonPulse className="h-3.5 w-28" />
                 </TableCell>
                 <TableCell>
                   <SkeletonPulse className="h-5 w-16 rounded-full" />
@@ -108,9 +107,6 @@ export function UsersTable({
                   <TableCell>
                     <p className="font-semibold text-foreground">
                       {displayOrDash(user.name)}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {displayOrDash(user.id)}
                     </p>
                   </TableCell>
 

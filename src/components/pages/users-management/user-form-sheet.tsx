@@ -51,7 +51,10 @@ const editUserSchema = z.object({
     .string()
     .min(1, "البريد الإلكتروني مطلوب")
     .email("البريد الإلكتروني غير صحيح"),
-  phone: z.string().min(1, "رقم الهاتف مطلوب"),
+  phone: z
+    .string()
+    .min(1, "رقم الهاتف مطلوب")
+    .regex(/^09\d{8}$/, "رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 09"),
   role: z.enum(userRoleValues),
   status: z.enum(userStatusValues),
   password: z.string().optional(),
@@ -206,6 +209,7 @@ export function UserFormSheet({
             className="flex h-full flex-col"
             onSubmit={handleSubmit(onValidSubmit)}
             autoComplete="off"
+            noValidate
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
               <SheetTitle className="text-right text-lg">
@@ -224,6 +228,7 @@ export function UserFormSheet({
                   <Input
                     id="user-name"
                     disabled={fieldsDisabled}
+                    aria-invalid={Boolean(errors.name)}
                     placeholder="أدخل اسم المستخدم"
                     {...register("name")}
                   />
@@ -239,6 +244,7 @@ export function UserFormSheet({
                     type="email"
                     autoComplete="off"
                     disabled={fieldsDisabled}
+                    aria-invalid={Boolean(errors.email || emailError)}
                     placeholder="name@example.com"
                     {...register("email")}
                   />
@@ -254,8 +260,12 @@ export function UserFormSheet({
                   <Label htmlFor="user-phone">رقم الهاتف</Label>
                   <Input
                     id="user-phone"
+                    inputMode="numeric"
+                    maxLength={10}
                     disabled={fieldsDisabled}
-                    placeholder="+9665XXXXXXXX"
+                    aria-invalid={Boolean(errors.phone)}
+                    placeholder="09XXXXXXXX"
+                    dir="ltr"
                     {...register("phone")}
                   />
                   {errors.phone ? (
@@ -271,6 +281,7 @@ export function UserFormSheet({
                         id="user-password"
                         autoComplete="new-password"
                         disabled={fieldsDisabled}
+                        aria-invalid={Boolean(errors.password)}
                         placeholder="أدخل كلمة المرور"
                         {...register("password")}
                       />
@@ -293,6 +304,7 @@ export function UserFormSheet({
                         id="user-password-confirmation"
                         autoComplete="new-password"
                         disabled={fieldsDisabled}
+                        aria-invalid={Boolean(errors.passwordConfirmation)}
                         placeholder="أعد كتابة كلمة المرور"
                         {...register("passwordConfirmation")}
                       />
@@ -320,7 +332,10 @@ export function UserFormSheet({
                             field.onChange(normalizeUserRole(value))
                           }
                         >
-                          <SelectTrigger className="w-full text-right">
+                          <SelectTrigger
+                            className="w-full text-right"
+                            aria-invalid={Boolean(errors.role)}
+                          >
                             <SelectValue placeholder="اختر الدور" />
                           </SelectTrigger>
                           <SelectContent
@@ -362,7 +377,10 @@ export function UserFormSheet({
                             field.onChange(normalizeUserStatus(value))
                           }
                         >
-                          <SelectTrigger className="w-full text-right">
+                          <SelectTrigger
+                            className="w-full text-right"
+                            aria-invalid={Boolean(errors.status)}
+                          >
                             <SelectValue placeholder="اختر الحالة" />
                           </SelectTrigger>
                           <SelectContent

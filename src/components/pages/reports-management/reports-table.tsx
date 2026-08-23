@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/tooltip";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTime } from "@/lib/date";
-import { displayOrDash } from "@/lib/text";
 import { ReportDetailsSheet } from "@/components/pages/reports-management/report-details-sheet";
 import {
   reportEntityTypeLabels,
@@ -67,9 +66,6 @@ export function ReportsTable({
             </TableHead>
             <TableHead className="min-w-[220px] text-right font-semibold text-muted-foreground">
               البلاغ
-            </TableHead>
-            <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground lg:table-cell">
-              المنظمة
             </TableHead>
             <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground md:table-cell">
               المبلّغ
@@ -149,13 +145,9 @@ function ReportRow({
               {report.description}
             </p>
             <span className="text-xs text-muted-foreground">
-              {reportEntityTypeLabels[report.entityType]} ·{" "}
-              {displayOrDash(report.entityId)}
+              {reportEntityTypeLabels[report.entityType]}
             </span>
           </div>
-        </TableCell>
-        <TableCell className="hidden align-middle text-right text-sm lg:table-cell">
-          {toDisplayName(report.organizationName)}
         </TableCell>
         <TableCell className="hidden align-middle text-right text-sm md:table-cell">
           {toDisplayName(report.reporterName)}

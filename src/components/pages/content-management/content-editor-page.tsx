@@ -200,6 +200,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
 
       <form
         className="rounded-md border border-border bg-background p-4 shadow-xs"
+        noValidate
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="grid gap-4">
@@ -208,6 +209,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
             <Input
               id="article-title"
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.title)}
               placeholder="اكتب عنوان المقال"
               {...register("title", {
                 onChange: (event) => {
@@ -229,6 +231,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
             <Input
               id="article-slug"
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.slug)}
               placeholder="example-article-slug"
               {...register("slug", {
                 onChange: (event) => {
@@ -249,6 +252,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
             <Textarea
               id="article-excerpt"
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.excerpt)}
               rows={4}
               placeholder="اكتب وصفا مختصرا للمقال"
               {...register("excerpt")}
@@ -264,6 +268,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
             <Textarea
               id="article-content"
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.content)}
               rows={10}
               placeholder="اكتب محتوى المقال الكامل"
               {...register("content")}
@@ -278,6 +283,7 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
               <Input
                 id="article-author"
                 disabled={isSubmitting}
+                aria-invalid={Boolean(errors.authorName)}
                 placeholder="اسم الكاتب"
                 {...register("authorName")}
               />
@@ -302,7 +308,10 @@ export function ContentEditorPage({ mode, articleId }: ContentEditorPageProps) {
                       field.onChange(value as ArticleStatus)
                     }
                   >
-                    <SelectTrigger className="w-full text-right">
+                    <SelectTrigger
+                      className="w-full text-right"
+                      aria-invalid={Boolean(errors.status)}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent align="start" position="popper" className="text-right">

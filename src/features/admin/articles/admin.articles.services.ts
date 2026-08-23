@@ -34,6 +34,14 @@ export const adminArticlesServices = {
     return response.data
   },
 
+  async uploadArticleImage(articleId: string, file: File): Promise<void> {
+    const formData = new FormData()
+    formData.append('file', file)
+    await api.post(`/media/article/${articleId}/images`, formData, {
+      skipSuccessToast: true,
+    })
+  },
+
   async updateArticle(articleId: string, body: ArticleUpdateRequest): Promise<UpdateArticleResponse> {
     const response = await api.patch<UpdateArticleResponse>(ENDPOINTS.ARTICLE(articleId), body, { successMessageKey: 'updated' })
     return response.data

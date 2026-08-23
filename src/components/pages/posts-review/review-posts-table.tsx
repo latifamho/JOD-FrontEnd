@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ import {
 
 type ReviewPostsTableProps = {
   posts: ReviewPostItem[];
+  approvingPostId?: string;
+  rejectingPostId?: string;
   onApprove: (postId: string) => void;
   onReject: (postId: string, reason: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
@@ -36,6 +39,8 @@ type ReviewPostsTableProps = {
 
 export function ReviewPostsTable({
   posts,
+  approvingPostId,
+  rejectingPostId,
   onApprove,
   onReject,
   onOpenDetails,
@@ -81,6 +86,8 @@ export function ReviewPostsTable({
               key={post.id}
               post={post}
               showReviewedBy={hasNonPending}
+              approvingPostId={approvingPostId}
+              rejectingPostId={rejectingPostId}
               onApprove={onApprove}
               onReject={onReject}
               onOpenDetails={onOpenDetails}
@@ -95,6 +102,8 @@ export function ReviewPostsTable({
 type ReviewPostRowProps = {
   post: ReviewPostItem;
   showReviewedBy: boolean;
+  approvingPostId?: string;
+  rejectingPostId?: string;
   onApprove: (postId: string) => void;
   onReject: (postId: string, reason: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
@@ -103,11 +112,16 @@ type ReviewPostRowProps = {
 function ReviewPostRow({
   post,
   showReviewedBy,
+  approvingPostId,
+  rejectingPostId,
   onApprove,
   onReject,
   onOpenDetails,
 }: ReviewPostRowProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`post-reject-${post.id}`);
+  const isApproving = approvingPostId === post.id;
+  const isRejecting = rejectingPostId === post.id;
+  const isMutating = isApproving || isRejecting;
 
   const dateToShow =
     post.status === "approved" && post.publishedAt
@@ -179,9 +193,14 @@ function ReviewPostRow({
                       type="button"
                       size="icon"
                       className="size-8 bg-emerald-600 text-white hover:bg-emerald-700"
+                      disabled={isMutating}
                       onClick={() => onApprove(post.id)}
                     >
-                      <AppIcons.posts className="size-4" />
+                      {isApproving ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <AppIcons.posts className="size-4" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">
@@ -195,9 +214,14 @@ function ReviewPostRow({
                       variant="destructive"
                       size="icon"
                       className="size-8"
+                      disabled={isMutating}
                       onClick={() => setRejectDialogOpen(true)}
                     >
-                      <AppIcons.reports className="size-4" />
+                      {isRejecting ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <AppIcons.reports className="size-4" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">
