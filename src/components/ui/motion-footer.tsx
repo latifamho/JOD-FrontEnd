@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 
 import { Logo } from "@/components/base/logo";
 import { RevealMask } from "@/components/pages/landing/reveal-mask";
@@ -20,13 +20,6 @@ const FOOTER_LINKS = [
       { label: "تسجيل منظمة جديدة", href: "/register" },
     ],
   },
-] as const;
-
-const SOCIALS = [
-  { icon: Twitter, label: "تويتر", href: "#" },
-  { icon: Instagram, label: "انستغرام", href: "#" },
-  { icon: Linkedin, label: "لينكدإن", href: "#" },
-  { icon: Facebook, label: "فيسبوك", href: "#" },
 ] as const;
 
 const TICKER_ITEMS = [
@@ -90,19 +83,6 @@ export function CinematicFooter() {
             منصة جود لدعم المبادرات الإنسانية والمجتمعية — تربط الجمعيات والمؤسسات
             الخيرية بالمتبرعين بشفافية وثقة كاملة.
           </p>
-
-          <div className="mt-5 flex items-center gap-2">
-            {SOCIALS.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                aria-label={social.label}
-                className="flex size-9 items-center justify-center rounded-full border border-white/15 text-neutral-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/40 hover:text-white"
-              >
-                <social.icon className="size-4" />
-              </a>
-            ))}
-          </div>
         </div>
 
         {FOOTER_LINKS.map((group) => (
