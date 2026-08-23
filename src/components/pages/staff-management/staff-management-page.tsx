@@ -1,26 +1,26 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { useQueryModal } from '@/hooks/use-query-modal'
+import * as React from "react";
+import { useQueryModal } from "@/hooks/use-query-modal";
 
-import { RolesTable } from '@/components/pages/staff-management/roles-table'
-import { StaffMemberDeleteDialog } from '@/components/pages/staff-management/staff-member-delete-dialog'
+import { RolesTable } from "@/components/pages/staff-management/roles-table";
+import { StaffMemberDeleteDialog } from "@/components/pages/staff-management/staff-member-delete-dialog";
 import {
   EMPTY_STAFF_MEMBER_FORM_VALUES,
   StaffMemberFormSheet,
   type StaffMemberFormValues,
-} from '@/components/pages/staff-management/staff-member-form-sheet'
-import { StaffRoleDeleteDialog } from '@/components/pages/staff-management/staff-role-delete-dialog'
+} from "@/components/pages/staff-management/staff-member-form-sheet";
+import { StaffRoleDeleteDialog } from "@/components/pages/staff-management/staff-role-delete-dialog";
 import {
   EMPTY_STAFF_ROLE_FORM_VALUES,
   StaffRoleFormSheet,
   type StaffRoleFormValues,
-} from '@/components/pages/staff-management/staff-role-form-sheet'
-import { StaffTable } from '@/components/pages/staff-management/staff-table'
-import { EmptyState, ListLoadingSkeleton, PaginationControls } from '@/components/shared'
-import { Button } from '@/components/ui/button'
-import { AppIcons } from '@/constant/icons'
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
+} from "@/components/pages/staff-management/staff-role-form-sheet";
+import { StaffTable } from "@/components/pages/staff-management/staff-table";
+import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
+import { Button } from "@/components/ui/button";
+import { AppIcons } from "@/constant/icons";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   useCreateOrgRole,
   useCreateOrgStaff,
@@ -33,185 +33,246 @@ import {
   useOrgStaffMember,
   useUpdateOrgRole,
   useUpdateOrgStaff,
-} from '@/features/org/staff/org.staff.query'
-import { usePagination } from '@/hooks/use-pagination'
-import { useAuth } from '@/providers/AuthProvider'
+} from "@/features/org/staff/org.staff.query";
+import { usePagination } from "@/hooks/use-pagination";
+import { useAuth } from "@/providers/AuthProvider";
 
-export function StaffManagementPage({ view = 'employees' }: { view?: 'employees' | 'roles' }) {
-  const { user: currentUser, can } = useAuth()
-  const canCreateMember = can('org.staff.create')
-  const canUpdateMember = can('org.staff.update')
-  const canDeleteMember = can('org.staff.delete')
-  const canCreateRole = can('org.roles.create')
-  const canUpdateRole = can('org.roles.update')
-  const canDeleteRole = can('org.roles.delete')
-  const isEmployeesView = view === 'employees'
-  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE)
-  const [total, setTotal] = React.useState(0)
-  const pagination = usePagination({ totalItems: total, pageSize })
-  const [memberOptionsRequested, setMemberOptionsRequested] = React.useState(false)
-  const [roleOptionsRequested, setRoleOptionsRequested] = React.useState(false)
+export function StaffManagementPage({ view = "employees" }: { view?: "employees" | "roles" }) {
+  const { user: currentUser, can } = useAuth();
+  const canCreateMember = can("org.staff.create");
+  const canUpdateMember = can("org.staff.update");
+  const canDeleteMember = can("org.staff.delete");
+  const canCreateRole = can("org.roles.create");
+  const canUpdateRole = can("org.roles.update");
+  const canDeleteRole = can("org.roles.delete");
+  const isEmployeesView = view === "employees";
+
+  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [total, setTotal] = React.useState(0);
+  const pagination = usePagination({ totalItems: total, pageSize });
 
   const staffQuery = useOrgStaff(
-    { page: pagination.currentPage, perPage: pageSize, sort: '-invitedAt' },
+    { page: pagination.currentPage, perPage: pageSize, sort: "-invitedAt" },
     isEmployeesView,
-  )
+  );
   const rolesQuery = useOrgRoles(
-    { page: pagination.currentPage, perPage: pageSize, sort: '-updatedAt' },
+    { page: pagination.currentPage, perPage: pageSize, sort: "-updatedAt" },
     !isEmployeesView,
-  )
+  );
   const roleOptionsQuery = useOrgRoles(
-    { page: 1, perPage: 100, sort: 'name', filter: { status: 'active' } },
-    isEmployeesView && memberOptionsRequested,
-  )
-  const catalogQuery = useOrgPermissionsCatalog(!isEmployeesView && roleOptionsRequested)
+    { page: 1, perPage: 100, sort: "name", filter: { status: "active" } },
+    isEmployeesView,
+  );
+  const catalogQuery = useOrgPermissionsCatalog(!isEmployeesView);
 
-  const activeQuery = isEmployeesView ? staffQuery : rolesQuery
+  const activeQuery = isEmployeesView ? staffQuery : rolesQuery;
   React.useEffect(() => {
-    setTotal(activeQuery.data?.meta.total ?? 0)
-  }, [activeQuery.data?.meta.total])
+    setTotal(activeQuery.data?.meta.total ?? 0);
+  }, [activeQuery.data?.meta.total]);
 
-  const staffRows = staffQuery.data?.data ?? []
-  const roleRows = rolesQuery.data?.data ?? []
-  const roleOptions = (roleOptionsQuery.data?.data ?? []).map((role) => ({ id: role.id, name: role.role }))
-  const permissionOptions = catalogQuery.data?.data ?? []
+  const staffRows = React.useMemo(() => staffQuery.data?.data ?? [], [staffQuery.data?.data]);
+  const roleRows = React.useMemo(() => rolesQuery.data?.data ?? [], [rolesQuery.data?.data]);
+  const roleOptions = React.useMemo(
+    () =>
+      (roleOptionsQuery.data?.data ?? []).map((role) => ({
+        id: role.id,
+        name: role.role,
+      })),
+    [roleOptionsQuery.data?.data],
+  );
+  const permissionOptions = catalogQuery.data?.data ?? [];
 
-  const createStaff = useCreateOrgStaff()
-  const updateStaff = useUpdateOrgStaff()
-  const deleteStaff = useDeleteOrgStaff()
-  const createRole = useCreateOrgRole()
-  const updateRole = useUpdateOrgRole()
-  const deleteRole = useDeleteOrgRole()
+  const createStaff = useCreateOrgStaff();
+  const updateStaff = useUpdateOrgStaff();
+  const deleteStaff = useDeleteOrgStaff();
+  const createRole = useCreateOrgRole();
+  const updateRole = useUpdateOrgRole();
+  const deleteRole = useDeleteOrgRole();
 
-  const memberModal = useQueryModal('staff-member-form', {
+  const memberModal = useQueryModal("staff-member-form", {
     permissionsByMode: {
-      create: 'org.staff.create',
-      edit: 'org.staff.update',
+      create: "org.staff.create",
+      edit: "org.staff.update",
     },
-  })
-  const memberOpen = memberModal.isOpen
-  const memberMode = memberModal.mode === 'edit' ? 'edit' : 'create'
-  const memberId = memberMode === 'edit' ? memberModal.id : null
-  const [memberValues, setMemberValues] = React.useState(EMPTY_STAFF_MEMBER_FORM_VALUES)
-  const memberDeleteModal = useQueryModal('staff-member-delete', {
-    permission: 'org.staff.delete',
-  })
-  const memberDeleteOpen = memberDeleteModal.isOpen
-  const memberDeleteId = memberDeleteModal.id
+  });
+  const memberOpen = memberModal.isOpen;
+  const memberMode = memberModal.mode === "edit" ? "edit" : "create";
+  const memberId = memberMode === "edit" ? memberModal.id : null;
+  const memberDeleteModal = useQueryModal("staff-member-delete", {
+    permission: "org.staff.delete",
+  });
+  const memberDeleteOpen = memberDeleteModal.isOpen;
+  const memberDeleteId = memberDeleteModal.id;
 
-  const roleModal = useQueryModal('staff-role-form', {
+  const roleModal = useQueryModal("staff-role-form", {
     permissionsByMode: {
-      create: 'org.roles.create',
-      edit: 'org.roles.update',
+      create: "org.roles.create",
+      edit: "org.roles.update",
     },
-  })
-  const roleOpen = roleModal.isOpen
-  const roleMode = roleModal.mode === 'edit' ? 'edit' : 'create'
-  const roleId = roleMode === 'edit' ? roleModal.id : null
-  const [roleValues, setRoleValues] = React.useState(EMPTY_STAFF_ROLE_FORM_VALUES)
-  const roleDeleteModal = useQueryModal('staff-role-delete', {
-    permission: 'org.roles.delete',
-  })
-  const roleDeleteOpen = roleDeleteModal.isOpen
-  const roleDeleteId = roleDeleteModal.id
+  });
+  const roleOpen = roleModal.isOpen;
+  const roleMode = roleModal.mode === "edit" ? "edit" : "create";
+  const roleId = roleMode === "edit" ? roleModal.id : null;
+  const roleDeleteModal = useQueryModal("staff-role-delete", {
+    permission: "org.roles.delete",
+  });
+  const roleDeleteOpen = roleDeleteModal.isOpen;
+  const roleDeleteId = roleDeleteModal.id;
 
-  const memberDetailQuery = useOrgStaffMember(memberOpen && memberMode === 'edit' ? memberId : null)
-  const roleDetailQuery = useOrgRole(roleOpen && roleMode === 'edit' ? roleId : null)
+  const memberDetailQuery = useOrgStaffMember(
+    memberOpen && memberMode === "edit" ? memberId : null,
+  );
+  const roleDetailQuery = useOrgRole(roleOpen && roleMode === "edit" ? roleId : null);
 
-  React.useEffect(() => {
-    const member = memberDetailQuery.data?.data
-    if (!member) return
-    setMemberValues({ name: member.name, email: member.email, organizationRoleId: member.roleId })
-  }, [memberDetailQuery.data])
+  const memberDetail = memberDetailQuery.data?.data;
+  const memberValues = React.useMemo<StaffMemberFormValues>(
+    () =>
+      memberMode === "edit" && memberDetail
+        ? {
+            name: memberDetail.name,
+            email: memberDetail.email,
+            phone: memberDetail.phone ?? "",
+            organizationRoleId: memberDetail.roleId,
+          }
+        : EMPTY_STAFF_MEMBER_FORM_VALUES,
+    [memberDetail, memberMode],
+  );
 
-  React.useEffect(() => {
-    const role = roleDetailQuery.data?.data
-    if (!role) return
-    setRoleValues({ name: role.role, description: role.description ?? '', permissions: role.permissions, isActive: role.isActive })
-  }, [roleDetailQuery.data])
+  const roleDetail = roleDetailQuery.data?.data;
+  const roleValues = React.useMemo<StaffRoleFormValues>(
+    () =>
+      roleMode === "edit" && roleDetail
+        ? {
+            name: roleDetail.role,
+            description: roleDetail.description ?? "",
+            permissions: roleDetail.permissions,
+            isActive: roleDetail.isActive,
+          }
+        : EMPTY_STAFF_ROLE_FORM_VALUES,
+    [roleDetail, roleMode],
+  );
 
-  const openCreateMember = () => {
-    setMemberOptionsRequested(true)
+  const openCreateMember = React.useCallback(() => {
+    memberModal.open({ mode: "create" });
+  }, [memberModal]);
 
-    setMemberValues({ ...EMPTY_STAFF_MEMBER_FORM_VALUES, organizationRoleId: roleOptions[0]?.id ?? '' })
-    memberModal.open({ mode: 'create' })
-  }
+  const openEditMember = React.useCallback(
+    (id: string) => {
+      memberModal.open({ id, mode: "edit" });
+    },
+    [memberModal],
+  );
 
-  const openEditMember = (id: string) => {
-    setMemberOptionsRequested(true)
-    const member = staffRows.find((item) => item.id === id)
-    if (!member) return
+  const submitMember = React.useCallback(
+    (values: StaffMemberFormValues) => {
+      const body = {
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        organizationRoleId: values.organizationRoleId,
+      };
 
-    setMemberValues({ name: member.name, email: member.email, organizationRoleId: member.roleId })
-    memberModal.open({ id, mode: 'edit' })
-  }
+      if (memberMode === "create") {
+        createStaff.mutate(body, {
+          onSuccess: () => memberModal.close(),
+        });
+        return;
+      }
 
-  const submitMember = (values: StaffMemberFormValues) => {
-    if (memberMode === 'create') {
-      createStaff.mutate({ name: values.name, email: values.email, organizationRoleId: values.organizationRoleId }, { onSuccess: () => memberModal.close() })
-      return
-    }
-    if (!memberId) return
-    updateStaff.mutate({ staffId: memberId, body: { organizationRoleId: values.organizationRoleId } }, { onSuccess: () => memberModal.close() })
-  }
+      if (!memberId) return;
+      updateStaff.mutate(
+        { staffId: memberId, body },
+        { onSuccess: () => memberModal.close() },
+      );
+    },
+    [createStaff, memberId, memberModal, memberMode, updateStaff],
+  );
 
-  const requestDeleteMember = (id: string) => {
-    const member = staffRows.find((item) => item.id === id)
-    const isCurrentUser =
-      id === currentUser?.id ||
-      member?.email.trim().toLowerCase() === currentUser?.email.trim().toLowerCase()
-    if (!member || isCurrentUser) return
-    memberDeleteModal.open({ id })
-  }
+  const requestDeleteMember = React.useCallback(
+    (id: string) => {
+      const member = staffRows.find((item) => item.id === id);
+      const isCurrentUser =
+        id === currentUser?.id ||
+        member?.email.trim().toLowerCase() === currentUser?.email.trim().toLowerCase();
+      if (!member || isCurrentUser) return;
+      memberDeleteModal.open({ id });
+    },
+    [currentUser?.email, currentUser?.id, memberDeleteModal, staffRows],
+  );
 
-  const openCreateRole = () => {
-    setRoleOptionsRequested(true)
+  const openCreateRole = React.useCallback(() => {
+    roleModal.open({ mode: "create" });
+  }, [roleModal]);
 
-    setRoleValues(EMPTY_STAFF_ROLE_FORM_VALUES)
-    roleModal.open({ mode: 'create' })
-  }
+  const openEditRole = React.useCallback(
+    (id: string) => {
+      const role = roleRows.find((item) => item.id === id);
+      if (!role || role.isSystem) return;
 
-  const openEditRole = (id: string) => {
-    setRoleOptionsRequested(true)
-    const role = roleRows.find((item) => item.id === id)
-    if (!role || role.isSystem) return
+      roleModal.open({ id, mode: "edit" });
+    },
+    [roleModal, roleRows],
+  );
 
-    setRoleValues({ name: role.role, description: role.description ?? '', permissions: role.permissions, isActive: role.isActive })
-    roleModal.open({ id, mode: 'edit' })
-  }
+  const submitRole = React.useCallback(
+    (values: StaffRoleFormValues) => {
+      if (roleMode === "create") {
+        createRole.mutate(values, { onSuccess: () => roleModal.close() });
+        return;
+      }
 
-  const submitRole = (values: StaffRoleFormValues) => {
-    if (roleMode === 'create') {
-      createRole.mutate(values, { onSuccess: () => roleModal.close() })
-      return
-    }
-    if (!roleId) return
-    updateRole.mutate({ roleId, body: values }, { onSuccess: () => roleModal.close() })
-  }
+      if (!roleId) return;
+      updateRole.mutate(
+        { roleId, body: values },
+        { onSuccess: () => roleModal.close() },
+      );
+    },
+    [createRole, roleId, roleModal, roleMode, updateRole],
+  );
 
-  const requestDeleteRole = (id: string) => {
-    const role = roleRows.find((item) => item.id === id)
-    if (!role) return
-    roleDeleteModal.open({ id })
-  }
+  const requestDeleteRole = React.useCallback(
+    (id: string) => {
+      const role = roleRows.find((item) => item.id === id);
+      if (!role || role.isSystem) return;
+      roleDeleteModal.open({ id });
+    },
+    [roleDeleteModal, roleRows],
+  );
+
+  const isMemberFormSubmitting =
+    memberMode === "create" ? createStaff.isPending : updateStaff.isPending;
+  const isRoleFormSubmitting =
+    roleMode === "create" ? createRole.isPending : updateRole.isPending;
+  const isMemberDetailsLoading =
+    roleOptionsQuery.isLoading ||
+    (memberMode === "edit" && memberOpen && memberDetailQuery.isLoading);
+  const isRoleDetailsLoading =
+    catalogQuery.isLoading || (roleMode === "edit" && roleOpen && roleDetailQuery.isLoading);
+
+  const memberDeleteTarget = staffRows.find((item) => item.id === memberDeleteId);
+  const roleDeleteTarget = roleRows.find((item) => item.id === roleDeleteId);
 
   return (
     <section className="flex flex-1 flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold">
-            {isEmployeesView ? 'إدارة موظفي المنظمة' : 'إدارة الأدوار والصلاحيات'}
+            {isEmployeesView ? "إدارة موظفي المنظمة" : "إدارة الأدوار والصلاحيات"}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             {isEmployeesView
-              ? 'إدارة الموظفين وربطهم بالأدوار المناسبة.'
-              : 'إنشاء أدوار مخصصة وتحديد صلاحيات كل دور.'}
+              ? "إدارة الموظفين وربطهم بالأدوار المناسبة."
+              : "إنشاء أدوار مخصصة وتحديد صلاحيات كل دور."}
           </p>
         </div>
         {(isEmployeesView ? canCreateMember : canCreateRole) ? (
           <Button size="sm" onClick={isEmployeesView ? openCreateMember : openCreateRole}>
-            {isEmployeesView ? <AppIcons.UserPlus className="size-4" /> : <AppIcons.settings className="size-4" />}
-            {isEmployeesView ? 'إضافة موظف' : 'إضافة دور'}
+            {isEmployeesView ? (
+              <AppIcons.UserPlus className="size-4" />
+            ) : (
+              <AppIcons.settings className="size-4" />
+            )}
+            {isEmployeesView ? "إضافة موظف" : "إضافة دور"}
           </Button>
         ) : null}
       </div>
@@ -223,11 +284,33 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
           تعذّر تحميل البيانات. حاول مرة أخرى.
         </div>
       ) : isEmployeesView ? (
-        staffRows.length ? <StaffTable rows={staffRows} currentUserId={currentUser?.id ?? null} currentUserEmail={currentUser?.email ?? null} onEdit={canUpdateMember ? openEditMember : undefined} onDelete={canDeleteMember ? requestDeleteMember : undefined} /> : <EmptyState icon="staff" title="لا يوجد موظفون" description="ابدأ بإضافة أول موظف إلى المنظمة." />
+        staffRows.length ? (
+          <StaffTable
+            rows={staffRows}
+            currentUserId={currentUser?.id ?? null}
+            currentUserEmail={currentUser?.email ?? null}
+            onEdit={canUpdateMember ? openEditMember : undefined}
+            onDelete={canDeleteMember ? requestDeleteMember : undefined}
+          />
+        ) : (
+          <EmptyState
+            icon="staff"
+            title="لا يوجد موظفون"
+            description="ابدأ بإضافة أول موظف إلى المنظمة."
+          />
+        )
       ) : roleRows.length ? (
-        <RolesTable rows={roleRows} onEditRole={canUpdateRole ? openEditRole : undefined} onDeleteRole={canDeleteRole ? requestDeleteRole : undefined} />
+        <RolesTable
+          rows={roleRows}
+          onEditRole={canUpdateRole ? openEditRole : undefined}
+          onDeleteRole={canDeleteRole ? requestDeleteRole : undefined}
+        />
       ) : (
-        <EmptyState icon="settings" title="لا توجد أدوار" description="ابدأ بإضافة دور وتحديد صلاحياته." />
+        <EmptyState
+          icon="settings"
+          title="لا توجد أدوار"
+          description="ابدأ بإضافة دور وتحديد صلاحياته."
+        />
       )}
 
       <PaginationControls
@@ -244,22 +327,62 @@ export function StaffManagementPage({ view = 'employees' }: { view?: 'employees'
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <StaffMemberFormSheet open={memberOpen} mode={memberMode} initialValues={memberValues} roleOptions={roleOptions} isLoadingDetails={roleOptionsQuery.isLoading || memberDetailQuery.isLoading} onOpenChange={memberModal.onOpenChange} onSubmit={submitMember} />
+      <StaffMemberFormSheet
+        key={`${memberMode}-${memberId ?? "new"}`}
+        open={memberOpen}
+        mode={memberMode}
+        initialValues={memberValues}
+        roleOptions={roleOptions}
+        isLoadingDetails={isMemberDetailsLoading}
+        isSubmitting={isMemberFormSubmitting}
+        onOpenChange={memberModal.onOpenChange}
+        onSubmit={submitMember}
+      />
+
       <StaffMemberDeleteDialog
         open={memberDeleteOpen}
-        staffName={staffRows.find((item) => item.id === memberDeleteId)?.name ?? ''}
+        staffName={memberDeleteTarget?.name ?? ""}
+        isDeleting={deleteStaff.isPending}
         onOpenChange={memberDeleteModal.onOpenChange}
         onConfirm={() => {
-          const member = staffRows.find((item) => item.id === memberId)
+          if (!memberDeleteId || deleteStaff.isPending) return;
           const isCurrentUser =
             memberDeleteId === currentUser?.id ||
-            member?.email.trim().toLowerCase() === currentUser?.email.trim().toLowerCase()
-          if (!memberDeleteId || isCurrentUser) return
-          deleteStaff.mutate(memberDeleteId, { onSuccess: () => memberDeleteModal.close() })
+            memberDeleteTarget?.email.trim().toLowerCase() ===
+              currentUser?.email.trim().toLowerCase();
+          if (isCurrentUser) return;
+
+          deleteStaff.mutate(memberDeleteId, {
+            onSuccess: () => memberDeleteModal.close(),
+          });
         }}
       />
-      <StaffRoleFormSheet open={roleOpen} mode={roleMode} initialValues={roleValues} permissionOptions={permissionOptions} isLoadingDetails={catalogQuery.isLoading || roleDetailQuery.isLoading} onOpenChange={roleModal.onOpenChange} onSubmit={submitRole} />
-      <StaffRoleDeleteDialog open={roleDeleteOpen} roleName={roleRows.find((item) => item.id === roleDeleteId)?.role ?? ''} membersCount={roleRows.find((item) => item.id === roleDeleteId)?.membersCount ?? 0} onOpenChange={roleDeleteModal.onOpenChange} onConfirm={() => roleDeleteId && deleteRole.mutate(roleDeleteId, { onSuccess: () => roleDeleteModal.close() })} />
+
+      <StaffRoleFormSheet
+        key={`${roleMode}-${roleId ?? "new"}`}
+        open={roleOpen}
+        mode={roleMode}
+        initialValues={roleValues}
+        permissionOptions={permissionOptions}
+        isLoadingDetails={isRoleDetailsLoading}
+        isSubmitting={isRoleFormSubmitting}
+        onOpenChange={roleModal.onOpenChange}
+        onSubmit={submitRole}
+      />
+
+      <StaffRoleDeleteDialog
+        open={roleDeleteOpen}
+        roleName={roleDeleteTarget?.role ?? ""}
+        membersCount={roleDeleteTarget?.membersCount ?? 0}
+        isDeleting={deleteRole.isPending}
+        onOpenChange={roleDeleteModal.onOpenChange}
+        onConfirm={() => {
+          if (!roleDeleteId || deleteRole.isPending) return;
+          deleteRole.mutate(roleDeleteId, {
+            onSuccess: () => roleDeleteModal.close(),
+          });
+        }}
+      />
     </section>
-  )
+  );
 }

@@ -38,8 +38,13 @@ export interface OrgStaffParams { page?: number; perPage?: number; sort?: string
 export interface OrgRolesFilter { status?: 'active' | 'inactive' }
 export interface OrgRolesParams { page?: number; perPage?: number; sort?: string; filter?: OrgRolesFilter }
 
-export interface StaffCreateRequest { name: string; email: string; phone?: string | null; organizationRoleId: string }
-export interface StaffUpdateRequest { organizationRoleId?: string; status?: StaffMemberItem['status'] }
+export interface StaffCreateRequest {
+  name: string
+  email: string
+  phone: string
+  organizationRoleId: string
+}
+export type StaffUpdateRequest = StaffCreateRequest | { status: StaffMemberItem['status'] }
 export interface RoleCreateRequest { name: string; description: string; permissions: string[]; isActive: boolean }
 export interface RoleUpdateRequest { name: string; description?: string; permissions: string[]; isActive: boolean }
 
