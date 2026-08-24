@@ -27,6 +27,12 @@ export type OrganizationVideoUploadPhase =
   | 'assembling'
   | 'error'
 
+export type CompletedOrganizationVideoUpload = {
+  uploadId: string
+  replaceVideoId: string | null
+  videoId: string | null
+}
+
 type Options = { scope: OrganizationVideosScope; organizationId?: string }
 type StartInput = { file: File; description?: string | null; replaceVideoId?: string | null }
 
@@ -63,6 +69,7 @@ export function useResumableOrganizationVideoUpload({ scope, organizationId }: O
   const [error, setError] = React.useState<string | null>(null)
   const [activeChunkLoadedBytes, setActiveChunkLoadedBytes] = React.useState(0)
   const [needsFileReselection, setNeedsFileReselection] = React.useState(false)
+  const [lastCompletedUpload, setLastCompletedUpload] = React.useState<CompletedOrganizationVideoUpload | null>(null)
 
   const sessionRef = React.useRef<VideoUploadSession | null>(null)
   const activeAbortRef = React.useRef<AbortController | null>(null)
@@ -110,9 +117,17 @@ export function useResumableOrganizationVideoUpload({ scope, organizationId }: O
   }, [applySession])
 
   const finishRecoveredCompletedSession = React.useCallback(async () => {
+    const completed = sessionRef.current
     clearPersisted()
     await invalidateVideos()
     resetLocalState()
+    if (completed) {
+      setLastCompletedUpload({
+        uploadId: completed.id,
+        replaceVideoId: completed.replaceVideoId,
+        videoId: completed.videoId,
+      })
+    }
     toast.success('اكتملت معالجة الفيديو وأصبح جاهزًا للعرض.')
   }, [clearPersisted, invalidateVideos, resetLocalState])
 
@@ -151,6 +166,11 @@ export function useResumableOrganizationVideoUpload({ scope, organizationId }: O
       clearPersisted()
       await invalidateVideos()
       resetLocalState()
+      setLastCompletedUpload({
+        uploadId: result.upload.id,
+        replaceVideoId: result.upload.replaceVideoId,
+        videoId: result.upload.videoId,
+      })
       toast.success(current.replaceVideoId ? 'تم استبدال الفيديو بنجاح.' : 'تم رفع الفيديو بنجاح.')
       return true
     } catch (finalizeError) {
@@ -243,6 +263,7 @@ export function useResumableOrganizationVideoUpload({ scope, organizationId }: O
 
   const start = React.useCallback(async ({ file: selectedFile, description, replaceVideoId }: StartInput): Promise<boolean> => {
     if (sessionRef.current || phase === 'recovering' || phase === 'initiating') return false
+    setLastCompletedUpload(null)
     const mimeType = resolveOrganizationVideoMimeType(selectedFile)
     if (!mimeType) return false
 
@@ -430,6 +451,7 @@ export function useResumableOrganizationVideoUpload({ scope, organizationId }: O
     needsFileReselection,
     progressPercent,
     optimisticUploadedBytes,
+    lastCompletedUpload,
     isActive: Boolean(session) || ['recovering', 'initiating', 'assembling'].includes(phase),
     start,
     pause,

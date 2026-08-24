@@ -296,7 +296,7 @@ export function OrganizationDetailsPage({
         organizationId={organization.id}
         canManage
         title="فيديوهات المنظمة"
-        description="إدارة الفيديوهات التعريفية والترويجية للمنظمة. يدعم الرفع المتقطع، الإيقاف والمتابعة، الاستبدال، والإلغاء قبل الاكتمال."
+        description="إدارة فيديوهات المنظمة بفيديو واحد في كل اختيار. أي فيديو إضافي أثناء الرفع يدخل الرتل ويبدأ بعد الحالي تلقائيًا، مع دعم الإيقاف والمتابعة والاستبدال والإلغاء قبل الاكتمال."
       />
 
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">

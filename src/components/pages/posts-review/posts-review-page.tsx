@@ -10,11 +10,9 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   reviewStatusLabels,
-  type ReviewPostItem,
   type ReviewPostType,
 } from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
-import { EditPostDialog } from "@/components/pages/posts-review/edit-post-dialog";
 import { ReviewPostsTable } from "@/components/pages/posts-review/review-posts-table";
 import {
   ReviewToolbar,
@@ -42,7 +40,6 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [typeFilter, setTypeFilter] = React.useState<"all" | ReviewPostType>("all");
   const [sortBy, setSortBy] = React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
-  const [editingPost, setEditingPost] = React.useState<ReviewPostItem | null>(null);
   const detailsModal = useQueryModal("post-details");
   const debouncedSearch = useDebounce(organizationSearch, 400);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -126,7 +123,6 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
           rejectingPostId={rejectMutation.isPending ? rejectMutation.variables?.postId : undefined}
           onApprove={handleApprove}
           onReject={handleReject}
-          onEdit={setEditingPost}
           onOpenDetails={(post) => detailsModal.open({ id: post.id })}
         />
       )}
@@ -138,12 +134,6 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
           post={selectedPostForDetails}
         />
       ) : null}
-
-      <EditPostDialog
-        open={Boolean(editingPost)}
-        onOpenChange={(open) => { if (!open) setEditingPost(null); }}
-        post={editingPost}
-      />
 
       <PaginationControls
         currentPage={pagination.currentPage}

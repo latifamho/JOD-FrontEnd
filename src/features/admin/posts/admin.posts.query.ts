@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { adminPostsServices } from './admin.posts.services'
 import { adminPostsKeys } from './admin.posts.query-keys'
-import type { AdminPostPayload, AdminReviewPostsParams } from './admin.posts.types'
+import type { AdminReviewPostsParams } from './admin.posts.types'
 
 export function useAdminReviewPosts(params: AdminReviewPostsParams) {
   return useQuery({
@@ -27,15 +27,6 @@ function useInvalidateAdminPosts() {
     queryClient.invalidateQueries({ queryKey: adminPostsKeys.reviewLists() })
     queryClient.invalidateQueries({ queryKey: adminPostsKeys.detail(postId) })
   }
-}
-
-export function useUpdateAdminPost() {
-  const invalidate = useInvalidateAdminPosts()
-  return useMutation({
-    mutationFn: ({ postId, body }: { postId: string; body: AdminPostPayload }) =>
-      adminPostsServices.updatePost(postId, body),
-    onSuccess: (_data, { postId }) => invalidate(postId),
-  })
 }
 
 export function useApprovePost() {

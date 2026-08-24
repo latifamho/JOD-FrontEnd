@@ -54,17 +54,3 @@ export type AdminPostStatus =
   | 'rejected'
   | 'published'
   | 'archived'
-
-export type AdminPostPayload = {
-  title?: string
-  summary?: string | null
-  content?: string | null
-  description?: string | null
-  type?: string
-  status?: AdminPostStatus
-  location?: string | null
-  category_id?: string | null
-  campaign_id?: string | null
-  organization_id?: string | null
-  author_id?: string | null
-}

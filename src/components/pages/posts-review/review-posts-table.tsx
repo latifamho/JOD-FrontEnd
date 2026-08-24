@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,6 @@ type ReviewPostsTableProps = {
   rejectingPostId?: string;
   onApprove: (postId: string) => void;
   onReject: (postId: string) => void;
-  onEdit: (post: ReviewPostItem) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
 };
 
@@ -42,7 +41,6 @@ export function ReviewPostsTable({
   rejectingPostId,
   onApprove,
   onReject,
-  onEdit,
   onOpenDetails,
 }: ReviewPostsTableProps) {
   const hasNonPending = posts.some((post) => post.status !== "pending");
@@ -63,7 +61,7 @@ export function ReviewPostsTable({
             <TableHead className="w-[110px] text-left font-semibold text-muted-foreground">
               {hasNonPending ? "تاريخ النشر" : "تاريخ الإرسال"}
             </TableHead>
-            <TableHead className="w-[170px] text-center font-semibold text-muted-foreground">إجراءات</TableHead>
+            <TableHead className="w-[140px] text-center font-semibold text-muted-foreground">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,7 +74,6 @@ export function ReviewPostsTable({
               rejectingPostId={rejectingPostId}
               onApprove={onApprove}
               onReject={onReject}
-              onEdit={onEdit}
               onOpenDetails={onOpenDetails}
             />
           ))}
@@ -93,7 +90,6 @@ function ReviewPostRow({
   rejectingPostId,
   onApprove,
   onReject,
-  onEdit,
   onOpenDetails,
 }: {
   post: ReviewPostItem;
@@ -102,7 +98,6 @@ function ReviewPostRow({
   rejectingPostId?: string;
   onApprove: (postId: string) => void;
   onReject: (postId: string) => void;
-  onEdit: (post: ReviewPostItem) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
 }) {
   const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`post-reject-${post.id}`);
@@ -143,15 +138,6 @@ function ReviewPostRow({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">عرض التفاصيل</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="size-8" disabled={isMutating} onClick={() => onEdit(post)}>
-                  <Pencil className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">تعديل المنشور</TooltipContent>
             </Tooltip>
 
             {post.status === "pending" ? (
