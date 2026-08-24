@@ -1,9 +1,2 @@
-import type { AdminUsersParams } from './admin.users.types'
-
-export const adminUsersKeys = {
-  all: ['admin', 'users'] as const,
-  lists: () => [...adminUsersKeys.all, 'list'] as const,
-  list: (params: AdminUsersParams) => [...adminUsersKeys.lists(), params] as const,
-  details: () => [...adminUsersKeys.all, 'detail'] as const,
-  detail: (id: string) => [...adminUsersKeys.details(), id] as const,
-}
+import type { AdminUserActivityParams, AdminUsersParams } from './admin.users.types'
+export const adminUsersKeys = { all: ['admin','users'] as const, lists: () => [...adminUsersKeys.all,'list'] as const, list: (params: AdminUsersParams) => [...adminUsersKeys.lists(),params] as const, details: () => [...adminUsersKeys.all,'detail'] as const, detail: (id: string) => [...adminUsersKeys.details(),id] as const, posts: (id: string, params: AdminUserActivityParams) => [...adminUsersKeys.detail(id),'posts',params] as const, donations: (id: string, params: AdminUserActivityParams) => [...adminUsersKeys.detail(id),'donations',params] as const }

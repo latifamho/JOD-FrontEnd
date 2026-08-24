@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 } from "@/components/pages/users-management/users-management.types";
 import { getUserStatusBadgeClass } from "@/components/pages/users-management/helpers";
 import { AppIcons } from "@/constant/icons";
+import { routePaths } from "@/constant/routes";
 
 const SKELETON_ROW_COUNT = 5;
 
@@ -160,6 +162,11 @@ export function UsersTable({
 
                   <TableCell>
                     <div className="flex items-center justify-start gap-2">
+                      <Button type="button" size="icon" variant="ghost" title="عرض التفاصيل" asChild className="shadow-sm">
+                        <Link href={routePaths.adminScope.userDetails(user.id)}>
+                          <AppIcons.eye className="size-4 text-info" />
+                        </Link>
+                      </Button>
                       <Button
                         type="button"
                         size="icon"

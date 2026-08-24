@@ -22,6 +22,8 @@ export const routePaths = {
     reportsInProgress: "/dashboard/admin/reports/in-progress",
     reportsClosed: "/dashboard/admin/reports/closed",
     users: "/dashboard/admin/users",
+    userDetails: (id = ":id") => `/dashboard/admin/users/${id}`,
+    userDetailsTemplate: "/dashboard/admin/users/:id",
     categories: "/dashboard/admin/categories",
     organizations: "/dashboard/admin/organizations",
     organizationDetails: (id = ":id") => `/dashboard/admin/organizations/${id}`,
@@ -56,6 +58,7 @@ export const routePaths = {
     postEdit: (id = ":id") => `/dashboard/org-owner/posts/${id}/edit`,
     postEditTemplate: "/dashboard/org-owner/posts/:id/edit",
     donors: "/dashboard/org-owner/donors",
+    donations: "/dashboard/org-owner/donations",
     donorsApplicants: "/dashboard/org-owner/donors/applicants",
     staff: "/dashboard/org-owner/staff",
     staffRoles: "/dashboard/org-owner/staff/roles",
@@ -83,6 +86,7 @@ export const routePaths = {
     postEdit: (id = ":id") => `/dashboard/org-staff/posts/${id}/edit`,
     postEditTemplate: "/dashboard/org-staff/posts/:id/edit",
     donors: "/dashboard/org-staff/donors",
+    donations: "/dashboard/org-staff/donations",
     donorsApplicants: "/dashboard/org-staff/donors/applicants",
     notifications: "/dashboard/org-staff/notifications",
     notificationsInbox: "/dashboard/org-staff/notifications/inbox",
@@ -170,6 +174,7 @@ const organizationNotificationsEnabled =
 export function getOrganizationPermissionForPath(pathname: string): string | null {
   if (pathname.includes("/campaigns")) return "org.campaigns.view";
   if (pathname.includes("/posts")) return "org.posts.view";
+  if (pathname.includes("/donations")) return "org.donors.view";
   if (pathname.includes("/donors/applicants")) return "org.applicants.view";
   if (pathname.includes("/donors")) return "org.donors.view";
   if (pathname.includes("/reports")) return "org.reports.view";
@@ -376,6 +381,11 @@ const organizationOwnerLinks: AppNavLink[] = [
         href: routePaths.organizationOwnerScope.donorsApplicants,
         icon: "users",
       },
+      {
+        label: "طلبات التبرع",
+        href: routePaths.organizationOwnerScope.donations,
+        icon: "donors",
+      },
     ],
   },
   {
@@ -502,6 +512,11 @@ const organizationStaffLinks: AppNavLink[] = [
         label: "المتقدمون",
         href: routePaths.organizationStaffScope.donorsApplicants,
         icon: "users",
+      },
+      {
+        label: "طلبات التبرع",
+        href: routePaths.organizationStaffScope.donations,
+        icon: "donors",
       },
     ],
   },
@@ -649,6 +664,7 @@ const segmentLabels: Record<string, string> = {
   analytics: "الإحصائيات",
   settings: "الإعدادات",
   donors: "المتبرعون",
+  donations: "طلبات التبرع",
   applicants: "المتقدمون",
   staff: "الموظفون",
   roles: "الصلاحيات",
@@ -701,6 +717,10 @@ routeTitleMap.set(
 routeTitleMap.set(
   normalizePathname(routePaths.adminScope.organizationDetailsTemplate),
   "تفاصيل المنظمة",
+);
+routeTitleMap.set(
+  normalizePathname(routePaths.adminScope.userDetailsTemplate),
+  "تفاصيل المستخدم",
 );
 routeTitleMap.set(
   normalizePathname(routePaths.dashboardScope.root),

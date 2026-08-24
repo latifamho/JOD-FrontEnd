@@ -1,0 +1,2 @@
+import type { OrgDonationsParams } from './org.donations.types'
+export const orgDonationsKeys = { all: ['org','donations'] as const, lists: () => [...orgDonationsKeys.all,'list'] as const, list: (params: OrgDonationsParams) => [...orgDonationsKeys.lists(), params] as const, details: () => [...orgDonationsKeys.all,'detail'] as const, detail: (id: string) => [...orgDonationsKeys.details(), id] as const }
