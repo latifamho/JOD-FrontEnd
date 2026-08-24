@@ -11,7 +11,7 @@ import type {
 } from './admin.posts.types'
 
 const ENDPOINTS = {
-  REVIEW_POSTS: '/admin/review/posts',
+  REVIEW_POSTS: '/admin/posts',
   REVIEW_POST_DETAIL: (id: string) => `/admin/review/posts/${id}`,
   APPROVE_POST: (id: string) => `/admin/review/posts/${id}/approve`,
   REJECT_POST: (id: string) => `/admin/review/posts/${id}/reject`,
