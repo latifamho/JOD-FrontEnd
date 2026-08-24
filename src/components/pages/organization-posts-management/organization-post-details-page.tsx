@@ -18,6 +18,7 @@ import {
 } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
 import { useOrgPost } from "@/features/org/posts/org.posts.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { useAuth } from "@/providers/AuthProvider";
@@ -31,6 +32,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
   const { can } = useAuth();
   const postQuery = useOrgPost(postId);
   const post = postQuery.data?.data;
+  const categoriesBrief = useOrgCategoriesBrief();
   const postsRoute =
     scope === "staff"
       ? routePaths.organizationStaffScope.posts
@@ -73,6 +75,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
 
   const normalizedStatus = normalizePostStatus(post.status);
   const campaignRelated = isCampaignRelatedPostType(post.type);
+  const categoryName = (categoriesBrief.data?.data ?? []).find((category) => category.id === post.categoryId)?.name;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -84,6 +87,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
                 {organizationPostStatusLabels[normalizedStatus]}
               </Badge>
               <Badge variant="outline">{organizationPostTypeLabels[post.type]}</Badge>
+              <Badge variant="outline">{displayOrDash(categoryName)}</Badge>
               <Badge variant="outline">{post.id}</Badge>
             </div>
             <div>

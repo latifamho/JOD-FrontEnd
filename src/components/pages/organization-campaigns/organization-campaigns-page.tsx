@@ -26,7 +26,6 @@ import { OrganizationCampaignsTable } from "@/components/pages/organization-camp
 import {
   organizationCampaignStatusLabels,
   syrianGovernorateOptions,
-  type OrganizationCampaignCategory,
   type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
 import {
@@ -35,6 +34,7 @@ import {
   useCloseOrgCampaign,
   useDeleteOrgCampaign,
 } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 
 type OrganizationCampaignsPageProps = {
   status: "all" | OrganizationCampaignStatus;
@@ -57,9 +57,7 @@ export function OrganizationCampaignsPage({
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
 
-  const [categoryFilter, setCategoryFilter] = React.useState<
-    "all" | OrganizationCampaignCategory
-  >("all");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [locationFilter, setLocationFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
@@ -75,6 +73,8 @@ export function OrganizationCampaignsPage({
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
+  const categoriesBrief = useOrgCategoriesBrief();
+  const categories = categoriesBrief.data?.data ?? [];
 
   const { data, isLoading, isError, refetch } = useOrgCampaigns({
     page: pagination.currentPage,
@@ -82,7 +82,7 @@ export function OrganizationCampaignsPage({
     sort: sortToApiSort[sortBy],
     filter: {
       status: status !== "all" ? status : undefined,
-      category: categoryFilter !== "all" ? categoryFilter : undefined,
+      categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
       location: locationFilter !== "all" ? locationFilter : undefined,
     },
   });
@@ -121,7 +121,7 @@ export function OrganizationCampaignsPage({
       const response = await createMutation.mutateAsync({
         title: values.title,
         summary: values.summary,
-        category: values.category,
+        categoryId: values.categoryId,
         status: values.status,
         location: values.location,
         goalAmount: values.goalAmount,
@@ -192,6 +192,7 @@ export function OrganizationCampaignsPage({
 
       <OrganizationCampaignsFilters
         categoryFilter={categoryFilter}
+        categories={categories}
         onCategoryFilterChange={setCategoryFilter}
         locationFilter={locationFilter}
         locationOptions={syrianGovernorateOptions.map((option) => option.value)}
@@ -222,6 +223,7 @@ export function OrganizationCampaignsPage({
       ) : (
         <OrganizationCampaignsTable
           rows={campaigns}
+          categories={categories}
           onCloseCampaign={openCloseDialog}
           onDeleteCampaign={openDeleteDialog}
           canClose={canClose}

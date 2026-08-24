@@ -27,13 +27,14 @@ import {
   getProgress,
 } from "@/components/pages/organization-campaigns/helpers";
 import {
-  organizationCampaignCategoryLabels,
   organizationCampaignStatusLabels,
   type OrganizationCampaignItem,
 } from "@/components/pages/organization-campaigns/static-data";
+import type { OrgCategoryBriefItem } from "@/features/org/categories/org.categories.types";
 
 type OrganizationCampaignsTableProps = {
   rows: OrganizationCampaignItem[];
+  categories: OrgCategoryBriefItem[];
   onCloseCampaign: (campaignId: string) => void;
   onDeleteCampaign: (campaignId: string) => void;
   canClose: boolean;
@@ -42,6 +43,7 @@ type OrganizationCampaignsTableProps = {
 
 export function OrganizationCampaignsTable({
   rows,
+  categories,
   onCloseCampaign,
   onDeleteCampaign,
   canClose,
@@ -49,6 +51,7 @@ export function OrganizationCampaignsTable({
 }: OrganizationCampaignsTableProps) {
   const pathname = usePathname();
   const isStaffScope = pathname.startsWith(routePaths.dashboardScope.orgStaffRoot);
+  const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
 
   return (
     <div className="overflow-auto flex flex-1 rounded-md border border-border shadow-xs">
@@ -95,7 +98,7 @@ export function OrganizationCampaignsTable({
 
                   <TableCell>
                     <Badge variant="outline">
-                      {organizationCampaignCategoryLabels[campaign.category]}
+                      {displayOrDash(categoryNames.get(campaign.categoryId ?? ""))}
                     </Badge>
                   </TableCell>
 

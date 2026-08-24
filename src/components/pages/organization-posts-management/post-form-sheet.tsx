@@ -23,6 +23,7 @@ import {
   type OrganizationPostType,
 } from "@/components/pages/organization-posts-management/static-data";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { toast } from "@/lib/toast";
@@ -31,6 +32,7 @@ const postFormSchema = z
   .object({
     title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
     summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
+    categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
     type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
     status: z.enum(["draft", "published", "archived"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
@@ -50,6 +52,7 @@ type PostFormFields = z.infer<typeof postFormSchema>;
 export type PostFormValues = {
   title: string;
   summary: string;
+  categoryId: string;
   type: OrganizationPostType;
   status: OrganizationPostStatus;
   location: string;
@@ -59,6 +62,7 @@ export type PostFormValues = {
 export const EMPTY_POST_FORM_VALUES: PostFormValues = {
   title: "",
   summary: "",
+  categoryId: "",
   type: "general",
   status: "published",
   location: "",
@@ -86,6 +90,7 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
   const campaignsBrief = useOrgCampaignsBrief(open && campaignRelated);
+  const categoriesBrief = useOrgCategoriesBrief(open);
   const mediaQueue = useMediaUploadQueue(10);
   const [createdPostId, setCreatedPostId] = React.useState<string | null>(null);
   const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
@@ -131,6 +136,7 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
               const postId = await onSubmit({
                 title: values.title.trim(),
                 summary: values.summary.trim(),
+                categoryId: values.categoryId,
                 type: values.type,
                 status: values.status,
                 location: values.location,
@@ -167,6 +173,24 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                 <Label htmlFor="post-summary">محتوى مختصر</Label>
                 <Textarea id="post-summary" disabled={formLocked} aria-invalid={Boolean(errors.summary)} placeholder="اكتب ملخص محتوى البوست" className="min-h-30 text-sm" {...register("summary")} />
                 {errors.summary ? <p className="text-xs text-destructive">{errors.summary.message}</p> : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>تصنيف البوست</Label>
+                <Controller control={control} name="categoryId" render={({ field }) => (
+                  <Select dir="rtl" disabled={formLocked || categoriesBrief.isLoading} value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.categoryId)}>
+                      <SelectValue placeholder={categoriesBrief.isLoading ? "جاري تحميل التصنيفات..." : "اختر التصنيف"} />
+                    </SelectTrigger>
+                    <SelectContent align="start" position="popper" className="text-right">
+                      {(categoriesBrief.data?.data ?? []).map((category) => (
+                        <SelectItem key={category.id} value={category.id} className="text-right text-xs">{category.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
+                {errors.categoryId ? <p className="text-xs text-destructive">{errors.categoryId.message}</p> : null}
+                {categoriesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل التصنيفات المتاحة.</p> : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

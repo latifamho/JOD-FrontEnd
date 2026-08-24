@@ -39,6 +39,7 @@ import {
   useRestoreOrgPost,
   useDeleteOrgPost,
 } from "@/features/org/posts/org.posts.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 
 type WorkflowAction = "publish" | "archive" | "restore";
 
@@ -91,6 +92,8 @@ function OrganizationPostsManagementPageContent({
   });
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
+  const categoriesBrief = useOrgCategoriesBrief();
+  const categories = categoriesBrief.data?.data ?? [];
   const { setCurrentPage } = pagination;
 
   const { data, isLoading, isError, refetch } = useOrgPosts({
@@ -154,6 +157,7 @@ function OrganizationPostsManagementPageContent({
       const response = await createMutation.mutateAsync({
         title: values.title,
         summary: values.summary,
+        categoryId: values.categoryId,
         type: values.type,
         status: values.status,
         location: values.location,
@@ -245,6 +249,7 @@ function OrganizationPostsManagementPageContent({
       ) : (
         <PostsTable
           rows={posts}
+          categories={categories}
           onOpenDetails={openDetails}
           onWorkflowAction={handleWorkflowAction}
           onDeletePost={openDeleteDialog}

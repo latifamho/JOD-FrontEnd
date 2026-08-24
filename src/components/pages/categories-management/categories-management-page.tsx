@@ -8,10 +8,7 @@ import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useQueryModal } from "@/hooks/use-query-modal";
-import {
-  type CategoryStatus,
-  type CategoryTarget,
-} from "@/components/pages/categories-management/categories-management.types";
+import { type CategoryStatus } from "@/components/pages/categories-management/categories-management.types";
 import {
   CategoryFormSheet,
   EMPTY_CATEGORY_FORM_VALUES,
@@ -38,7 +35,6 @@ export function CategoriesManagementPage() {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const [searchFilter, setSearchFilter] = React.useState("");
-  const [targetFilter, setTargetFilter] = React.useState<"all" | CategoryTarget>("all");
   const [statusFilter, setStatusFilter] = React.useState<"all" | CategoryStatus>("all");
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -50,7 +46,6 @@ export function CategoriesManagementPage() {
     sort: "-createdAt",
     filter: {
       search: searchFilter.trim() || undefined,
-      target: targetFilter !== "all" ? targetFilter : undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
     },
   });
@@ -63,7 +58,7 @@ export function CategoriesManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, searchFilter, targetFilter, statusFilter, setCurrentPage]);
+  }, [pageSize, searchFilter, statusFilter, setCurrentPage]);
 
   const categories = data?.data ?? [];
 
@@ -104,7 +99,6 @@ export function CategoriesManagementPage() {
 
   const resetFilters = React.useCallback(() => {
     setSearchFilter("");
-    setTargetFilter("all");
     setStatusFilter("all");
   }, []);
 
@@ -132,7 +126,6 @@ export function CategoriesManagementPage() {
         setFormInitialValues({
           name: category.name,
           description: category.description,
-          target: category.target,
           status: category.status,
         });
       } catch {
@@ -150,7 +143,6 @@ export function CategoriesManagementPage() {
       const body = {
         name: values.name,
         description: values.description,
-        target: values.target,
         status: values.status,
       };
 
@@ -212,7 +204,7 @@ export function CategoriesManagementPage() {
         <div>
           <h2 className="text-base font-semibold text-foreground">إدارة التصنيفات</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            تخصيص تصنيفات المنشورات والحملات لتسهيل التنظيم والإدارة.
+            تخصيص التصنيفات لتسهيل تنظيم المحتوى وإدارته.
           </p>
         </div>
 
@@ -224,10 +216,8 @@ export function CategoriesManagementPage() {
 
       <CategoriesFilters
         searchFilter={searchFilter}
-        targetFilter={targetFilter}
         statusFilter={statusFilter}
         onSearchFilterChange={setSearchFilter}
-        onTargetFilterChange={setTargetFilter}
         onStatusFilterChange={setStatusFilter}
         onResetFilters={resetFilters}
       />

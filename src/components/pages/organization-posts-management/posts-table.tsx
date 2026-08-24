@@ -26,11 +26,13 @@ import {
   organizationPostTypeLabels,
   type OrganizationPostItem,
 } from "@/components/pages/organization-posts-management/static-data";
+import type { OrgCategoryBriefItem } from "@/features/org/categories/org.categories.types";
 
 type WorkflowAction = "publish" | "archive" | "restore";
 
 type PostsTableProps = {
   rows: OrganizationPostItem[];
+  categories: OrgCategoryBriefItem[];
   onOpenDetails: (postId: string) => void;
   onWorkflowAction: (postId: string, action: WorkflowAction) => void;
   onDeletePost: (postId: string) => void;
@@ -78,6 +80,7 @@ function WorkflowActionButton({
 
 export function PostsTable({
   rows,
+  categories,
   onOpenDetails,
   onWorkflowAction,
   onDeletePost,
@@ -87,6 +90,7 @@ export function PostsTable({
   canRestore,
   canDelete,
 }: PostsTableProps) {
+  const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
   return (
     <div className="flex flex-1 overflow-auto rounded-md border border-border shadow-xs">
       <Table className="min-w-320 bg-background">
@@ -94,6 +98,7 @@ export function PostsTable({
           <TableRow>
             <TableHead>البوست</TableHead>
             <TableHead>النوع</TableHead>
+            <TableHead>التصنيف</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>الارتباط</TableHead>
             <TableHead>الموقع</TableHead>
@@ -121,6 +126,10 @@ export function PostsTable({
 
                   <TableCell>
                     <Badge variant="outline">{organizationPostTypeLabels[post.type]}</Badge>
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge variant="outline">{displayOrDash(categoryNames.get(post.categoryId ?? ""))}</Badge>
                   </TableCell>
 
                   <TableCell>
@@ -223,7 +232,7 @@ export function PostsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={8}
+                colSpan={9}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد بوستات مطابقة لخيارات العرض الحالية.

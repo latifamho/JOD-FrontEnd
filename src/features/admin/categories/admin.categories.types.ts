@@ -2,11 +2,9 @@ import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/
 import type {
   AdminCategoryItem,
   CategoryStatus,
-  CategoryTarget,
 } from '@/components/pages/categories-management/categories-management.types'
 
 export interface AdminCategoriesFilter {
-  target?: CategoryTarget
   status?: CategoryStatus
   search?: string
 }
@@ -20,14 +18,12 @@ export interface AdminCategoriesParams {
 
 export interface CategoryCreateRequest {
   name: string
-  target: CategoryTarget
   description: string
   status: CategoryStatus
 }
 
 export interface CategoryUpdateRequest {
   name: string
-  target: CategoryTarget
   description: string
   status: CategoryStatus
 }

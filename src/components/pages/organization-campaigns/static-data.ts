@@ -34,7 +34,8 @@ export type OrganizationCampaignItem = {
   id: string;
   title: string;
   summary: string;
-  category: OrganizationCampaignCategory;
+  categoryId?: string | null;
+  category?: OrganizationCampaignCategory;
   status: OrganizationCampaignStatus;
   location: string;
   goalAmount: number;

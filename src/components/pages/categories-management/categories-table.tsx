@@ -17,7 +17,6 @@ import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
 import {
   categoryStatusLabels,
-  categoryTargetLabels,
   type AdminCategoryItem,
 } from "@/components/pages/categories-management/categories-management.types";
 import { getCategoryStatusBadgeClass } from "@/components/pages/categories-management/helpers";
@@ -51,7 +50,6 @@ export function CategoriesTable({
         <TableHeader className="bg-muted/35">
           <TableRow>
             <TableHead className="font-semibold text-muted-foreground">التصنيف</TableHead>
-            <TableHead className="font-semibold text-muted-foreground">النوع</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الوصف</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الاستخدام</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الحالة</TableHead>
@@ -68,7 +66,6 @@ export function CategoriesTable({
                   <SkeletonPulse className="h-3.5 w-28 mb-1.5" />
                   <SkeletonPulse className="h-3 w-16" />
                 </TableCell>
-                <TableCell><SkeletonPulse className="h-5 w-20 rounded-full" /></TableCell>
                 <TableCell><SkeletonPulse className="h-3 w-48" /></TableCell>
                 <TableCell><SkeletonPulse className="h-3 w-12" /></TableCell>
                 <TableCell><SkeletonPulse className="h-5 w-16 rounded-full" /></TableCell>
@@ -90,9 +87,6 @@ export function CategoriesTable({
                   <TableCell>
                     <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
                     <p className="text-xs text-muted-foreground">{row.id}</p>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{categoryTargetLabels[row.target]}</Badge>
                   </TableCell>
                   <TableCell className="max-w-[280px] text-sm text-muted-foreground">
                     {displayOrDash(row.description)}
@@ -155,7 +149,7 @@ export function CategoriesTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={6}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد تصنيفات للعرض.

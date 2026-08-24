@@ -16,13 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toDateInputValue, toDateTimeFromInput } from "@/components/pages/organization-campaigns/helpers";
 import {
-  organizationCampaignCategoryLabels,
   organizationCampaignStatusLabels,
   syrianGovernorateOptions,
 } from "@/components/pages/organization-campaigns/static-data";
 import { routePaths } from "@/constant/routes";
 import { mediaServices } from "@/features/shared/media/media.services";
 import { useOrgCampaign, useUpdateOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { toast } from "@/lib/toast";
 import { useAuth } from "@/providers/AuthProvider";
@@ -30,7 +30,7 @@ import { useAuth } from "@/providers/AuthProvider";
 const schema = z.object({
   title: z.string().trim().min(1, "عنوان الحملة مطلوب"),
   summary: z.string().trim().min(1, "ملخص الحملة مطلوب"),
-  category: z.enum(["health", "education", "food", "shelter", "employment", "emergency", "donation", "volunteer", "community"]),
+  categoryId: z.string().min(1, "تصنيف الحملة مطلوب"),
   status: z.enum(["draft", "active"]),
   location: z.string().refine((value) => syrianGovernorateOptions.some((item) => item.value === value), "اختر محافظة سورية صحيحة"),
   goalAmount: z.coerce.number().min(0),
@@ -61,6 +61,7 @@ export function OrganizationCampaignEditPage({ campaignId, scope }: Props) {
 function CampaignEditForm({ campaign, detailsRoute, refetch }: { campaign: NonNullable<ReturnType<typeof useOrgCampaign>["data"]>["data"]; detailsRoute: string; refetch: () => Promise<unknown> }) {
   const router = useRouter();
   const updateMutation = useUpdateOrgCampaign();
+  const categoriesBrief = useOrgCategoriesBrief();
   const mediaQueue = useMediaUploadQueue(10);
   const [pendingDeleteIds, setPendingDeleteIds] = React.useState<Set<string>>(new Set());
   const [pendingReplacements, setPendingReplacements] = React.useState<Map<string, File>>(new Map());
@@ -70,7 +71,7 @@ function CampaignEditForm({ campaign, detailsRoute, refetch }: { campaign: NonNu
     defaultValues: {
       title: campaign.title,
       summary: campaign.summary,
-      category: campaign.category,
+      categoryId: campaign.categoryId ?? "",
       status: campaign.status as "draft" | "active",
       location: campaign.location,
       goalAmount: campaign.goalAmount,
@@ -90,7 +91,7 @@ function CampaignEditForm({ campaign, detailsRoute, refetch }: { campaign: NonNu
       <div><h2 className="text-lg font-semibold">تعديل الحملة</h2><p className="mt-1 text-sm text-muted-foreground">حدّث البيانات والصور ثم احفظ التغييرات.</p></div>
       <form noValidate className="space-y-5 rounded-xl border bg-card p-4 sm:p-6" onSubmit={handleSubmit(async (values) => {
         await updateMutation.mutateAsync({ campaignId: campaign.id, body: {
-          title: values.title.trim(), summary: values.summary.trim(), category: values.category, status: values.status,
+          title: values.title.trim(), summary: values.summary.trim(), categoryId: values.categoryId, status: values.status,
           location: values.location, goalAmount: values.goalAmount, beneficiariesCount: values.beneficiariesCount,
           startDate: toDateTimeFromInput(values.startDate), endDate: toDateTimeFromInput(values.endDate),
         }});
@@ -133,7 +134,7 @@ function CampaignEditForm({ campaign, detailsRoute, refetch }: { campaign: NonNu
         <Field label="عنوان الحملة" error={errors.title?.message}><Input disabled={isBusy} aria-invalid={Boolean(errors.title)} {...register("title")} /></Field>
         <Field label="ملخص الحملة" error={errors.summary?.message}><Textarea disabled={isBusy} aria-invalid={Boolean(errors.summary)} className="min-h-32" {...register("summary")} /></Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="الفئة"><Controller control={control} name="category" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(organizationCampaignCategoryLabels).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
+          <Field label="التصنيف" error={errors.categoryId?.message}><Controller control={control} name="categoryId" render={({ field }) => <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isBusy || categoriesBrief.isLoading}><SelectTrigger aria-invalid={Boolean(errors.categoryId)}><SelectValue placeholder={categoriesBrief.isLoading ? "جاري تحميل التصنيفات..." : "اختر التصنيف"} /></SelectTrigger><SelectContent>{(categoriesBrief.data?.data ?? []).map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select>} />{categoriesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل التصنيفات المتاحة.</p> : null}</Field>
           <Field label="الحالة"><Controller control={control} name="status" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(organizationCampaignStatusLabels).filter(([value]) => value !== "closed").map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
         </div>
         <Field label="المحافظة" error={errors.location?.message}><Controller control={control} name="location" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger aria-invalid={Boolean(errors.location)}><SelectValue placeholder="اختر المحافظة" /></SelectTrigger><SelectContent>{syrianGovernorateOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>} /></Field>

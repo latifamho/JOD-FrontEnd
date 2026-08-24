@@ -19,6 +19,7 @@ import { isCampaignRelatedPostType } from "@/components/pages/organization-posts
 import { organizationPostTypeLabels, type OrganizationPostItem } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useOrgPost, useUpdateOrgPost } from "@/features/org/posts/org.posts.query";
 import { mediaServices } from "@/features/shared/media/media.services";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
@@ -28,6 +29,7 @@ import { useAuth } from "@/providers/AuthProvider";
 const schema = z.object({
   title: z.string().trim().min(1, "عنوان المنشور مطلوب"),
   summary: z.string().trim().min(1, "محتوى المنشور مطلوب"),
+  categoryId: z.string().min(1, "تصنيف المنشور مطلوب"),
   type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
   location: z.string().refine((value) => syrianGovernorateOptions.some((option) => option.value === value), "اختر محافظة سورية صحيحة"),
   campaignTitle: z.string(),
@@ -57,13 +59,14 @@ export function OrganizationPostEditPage({ postId, scope }: Props) {
 function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostItem; detailsRoute: string; refetch: () => Promise<unknown> }) {
   const router = useRouter();
   const updateMutation = useUpdateOrgPost();
+  const categoriesBrief = useOrgCategoriesBrief();
   const mediaQueue = useMediaUploadQueue(10);
   const [pendingDeleteIds, setPendingDeleteIds] = React.useState<Set<string>>(new Set());
   const [pendingReplacements, setPendingReplacements] = React.useState<Map<string, File>>(new Map());
   const [processingMedia, setProcessingMedia] = React.useState(false);
   const { register, control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: post.title, summary: post.summary, type: post.type, location: post.location, campaignTitle: post.campaignTitle ?? "" },
+    defaultValues: { title: post.title, summary: post.summary, categoryId: post.categoryId ?? "", type: post.type, location: post.location, campaignTitle: post.campaignTitle ?? "" },
   });
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
@@ -78,7 +81,7 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
       <div><h2 className="text-lg font-semibold">تعديل المنشور</h2><p className="mt-1 text-sm text-muted-foreground">حدّث بيانات المنشور والصور ثم احفظ التغييرات.</p></div>
       <form noValidate className="space-y-5 rounded-xl border bg-card p-4 sm:p-6" onSubmit={handleSubmit(async (values) => {
         await updateMutation.mutateAsync({ postId: post.id, body: {
-          title: values.title.trim(), summary: values.summary.trim(), type: values.type, location: values.location,
+          title: values.title.trim(), summary: values.summary.trim(), categoryId: values.categoryId, type: values.type, location: values.location,
           campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : undefined,
         }});
         setProcessingMedia(true);
@@ -119,6 +122,15 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
       })}>
         <Field label="عنوان المنشور" error={errors.title?.message}><Input disabled={isBusy} aria-invalid={Boolean(errors.title)} {...register("title")} /></Field>
         <Field label="محتوى مختصر" error={errors.summary?.message}><Textarea className="min-h-32" disabled={isBusy} aria-invalid={Boolean(errors.summary)} {...register("summary")} /></Field>
+        <Field label="التصنيف" error={errors.categoryId?.message}>
+          <Controller control={control} name="categoryId" render={({ field }) => (
+            <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isBusy || categoriesBrief.isLoading}>
+              <SelectTrigger aria-invalid={Boolean(errors.categoryId)}><SelectValue placeholder={categoriesBrief.isLoading ? "جاري تحميل التصنيفات..." : "اختر التصنيف"} /></SelectTrigger>
+              <SelectContent>{(categoriesBrief.data?.data ?? []).map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+          {categoriesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل التصنيفات المتاحة.</p> : null}
+        </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="نوع المنشور"><Controller control={control} name="type" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(organizationPostTypeLabels).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
           <Field label="المحافظة" error={errors.location?.message}><Controller control={control} name="location" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger aria-invalid={Boolean(errors.location)}><SelectValue placeholder="اختر المحافظة" /></SelectTrigger><SelectContent>{syrianGovernorateOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>} /></Field>

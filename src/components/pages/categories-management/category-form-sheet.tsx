@@ -26,9 +26,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   categoryStatusLabels,
-  categoryTargetLabels,
   type CategoryStatus,
-  type CategoryTarget,
 } from "@/components/pages/categories-management/categories-management.types";
 
 const categoryFormSchema = z.object({
@@ -37,20 +35,17 @@ const categoryFormSchema = z.object({
     .string()
     .min(1, "وصف التصنيف مطلوب")
     .max(1000, "وصف التصنيف يجب ألا يتجاوز 1000 حرف"),
-  target: z.enum(["post", "campaign"]),
   status: z.enum(["active", "inactive"]),
 });
 
 export type CategoryFormValues = {
   name: string;
   description: string;
-  target: CategoryTarget;
   status: CategoryStatus;
 };
 
 export const EMPTY_CATEGORY_FORM_VALUES: CategoryFormValues = {
   name: "",
-  target: "post",
   description: "",
   status: "active",
 };
@@ -85,7 +80,6 @@ export function CategoryFormSheet({
     defaultValues: {
       name: initialValues.name,
       description: initialValues.description,
-      target: initialValues.target,
       status: initialValues.status,
     },
   });
@@ -95,8 +89,7 @@ export function CategoryFormSheet({
       reset({
         name: initialValues.name,
         description: initialValues.description,
-        target: initialValues.target,
-        status: initialValues.status,
+          status: initialValues.status,
       });
     }
   }, [initialValues, open, reset]);
@@ -113,7 +106,6 @@ export function CategoryFormSheet({
             onSubmit({
               name: values.name.trim(),
               description: values.description.trim(),
-              target: values.target,
               status: values.status,
             });
           })}
@@ -162,36 +154,6 @@ export function CategoryFormSheet({
                       {errors.description.message}
                     </p>
                   ) : null}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>نوع التصنيف</Label>
-                  <Controller
-                    control={control}
-                    name="target"
-                    render={({ field }) => (
-                      <Select
-                        dir="rtl"
-                        disabled={isFormLocked}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          className="w-full text-right"
-                          aria-invalid={Boolean(errors.target)}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent align="start" position="popper" className="text-right">
-                          {Object.entries(categoryTargetLabels).map(([target, label]) => (
-                            <SelectItem key={target} value={target} className="text-right text-xs">
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
                 </div>
 
                 <div className="space-y-2">

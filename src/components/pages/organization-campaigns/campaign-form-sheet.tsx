@@ -34,12 +34,11 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  organizationCampaignCategoryLabels,
   organizationCampaignStatusLabels,
   syrianGovernorateOptions,
-  type OrganizationCampaignCategory,
   type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { toast } from "@/lib/toast";
@@ -55,7 +54,7 @@ const campaignFormSchema = z
   .object({
     title: z.string().min(1, "عنوان الحملة مطلوب").max(255, "عنوان الحملة يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان الحملة مطلوب"),
     summary: z.string().min(1, "ملخص الحملة مطلوب").refine((value) => value.trim().length > 0, "ملخص الحملة مطلوب"),
-    category: z.enum(["health", "education", "food", "shelter", "employment", "emergency", "donation", "volunteer", "community"]),
+    categoryId: z.string().min(1, "تصنيف الحملة مطلوب"),
     status: z.enum(["draft", "active", "closed"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
@@ -86,7 +85,7 @@ type CampaignFormFields = z.infer<typeof campaignFormSchema>;
 export type CampaignFormValues = {
   title: string;
   summary: string;
-  category: OrganizationCampaignCategory;
+  categoryId: string;
   status: OrganizationCampaignStatus;
   location: string;
   goalAmount: number;
@@ -98,7 +97,7 @@ export type CampaignFormValues = {
 export const EMPTY_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   title: "",
   summary: "",
-  category: "health",
+  categoryId: "",
   status: "active",
   location: "",
   goalAmount: 0,
@@ -120,7 +119,7 @@ function toCampaignFormFields(values: CampaignFormValues): CampaignFormFields {
   return {
     title: values.title,
     summary: values.summary,
-    category: values.category,
+    categoryId: values.categoryId,
     status: values.status,
     location: values.location,
     goalAmount: String(values.goalAmount),
@@ -142,6 +141,7 @@ export function CampaignFormSheet({ open, mode, initialValues, isSubmitting = fa
     defaultValues: toCampaignFormFields(initialValues),
   });
   const mediaQueue = useMediaUploadQueue(10);
+  const categoriesBrief = useOrgCategoriesBrief(open);
   const [createdCampaignId, setCreatedCampaignId] = React.useState<string | null>(null);
   const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
     "campaign-discard-changes",
@@ -192,7 +192,7 @@ export function CampaignFormSheet({ open, mode, initialValues, isSubmitting = fa
               const campaignId = await onSubmit({
                 title: values.title.trim(),
                 summary: values.summary.trim(),
-                category: values.category,
+                categoryId: values.categoryId,
                 status: values.status,
                 location: values.location,
                 goalAmount: Number(values.goalAmount),
@@ -236,17 +236,21 @@ export function CampaignFormSheet({ open, mode, initialValues, isSubmitting = fa
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>فئة الحملة</Label>
-                  <Controller control={control} name="category" render={({ field }) => (
-                    <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.category)}><SelectValue /></SelectTrigger>
+                  <Label>تصنيف الحملة</Label>
+                  <Controller control={control} name="categoryId" render={({ field }) => (
+                    <Select dir="rtl" disabled={formLocked || categoriesBrief.isLoading} value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.categoryId)}>
+                        <SelectValue placeholder={categoriesBrief.isLoading ? "جاري تحميل التصنيفات..." : "اختر التصنيف"} />
+                      </SelectTrigger>
                       <SelectContent align="start" position="popper" className="text-right">
-                        {Object.entries(organizationCampaignCategoryLabels).map(([category, label]) => (
-                          <SelectItem key={category} value={category} className="text-right text-xs">{label}</SelectItem>
+                        {(categoriesBrief.data?.data ?? []).map((category) => (
+                          <SelectItem key={category.id} value={category.id} className="text-right text-xs">{category.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )} />
+                  {errors.categoryId ? <p className="text-xs text-destructive">{errors.categoryId.message}</p> : null}
+                  {categoriesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل التصنيفات المتاحة.</p> : null}
                 </div>
 
                 <div className="space-y-2">

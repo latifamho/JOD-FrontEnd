@@ -7,11 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  organizationCampaignCategoryLabels,
-  syrianGovernorateOptions,
-  type OrganizationCampaignCategory,
-} from "@/components/pages/organization-campaigns/static-data";
+import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
+import type { OrgCategoryBriefItem } from "@/features/org/categories/org.categories.types";
 
 export type CampaignSortOption =
   | "updated_newest"
@@ -20,10 +17,9 @@ export type CampaignSortOption =
   | "progress_lowest";
 
 type OrganizationCampaignsFiltersProps = {
-  categoryFilter: "all" | OrganizationCampaignCategory;
-  onCategoryFilterChange: (
-    value: "all" | OrganizationCampaignCategory,
-  ) => void;
+  categoryFilter: string;
+  categories: OrgCategoryBriefItem[];
+  onCategoryFilterChange: (value: string) => void;
   locationFilter: string;
   locationOptions: string[];
   onLocationFilterChange: (value: string) => void;
@@ -33,6 +29,7 @@ type OrganizationCampaignsFiltersProps = {
 
 export function OrganizationCampaignsFilters({
   categoryFilter,
+  categories,
   onCategoryFilterChange,
   locationFilter,
   locationOptions,
@@ -45,9 +42,7 @@ export function OrganizationCampaignsFilters({
       <Select
         dir="rtl"
         value={categoryFilter}
-        onValueChange={(value) =>
-          onCategoryFilterChange(value as "all" | OrganizationCampaignCategory)
-        }
+        onValueChange={onCategoryFilterChange}
       >
         <SelectTrigger className="w-full text-right text-xs">
           <SelectValue placeholder="فلتر الفئة" />
@@ -56,17 +51,15 @@ export function OrganizationCampaignsFilters({
           <SelectItem value="all" className="text-right text-xs">
             كل الفئات
           </SelectItem>
-          {Object.entries(organizationCampaignCategoryLabels).map(
-            ([category, label]) => (
-              <SelectItem
-                key={category}
-                value={category}
-                className="text-right text-xs"
-              >
-                {label}
-              </SelectItem>
-            ),
-          )}
+          {categories.map((category) => (
+            <SelectItem
+              key={category.id}
+              value={category.id}
+              className="text-right text-xs"
+            >
+              {category.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

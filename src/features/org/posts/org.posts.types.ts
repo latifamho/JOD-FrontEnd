@@ -20,6 +20,7 @@ export interface OrgPostsParams {
 export interface PostCreateRequest {
   title: string
   summary: string
+  categoryId: string
   type: OrganizationPostType
   status: OrganizationPostStatus
   location: string
@@ -29,6 +30,7 @@ export interface PostCreateRequest {
 export interface PostUpdateRequest {
   title?: string
   summary?: string
+  categoryId?: string
   type?: OrganizationPostType
   location?: string
   campaignTitle?: string

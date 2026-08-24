@@ -17,10 +17,8 @@ import {
   getCampaignStatusBadgeClass,
   getProgress,
 } from "@/components/pages/organization-campaigns/helpers";
-import {
-  organizationCampaignCategoryLabels,
-  organizationCampaignStatusLabels,
-} from "@/components/pages/organization-campaigns/static-data";
+import { organizationCampaignStatusLabels } from "@/components/pages/organization-campaigns/static-data";
+import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -36,6 +34,7 @@ export function OrganizationCampaignDetailsPage({
   const { can } = useAuth();
   const campaignQuery = useOrgCampaign(campaignId);
   const campaign = campaignQuery.data?.data;
+  const categoriesBrief = useOrgCategoriesBrief();
 
   if (campaignQuery.isLoading) {
     return <DetailsLoadingSkeleton className="rounded-xl border border-border bg-card" />;
@@ -61,6 +60,7 @@ export function OrganizationCampaignDetailsPage({
   }
 
   const progress = getProgress(campaign.goalAmount, campaign.raisedAmount);
+  const categoryName = (categoriesBrief.data?.data ?? []).find((category) => category.id === campaign.categoryId)?.name;
   const editRoute =
     scope === "staff"
       ? routePaths.organizationStaffScope.campaignEdit(campaign.id)
@@ -79,7 +79,7 @@ export function OrganizationCampaignDetailsPage({
                 {organizationCampaignStatusLabels[campaign.status]}
               </Badge>
               <Badge variant="outline">
-                {organizationCampaignCategoryLabels[campaign.category]}
+                {displayOrDash(categoryName)}
               </Badge>
             </div>
             <h2 className="text-xl font-semibold text-foreground">{campaign.title}</h2>

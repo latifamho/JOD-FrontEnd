@@ -1,13 +1,12 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type {
-  OrganizationCampaignCategory,
   OrganizationCampaignItem,
   OrganizationCampaignStatus,
 } from '@/components/pages/organization-campaigns/static-data'
 
 export interface OrgCampaignsFilter {
   status?: OrganizationCampaignStatus
-  category?: OrganizationCampaignCategory
+  categoryId?: string
   location?: string
 }
 
@@ -21,7 +20,7 @@ export interface OrgCampaignsParams {
 export interface CampaignCreateRequest {
   title: string
   summary: string
-  category: OrganizationCampaignCategory
+  categoryId: string
   status: OrganizationCampaignStatus
   location: string
   goalAmount: number
@@ -33,7 +32,7 @@ export interface CampaignCreateRequest {
 export interface CampaignUpdateRequest {
   title?: string
   summary?: string
-  category?: OrganizationCampaignCategory
+  categoryId?: string
   status?: OrganizationCampaignStatus
   location?: string
   goalAmount?: number

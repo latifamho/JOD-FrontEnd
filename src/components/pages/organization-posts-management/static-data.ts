@@ -16,6 +16,7 @@ export type OrganizationPostItem = {
   id: string;
   title: string;
   summary: string;
+  categoryId?: string | null;
   type: OrganizationPostType;
   status: OrganizationPostStatus;
   location: string;

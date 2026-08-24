@@ -19,7 +19,7 @@ const labels: Record<string, string> = {
   password: "كلمة المرور", passwordConfirmation: "تأكيد كلمة المرور",
   title: "العنوان", body: "المحتوى", description: "الوصف", excerpt: "الملخص",
   slug: "الرابط المختصر", authorName: "اسم الكاتب", status: "الحالة",
-  target: "النوع", category: "التصنيف", recipientScope: "نوع المستلم",
+  target: "النوع", category: "التصنيف", categoryId: "التصنيف", recipientScope: "نوع المستلم",
   recipientLabel: "اسم المستلم", criteria: "المعايير", iconName: "الأيقونة",
   isActive: "الحالة", siteName: "اسم المنصة", location: "الموقع",
   verificationStatus: "حالة التوثيق", role: "الدور",
