@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Loader2 } from 'lucide-react'
 
 import { FormLoadingSkeleton, MediaUploadField } from '@/components/shared'
+import { OrganizationVideosSection } from '@/components/shared/organization-videos-section'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -147,6 +148,13 @@ export function OrganizationSettingsPage() {
           }}>{logoQueue.isUploading ? <Loader2 className="size-4 animate-spin" /> : null}رفع الشعار</Button>
         ) : null}
       </div>
+
+      <OrganizationVideosSection
+        scope="org"
+        organizationId={profile.id}
+        canManage={canUpdate}
+        description="أدر فيديوهات المنظمة التعريفية والترويجية التي تظهر للمستخدمين في التطبيق. يمكن إيقاف الرفع ومتابعته بعد انقطاع الشبكة أو تحديث الصفحة."
+      />
 
       {canUpdate ? (
         <form className="space-y-4 rounded-xl border bg-card p-6" onSubmit={(event) => {

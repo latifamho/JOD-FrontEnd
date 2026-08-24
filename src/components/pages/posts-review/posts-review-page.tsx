@@ -10,9 +10,11 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   reviewStatusLabels,
+  type ReviewPostItem,
   type ReviewPostType,
 } from "@/components/pages/posts-review/posts-review.types";
 import { PostDetailsDialog } from "@/components/pages/posts-review/post-details-dialog";
+import { EditPostDialog } from "@/components/pages/posts-review/edit-post-dialog";
 import { ReviewPostsTable } from "@/components/pages/posts-review/review-posts-table";
 import {
   ReviewToolbar,
@@ -31,71 +33,58 @@ type PostsReviewPageProps = {
 const sortToApiSort: Record<ReviewSortOption, string> = {
   title_asc: "title",
   title_desc: "-title",
-  created_at_newest: "-submittedAt",
-  created_at_oldest: "submittedAt",
+  created_at_newest: "-createdAt",
+  created_at_oldest: "createdAt",
 };
 
 export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [organizationSearch, setOrganizationSearch] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<"all" | ReviewPostType>("all");
-  const [sortBy, setSortBy] =
-    React.useState<ReviewSortOption>("created_at_newest");
+  const [sortBy, setSortBy] = React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
+  const [editingPost, setEditingPost] = React.useState<ReviewPostItem | null>(null);
   const detailsModal = useQueryModal("post-details");
-
-  const debouncedOrgSearch = useDebounce(organizationSearch, 400);
-
-  // Separate total state breaks the circular dependency between
-  // usePagination (needs total) and the query (needs currentPage).
+  const debouncedSearch = useDebounce(organizationSearch, 400);
   const [apiTotal, setApiTotal] = React.useState(0);
-
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
   const { setCurrentPage } = pagination;
 
   const { data, isLoading, isError } = useAdminReviewPosts({
     page: pagination.currentPage,
     perPage: pageSize,
+    status,
+    type: typeFilter !== "all" ? typeFilter : undefined,
+    search: debouncedSearch || undefined,
     sort: sortToApiSort[sortBy],
-    filter: {
-      status,
-      organizationName: debouncedOrgSearch || undefined,
-      type: typeFilter !== "all" ? typeFilter : undefined,
-    },
   });
 
   React.useEffect(() => {
-    if (data?.meta.total !== undefined) {
-      setApiTotal(data.meta.total);
-    }
+    if (data?.meta.total === undefined) return;
+    const timer = window.setTimeout(() => setApiTotal(data.meta.total), 0);
+    return () => window.clearTimeout(timer);
   }, [data?.meta.total]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [status, debouncedOrgSearch, typeFilter, sortBy, pageSize, setCurrentPage]);
+  }, [status, debouncedSearch, typeFilter, sortBy, pageSize, setCurrentPage]);
 
   const approveMutation = useApprovePost();
   const rejectMutation = useRejectPost();
-
   const posts = data?.data ?? [];
-  const selectedPostForDetails =
-    posts.find((post) => post.id === detailsModal.id) ?? null;
+  const selectedPostForDetails = posts.find((post) => post.id === detailsModal.id) ?? null;
 
   const handleApprove = React.useCallback(
-    (postId: string) => {
-      approveMutation.mutate({ postId, body: {} });
-    },
+    (postId: string) => approveMutation.mutate({ postId }),
     [approveMutation],
   );
 
   const handleReject = React.useCallback(
-    (postId: string, reason: string) => {
-      rejectMutation.mutate({ postId, body: { reason } });
-    },
+    (postId: string) => rejectMutation.mutate({ postId }),
     [rejectMutation],
   );
 
   return (
-    <section className="flex flex-col flex-1 gap-4">
+    <section className="flex flex-1 flex-col gap-4">
       <ReviewToolbar
         status={status}
         sortBy={sortBy}
@@ -107,22 +96,20 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
         totalResults={apiTotal}
       />
 
-      {isError && (
-        <p className="text-sm text-destructive">
-          تعذّر تحميل المنشورات. حاول مرة أخرى.
-        </p>
-      )}
+      {isError ? (
+        <p className="text-sm text-destructive">تعذّر تحميل المنشورات. حاول مرة أخرى.</p>
+      ) : null}
 
       {isLoading ? (
-        <div className="rounded-md border border-border bg-card shadow-sm divide-y divide-border">
+        <div className="divide-y divide-border rounded-md border border-border bg-card shadow-sm">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3">
-              <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+              <div className="h-4 w-16 animate-pulse rounded bg-muted" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-4 w-48 rounded bg-muted animate-pulse" />
-                <div className="h-3 w-72 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-72 animate-pulse rounded bg-muted" />
               </div>
-              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
             </div>
           ))}
         </div>
@@ -130,30 +117,33 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
         <EmptyState
           icon="posts"
           title={`لا توجد منشورات ضمن حالة ${reviewStatusLabels[status]}`}
-          description="جرّب تغيير الفلتر أو طريقة الفرز لعرض نتائج إضافية."
+          description="جرّب تغيير البحث أو الفلتر أو طريقة الفرز لعرض نتائج إضافية."
         />
       ) : (
         <ReviewPostsTable
           posts={posts}
-          approvingPostId={
-            approveMutation.isPending ? approveMutation.variables?.postId : undefined
-          }
-          rejectingPostId={
-            rejectMutation.isPending ? rejectMutation.variables?.postId : undefined
-          }
+          approvingPostId={approveMutation.isPending ? approveMutation.variables?.postId : undefined}
+          rejectingPostId={rejectMutation.isPending ? rejectMutation.variables?.postId : undefined}
           onApprove={handleApprove}
           onReject={handleReject}
+          onEdit={setEditingPost}
           onOpenDetails={(post) => detailsModal.open({ id: post.id })}
         />
       )}
 
-      {selectedPostForDetails && (
+      {selectedPostForDetails ? (
         <PostDetailsDialog
           open={detailsModal.isOpen}
           onOpenChange={detailsModal.onOpenChange}
           post={selectedPostForDetails}
         />
-      )}
+      ) : null}
+
+      <EditPostDialog
+        open={Boolean(editingPost)}
+        onOpenChange={(open) => { if (!open) setEditingPost(null); }}
+        post={editingPost}
+      />
 
       <PaginationControls
         currentPage={pagination.currentPage}

@@ -8,7 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ReviewStatusBadge } from "@/components/shared";
-import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
+import { formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
@@ -98,7 +98,7 @@ export function PostDetailsDialog({
                 تاريخ الإرسال للمراجعة
               </p>
               <p className="text-sm font-medium">
-                {formatUtcDateTime(post.submittedAt)}
+                {formatUtcDateTimeOrDash(post.submittedAt)}
               </p>
             </div>
             <div>
@@ -126,13 +126,13 @@ export function PostDetailsDialog({
                 <div>
                   <p className="text-xs text-muted-foreground">تاريخ الإنشاء</p>
                   <p className="text-sm font-medium">
-                    {formatUtcDateTime(detail.createdAt)}
+                    {formatUtcDateTimeOrDash(detail.createdAt)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">آخر تحديث</p>
                   <p className="text-sm font-medium">
-                    {formatUtcDateTime(detail.updatedAt)}
+                    {formatUtcDateTimeOrDash(detail.updatedAt)}
                   </p>
                 </div>
               </>

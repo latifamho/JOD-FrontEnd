@@ -1,22 +1,21 @@
 import type { ModerationStatus } from "@/components/shared";
 
 export type ReviewPostType =
-  | "general"
+  | "volunteer_opportunity"
+  | "donation_campaign"
   | "help_request"
-  | "job_opportunity"
-  | "awareness"
   | "campaign_update"
-  | "campaign_teaser"
-  | "campaign_summary";
+  | "awareness"
+  | "general";
 
 export type ReviewPostItem = {
   id: string;
-  title: string;
-  summary: string;
-  organizationName: string;
+  title: string | null;
+  summary: string | null;
+  organizationName: string | null;
   authorName: string | null;
-  location: string;
-  submittedAt: string;
+  location: string | null;
+  submittedAt: string | null;
   publishedAt: string | null;
   status: ModerationStatus;
   type: ReviewPostType;
@@ -26,13 +25,12 @@ export type ReviewPostItem = {
 };
 
 export const postTypeLabels: Record<ReviewPostType, string> = {
-  general: "عام",
+  volunteer_opportunity: "فرصة تطوع",
+  donation_campaign: "حملة تبرع",
   help_request: "طلب مساعدة",
-  job_opportunity: "فرصة عمل",
-  awareness: "منشور توعوي",
   campaign_update: "تحديث حملة",
-  campaign_teaser: "تشويق حملة",
-  campaign_summary: "ملخص حملة",
+  awareness: "منشور توعوي",
+  general: "عام",
 };
 
 export const reviewStatusLabels: Record<ModerationStatus, string> = {

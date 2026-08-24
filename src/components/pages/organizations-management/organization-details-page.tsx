@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
+import { OrganizationVideosSection } from "@/components/shared/organization-videos-section";
 import { routePaths } from "@/constant/routes";
 import {
   formatUtcDateOrDash,
@@ -289,6 +290,14 @@ export function OrganizationDetailsPage({
           </div>
         </div>
       </div>
+
+      <OrganizationVideosSection
+        scope="admin"
+        organizationId={organization.id}
+        canManage
+        title="فيديوهات المنظمة"
+        description="إدارة الفيديوهات التعريفية والترويجية للمنظمة. يدعم الرفع المتقطع، الإيقاف والمتابعة، الاستبدال، والإلغاء قبل الاكتمال."
+      />
 
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">
         <h3 className="text-sm font-semibold text-foreground">مرفقات التسجيل</h3>

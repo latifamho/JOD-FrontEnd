@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReviewStatusBadge } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
-import { formatUtcDate } from "@/lib/date";
+import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
   postTypeLabels,
@@ -19,7 +19,7 @@ import { RejectPostDialog } from "@/components/pages/posts-review/reject-post-di
 type ReviewPostCardProps = {
   post: ReviewPostItem;
   onApprove: (postId: string) => void;
-  onReject: (postId: string, reason: string) => void;
+  onReject: (postId: string) => void;
 };
 
 export function ReviewPostCard({
@@ -41,8 +41,8 @@ export function ReviewPostCard({
           </div>
           <p className="text-xs text-muted-foreground">
             {post.status === "approved" && post.publishedAt
-              ? `نُشر: ${formatUtcDate(post.publishedAt)}`
-              : `أرسلت للمراجعة: ${formatUtcDate(post.submittedAt)}`}
+              ? `نُشر: ${formatUtcDateOrDash(post.publishedAt)}`
+              : `أرسلت للمراجعة: ${formatUtcDateOrDash(post.submittedAt)}`}
           </p>
         </div>
 
@@ -120,8 +120,8 @@ export function ReviewPostCard({
       <RejectPostDialog
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
-        postTitle={post.title}
-        onConfirm={(reason) => onReject(post.id, reason)}
+        postTitle={post.title ?? "بدون عنوان"}
+        onConfirm={() => onReject(post.id)}
       />
     </>
   );
