@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
-
 import { EmptyState, PaginationControls } from "@/components/shared";
-import { AdminPostFormSheet } from "@/components/pages/posts-review/admin-post-form-sheet";
-import { Button } from "@/components/ui/button";
 import type { ModerationStatus } from "@/components/shared";
 import { usePagination } from "@/hooks/use-pagination";
 import { useQueryModal } from "@/hooks/use-query-modal";
@@ -44,7 +40,6 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   const [sortBy, setSortBy] = React.useState<ReviewSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const detailsModal = useQueryModal("post-details");
-  const postForm = useQueryModal("admin-post-form");
   const debouncedSearch = useDebounce(organizationSearch, 400);
   const [apiTotal, setApiTotal] = React.useState(0);
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -86,14 +81,6 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
 
   return (
     <section className="flex flex-1 flex-col gap-4">
-      {status === "approved" ? (
-        <div className="flex justify-start">
-          <Button type="button" onClick={() => postForm.open({ mode: "create" })}>
-            <Plus className="size-4" />
-            إضافة منشور
-          </Button>
-        </div>
-      ) : null}
       <ReviewToolbar
         status={status}
         sortBy={sortBy}
@@ -136,18 +123,8 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
           onApprove={handleApprove}
           onReject={handleReject}
           onOpenDetails={(post) => detailsModal.open({ id: post.id })}
-          onEdit={(post) => postForm.open({ mode: "edit", id: post.id })}
         />
       )}
-
-      <AdminPostFormSheet
-        open={postForm.isOpen}
-        mode={postForm.mode === "edit" ? "edit" : "create"}
-        postId={postForm.id ?? undefined}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) postForm.close();
-        }}
-      />
 
       {selectedPostForDetails ? (
         <PostDetailsDialog

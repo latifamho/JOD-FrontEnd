@@ -1,24 +1,5 @@
-﻿import { api } from '@/services/api'
+import { api } from '@/services/api'
 import { buildApiParams } from '@/lib/build-api-params'
-import type { OrgReportsParams, OrgReportsResponse, OrgReportDetailResponse, UpdateOrgReportStatusRequest, UpdateOrgReportStatusResponse } from './org.reports.types'
-
-const ENDPOINTS = {
-  REPORTS: '/org/reports',
-  REPORT: (id: string) => `/org/reports/${id}`,
-  STATUS: (id: string) => `/org/reports/${id}/status`,
-} as const
-
-export const orgReportsServices = {
-  async getReports(params: OrgReportsParams): Promise<OrgReportsResponse> {
-    const response = await api.get<OrgReportsResponse>(ENDPOINTS.REPORTS, { params: buildApiParams(params) })
-    return response.data
-  },
-  async getReportById(reportId: string): Promise<OrgReportDetailResponse> {
-    const response = await api.get<OrgReportDetailResponse>(ENDPOINTS.REPORT(reportId))
-    return response.data
-  },
-  async updateStatus(reportId: string, body: UpdateOrgReportStatusRequest): Promise<UpdateOrgReportStatusResponse> {
-    const response = await api.patch<UpdateOrgReportStatusResponse>(ENDPOINTS.STATUS(reportId), body)
-    return response.data
-  },
-}
+import type { ClaimOrgReportRequest,CloseOrgReportRequest,OrgReportsParams,OrgReportsResponse,OrgReportDetailResponse,OrgReportMutationResponse } from './org.reports.types'
+const E={REPORTS:'/org/reports',REPORT:(id:string)=>`/org/reports/${id}`,CLAIM:(id:string)=>`/org/reports/${id}/claim`,CLOSE:(id:string)=>`/org/reports/${id}/close`} as const
+export const orgReportsServices={async getReports(p:OrgReportsParams):Promise<OrgReportsResponse>{const r=await api.get<OrgReportsResponse>(E.REPORTS,{params:buildApiParams(p)});return r.data},async getReportById(id:string):Promise<OrgReportDetailResponse>{const r=await api.get<OrgReportDetailResponse>(E.REPORT(id));return r.data},async claim(id:string,b:ClaimOrgReportRequest={}):Promise<OrgReportMutationResponse>{const r=await api.post<OrgReportMutationResponse>(E.CLAIM(id),b);return r.data},async close(id:string,b:CloseOrgReportRequest={}):Promise<OrgReportMutationResponse>{const r=await api.post<OrgReportMutationResponse>(E.CLOSE(id),b);return r.data}}

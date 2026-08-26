@@ -12,7 +12,9 @@ import { mediaServices } from '@/features/shared/media/media.services'
 import type { MediaItem } from '@/features/shared/media/media.types'
 import {
   orgSettingsKeys,
+  useOrgBankAccount,
   useOrgSettingsProfile,
+  useUpdateOrgBankAccount,
   useUpdateOrgSettingsPassword,
   useUpdateOrgSettingsProfile,
 } from '@/features/org/settings/org.settings.query'
@@ -32,10 +34,13 @@ export function OrganizationSettingsPage() {
   const canUpdate = can('org.settings.update')
   const queryClient = useQueryClient()
   const profileQuery = useOrgSettingsProfile()
+  const bankQuery = useOrgBankAccount()
   const updateProfile = useUpdateOrgSettingsProfile()
+  const updateBank = useUpdateOrgBankAccount()
   const updatePassword = useUpdateOrgSettingsPassword()
   const logoQueue = useMediaUploadQueue(1)
   const [profileValues, setProfileValues] = React.useState(EMPTY_PROFILE)
+  const [bankDraft, setBankDraft] = React.useState<{ bankName: string; iban: string } | null>(null)
   const [passwords, setPasswords] = React.useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [passwordError, setPasswordError] = React.useState<string | null>(null)
   const [busyMediaIds, setBusyMediaIds] = React.useState<Set<string>>(new Set())
@@ -51,6 +56,8 @@ export function OrganizationSettingsPage() {
     })
   }, [profile])
 
+  const bankValues = bankDraft ?? { bankName: bankQuery.data?.data.bankName ?? '', iban: bankQuery.data?.data.iban ?? '' }
+
   const refreshProfile = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: orgSettingsKeys.profile })
   }, [queryClient])
@@ -58,7 +65,7 @@ export function OrganizationSettingsPage() {
   const target = profile ? { model: 'organization' as const, modelId: profile.id, prop: 'logo' as const } : null
   const existingLogo = profile?.logo ? [profile.logo] : []
   const mediaBusy = busyMediaIds.size > 0 || logoQueue.isUploading
-  const formBusy = updateProfile.isPending || updatePassword.isPending || mediaBusy
+  const formBusy = updateProfile.isPending || updateBank.isPending || updatePassword.isPending || mediaBusy
 
   const changeProfile = (key: keyof typeof profileValues, value: string) => {
     setProfileValues((current) => ({ ...current, [key]: value }))
@@ -122,6 +129,13 @@ export function OrganizationSettingsPage() {
           <div className="sm:col-span-2"><Field label="الموقع الإلكتروني"><Input type="url" dir="ltr" value={profileValues.website} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('website', e.target.value)} /></Field></div>
         </div>
         {canUpdate ? <Button type="submit" disabled={formBusy}>{updateProfile.isPending ? <Loader2 className="size-4 animate-spin" /> : null}حفظ بيانات المنظمة</Button> : null}
+      </form>
+
+      <form className="space-y-4 rounded-xl border bg-card p-6" onSubmit={(event) => { event.preventDefault(); if (canUpdate && bankValues.bankName.trim() && bankValues.iban.trim()) updateBank.mutate({ bankName: bankValues.bankName.trim(), iban: bankValues.iban.trim() }, { onSuccess: () => setBankDraft(null) }) }}>
+        <div><h3 className="text-sm font-semibold">البيانات البنكية</h3><p className="mt-1 text-xs text-muted-foreground">اسم البنك وIBAN بالإضافة إلى رقم الحساب البنكي الموجود ضمن بيانات المنظمة.</p></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="اسم البنك"><Input value={bankValues.bankName} disabled={!canUpdate || formBusy || bankQuery.isLoading} onChange={(e) => setBankDraft({ ...bankValues, bankName: e.target.value })} /></Field><Field label="IBAN"><Input dir="ltr" value={bankValues.iban} disabled={!canUpdate || formBusy || bankQuery.isLoading} onChange={(e) => setBankDraft({ ...bankValues, iban: e.target.value })} /></Field></div>
+        {bankQuery.isError ? <p className="text-xs text-destructive">تعذر تحميل البيانات البنكية.</p> : null}
+        {canUpdate ? <Button type="submit" disabled={formBusy || bankQuery.isLoading || !bankValues.bankName.trim() || !bankValues.iban.trim()}>{updateBank.isPending ? <Loader2 className="size-4 animate-spin" /> : null}حفظ البيانات البنكية</Button> : null}
       </form>
 
       <div className="space-y-4 rounded-xl border bg-card p-6">

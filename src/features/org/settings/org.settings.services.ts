@@ -1,22 +1,3 @@
-﻿import { api } from '@/services/api'
-import type {
-  OrganizationPasswordUpdateRequest,
-  OrganizationPasswordUpdateResponse,
-  OrganizationProfileResponse,
-  OrganizationProfileUpdateRequest,
-} from './org.settings.types'
-
-export const orgSettingsServices = {
-  async getProfile(): Promise<OrganizationProfileResponse> {
-    const response = await api.get<OrganizationProfileResponse>('/org/settings/profile')
-    return response.data
-  },
-  async updateProfile(body: OrganizationProfileUpdateRequest): Promise<OrganizationProfileResponse> {
-    const response = await api.patch<OrganizationProfileResponse>('/org/settings/profile', body)
-    return response.data
-  },
-  async updatePassword(body: OrganizationPasswordUpdateRequest): Promise<OrganizationPasswordUpdateResponse> {
-    const response = await api.patch<OrganizationPasswordUpdateResponse>('/org/settings/password', body)
-    return response.data
-  },
-}
+import { api } from '@/services/api'
+import type { OrganizationBankAccountResponse,OrganizationBankAccountUpdateRequest,OrganizationPasswordUpdateRequest,OrganizationPasswordUpdateResponse,OrganizationProfileResponse,OrganizationProfileUpdateRequest } from './org.settings.types'
+export const orgSettingsServices={async getProfile():Promise<OrganizationProfileResponse>{const r=await api.get<OrganizationProfileResponse>('/org/settings/profile');return r.data},async updateProfile(b:OrganizationProfileUpdateRequest):Promise<OrganizationProfileResponse>{const r=await api.patch<OrganizationProfileResponse>('/org/settings/profile',b);return r.data},async updatePassword(b:OrganizationPasswordUpdateRequest):Promise<OrganizationPasswordUpdateResponse>{const r=await api.patch<OrganizationPasswordUpdateResponse>('/org/settings/password',b);return r.data},async getBankAccount():Promise<OrganizationBankAccountResponse>{const r=await api.get<OrganizationBankAccountResponse>('/org/settings/bank-account');return r.data},async updateBankAccount(b:OrganizationBankAccountUpdateRequest):Promise<OrganizationBankAccountResponse>{const r=await api.patch<OrganizationBankAccountResponse>('/org/settings/bank-account',b);return r.data}}

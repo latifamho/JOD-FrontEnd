@@ -1,104 +1,17 @@
-﻿'use client'
-
+'use client'
 import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ListLoadingSkeleton, PaginationControls, TableRowActions } from '@/components/shared'
+import { Sheet,SheetContent,SheetHeader,SheetTitle } from '@/components/ui/sheet'
+import { Table,TableBody,TableCell,TableHead,TableHeader,TableRow } from '@/components/ui/table'
+import { ListLoadingSkeleton,PaginationControls,TableRowActions } from '@/components/shared'
 import { AppIcons } from '@/constant/icons'
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
-import { useOrgReports, useUpdateOrgReportStatus } from '@/features/org/reports/org.reports.query'
-import type { OrgReportStatus } from '@/features/org/reports/org.reports.types'
+import { DEFAULT_PAGE_SIZE,PAGE_SIZE_OPTIONS } from '@/constant/pagination'
+import { useClaimOrgReport,useCloseOrgReport,useOrgReportDetail,useOrgReports } from '@/features/org/reports/org.reports.query'
+import type { OrgReportItem,OrgReportStatus } from '@/features/org/reports/org.reports.types'
+import { reportEntityTypeLabels } from '@/components/pages/reports-management/reports-management.types'
 import { usePagination } from '@/hooks/use-pagination'
 import { formatUtcDateTime } from '@/lib/date'
 import { useAuth } from '@/providers/AuthProvider'
-
-const statusLabels: Record<OrgReportStatus, string> = {
-  new: 'جديد',
-  in_progress: 'قيد المعالجة',
-  waiting_response: 'بانتظار الرد',
-  closed: 'مغلق',
-}
-
-export function OrganizationReportsPage() {
-  const { can } = useAuth()
-  const canUpdate = can('org.reports.update')
-  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE)
-  const [total, setTotal] = React.useState(0)
-  const pagination = usePagination({ totalItems: total, pageSize })
-  const reports = useOrgReports({ page: pagination.currentPage, perPage: pageSize, sort: '-submittedAt' })
-  const updateStatus = useUpdateOrgReportStatus()
-
-  React.useEffect(() => setTotal(reports.data?.meta.total ?? 0), [reports.data?.meta.total])
-  const rows = reports.data?.data ?? []
-
-  const allowedStatuses = (status: OrgReportStatus): Exclude<OrgReportStatus, 'new'>[] => {
-    if (status === 'new') return ['in_progress']
-    if (status === 'in_progress') return ['waiting_response', 'closed']
-    if (status === 'waiting_response') return ['closed']
-    return []
-  }
-
-  return (
-    <section className="flex flex-1 flex-col gap-4">
-      <div>
-        <h2 className="text-base font-semibold">بلاغات المؤسسة</h2>
-        <p className="mt-1 text-xs text-muted-foreground">عرض البلاغات المرتبطة بالمؤسسة وتحديث مسار معالجتها حسب الصلاحية.</p>
-      </div>
-
-      {reports.isError ? <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">تعذر تحميل البلاغات.</div> : null}
-
-      {reports.isLoading ? (
-        <ListLoadingSkeleton />
-      ) : (
-      <div className="overflow-auto rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>العنوان</TableHead>
-              <TableHead>الخطورة</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead>المبلّغ</TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead className="w-14">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => {
-              const nextStatuses = allowedStatuses(row.status)
-              return (
-              <TableRow key={row.id}>
-                <TableCell><p className="font-medium">{row.title}</p><p className="mt-1 max-w-md text-xs text-muted-foreground">{row.description}</p></TableCell>
-                <TableCell><Badge variant="outline">{row.severity}</Badge></TableCell>
-                <TableCell><Badge variant="secondary">{statusLabels[row.status]}</Badge></TableCell>
-                <TableCell>{row.reporterName ?? '-'}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{formatUtcDateTime(row.createdAt)}</TableCell>
-                <TableCell>
-                  <TableRowActions
-                    loading={updateStatus.isPending}
-                    actions={
-                      canUpdate && nextStatuses.length > 0
-                        ? nextStatuses.map((status) => ({
-                            id: status,
-                            label: `نقل إلى: ${statusLabels[status]}`,
-                            icon: <AppIcons.posts className="size-4" />,
-                            onSelect: () =>
-                              updateStatus.mutate({
-                                reportId: row.id,
-                                body: { status },
-                              }),
-                          }))
-                        : []
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            )})}
-          </TableBody>
-        </Table>
-      </div>
-      )}
-
-      <PaginationControls currentPage={pagination.currentPage} totalPages={pagination.totalPages} hasPreviousPage={pagination.hasPreviousPage} hasNextPage={pagination.hasNextPage} paginationRange={pagination.paginationRange} onPageChange={pagination.goToPage} onPreviousPage={pagination.goToPreviousPage} onNextPage={pagination.goToNextPage} pageSize={pageSize} onPageSizeChange={setPageSize} pageSizeOptions={PAGE_SIZE_OPTIONS} />
-    </section>
-  )
-}
+const labels:Record<OrgReportStatus,string>={new:'جديد',in_progress:'قيد المعالجة',closed:'مغلق'};const txt=(v:unknown)=>typeof v==='string'||typeof v==='number'?String(v):'-';
+function Details({report,open,onOpenChange}:{report:OrgReportItem|null;open:boolean;onOpenChange:(v:boolean)=>void}){const q=useOrgReportDetail(open?report?.id??null:null),r=q.data?.data??report,d=r?.entity?.data??{},imgs=Array.isArray(d.images)?d.images.filter((v):v is string=>typeof v==='string'):[];return <Sheet open={open} onOpenChange={onOpenChange}><SheetContent side="right" dir="rtl" className="w-[95vw] overflow-y-auto sm:max-w-2xl">{r?<div className="space-y-4"><SheetHeader><SheetTitle className="text-right">تفاصيل البلاغ</SheetTitle></SheetHeader><section className="rounded border p-3 text-xs"><div className="grid gap-2 sm:grid-cols-2"><p>المبلّغ: <b>{r.reporter?.name??txt(r.reporterName)}</b></p><p>المبلّغ عليه: <b>{r.reportedTarget?.name??'-'}</b></p><p>النوع: <b>{r.reportedTarget?.type==='organization'?'منظمة':r.reportedTarget?.type==='user'?'مستخدم':'-'}</b></p><p>نوع المحتوى: <b>{reportEntityTypeLabels[r.entityType]}</b></p><p>التاريخ: <b>{formatUtcDateTime(r.createdAt)}</b></p></div></section><section className="rounded border p-3"><h3 className="mb-2 text-sm font-semibold">المحتوى المبلّغ عنه</h3>{d.title?<p className="text-xs">العنوان: <b>{txt(d.title)}</b></p>:null}{d.authorName?<p className="text-xs">صاحب المنشور: <b>{txt(d.authorName)}</b></p>:null}{d.organizationName?<p className="text-xs">المنظمة: <b>{txt(d.organizationName)}</b></p>:null}{d.content||d.description?<p className="mt-2 whitespace-pre-wrap text-xs leading-6">{txt(d.content??d.description)}</p>:null}{imgs.length?<div className="mt-2 grid grid-cols-2 gap-2">{imgs.map(src=><a key={src} href={src} target="_blank" rel="noreferrer"><img src={src} alt="المحتوى المبلغ عنه" className="h-28 w-full rounded border object-cover"/></a>)}</div>:null}</section><section className="rounded border p-3"><h3 className="mb-2 text-sm font-semibold">سبب البلاغ</h3><p className="text-xs leading-6">{r.description}</p>{r.evidence?<pre className="mt-2 whitespace-pre-wrap rounded bg-muted p-2 text-xs">{JSON.stringify(r.evidence,null,2)}</pre>:null}</section></div>:null}</SheetContent></Sheet>}
+export function OrganizationReportsPage(){const {can}=useAuth(),canUpdate=can('org.reports.update'),[size,setSize]=React.useState<number>(DEFAULT_PAGE_SIZE),[selected,setSelected]=React.useState<OrgReportItem|null>(null),qPreview=useOrgReports({page:1,perPage:size,sort:'-submittedAt'}),total=qPreview.data?.meta.total??0,p=usePagination({totalItems:total,pageSize:size}),q=useOrgReports({page:p.currentPage,perPage:size,sort:'-submittedAt'}),claim=useClaimOrgReport(),close=useCloseOrgReport();const rows=q.data?.data??[];return <section className="flex flex-1 flex-col gap-4"><div><h2 className="text-base font-semibold">بلاغات المؤسسة</h2><p className="mt-1 text-xs text-muted-foreground">عرض البلاغات المرتبطة بمحتوى المؤسسة ومعالجتها.</p></div>{q.isLoading?<ListLoadingSkeleton/>:<div className="overflow-auto rounded border bg-card"><Table><TableHeader><TableRow><TableHead>العنوان</TableHead><TableHead>المبلّغ</TableHead><TableHead>المبلّغ عليه</TableHead><TableHead>الحالة</TableHead><TableHead>التاريخ</TableHead><TableHead>الإجراءات</TableHead></TableRow></TableHeader><TableBody>{rows.map(r=><TableRow key={r.id}><TableCell><b>{r.title}</b><p className="text-xs text-muted-foreground">{r.description}</p></TableCell><TableCell>{r.reporter?.name??txt(r.reporterName)}</TableCell><TableCell>{r.reportedTarget?.name??'-'}</TableCell><TableCell><Badge>{labels[r.status]}</Badge></TableCell><TableCell>{formatUtcDateTime(r.createdAt)}</TableCell><TableCell><TableRowActions loading={claim.isPending||close.isPending} actions={[{id:'view',label:'عرض التفاصيل',icon:<AppIcons.eye className="size-4"/>,onSelect:()=>setSelected(r)},...(canUpdate&&r.status==='new'?[{id:'claim',label:'استلام البلاغ',icon:<AppIcons.posts className="size-4"/>,onSelect:()=>claim.mutate({reportId:r.id})}]:[]),...(canUpdate&&r.status==='in_progress'?[{id:'close',label:'إغلاق البلاغ',icon:<AppIcons.archive className="size-4"/>,onSelect:()=>close.mutate({reportId:r.id})}]:[])]}/></TableCell></TableRow>)}</TableBody></Table></div>}<PaginationControls currentPage={p.currentPage} totalPages={p.totalPages} hasPreviousPage={p.hasPreviousPage} hasNextPage={p.hasNextPage} paginationRange={p.paginationRange} onPageChange={p.goToPage} onPreviousPage={p.goToPreviousPage} onNextPage={p.goToNextPage} pageSize={size} onPageSizeChange={setSize} pageSizeOptions={PAGE_SIZE_OPTIONS}/><Details report={selected} open={!!selected} onOpenChange={v=>{if(!v)setSelected(null)}}/></section>}

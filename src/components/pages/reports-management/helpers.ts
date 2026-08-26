@@ -38,9 +38,5 @@ export function getStatusBadgeClass(status: ReportStatus): string {
     return "border-violet-200/70 bg-violet-100 text-violet-800 dark:border-violet-500/40 dark:bg-violet-500/20 dark:text-violet-100";
   }
 
-  if (status === "waiting_response") {
-    return "border-amber-200/70 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-100";
-  }
-
   return "border-emerald-200/70 bg-emerald-100 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-100";
 }
