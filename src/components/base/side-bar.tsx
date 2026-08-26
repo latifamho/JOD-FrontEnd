@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 
 import { Logo } from "@/components/base/logo";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SIDEBAR_TOGGLE_EVENT } from "@/constant/events";
@@ -26,13 +27,14 @@ const COLLAPSE_STORAGE_KEY = "jod:sidebar-collapsed";
 const SIDEBAR_COLLAPSE_CHANGE_EVENT = "jod:sidebar-collapse-change";
 
 function getCollapsedSnapshot(): boolean {
-  if (typeof window === "undefined") return true;
+  if (typeof window === "undefined") return false;
 
   try {
     const persisted = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
-    return persisted === null ? true : persisted === "true";
+    // Default: sidebar stays open until the user collapses it.
+    return persisted === null ? false : persisted === "true";
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -59,7 +61,7 @@ function usePersistedCollapsed(): readonly [
   const collapsed = React.useSyncExternalStore(
     subscribeToCollapsedChanges,
     getCollapsedSnapshot,
-    () => true,
+    () => false,
   );
 
   const setCollapsed = React.useCallback<
@@ -346,15 +348,15 @@ function SideBarContent({
       <div className={cn("px-3 pb-3 pt-4", !visualExpanded && "px-2")}>
         <div
           className={cn(
-            "mb-2 flex gap-2",
-            visualExpanded ? "items-center justify-between" : "justify-center",
+            "mb-2 flex",
+            visualExpanded ? "items-center" : "justify-center",
           )}
         >
           <Link
             href={getDashboardHomeByRole(role)}
             className={cn(
               "flex min-w-0 items-center justify-center p-3",
-              !visualExpanded ? "mx-auto w-fit justify-center" : "flex-1 gap-3",
+              !visualExpanded ? "w-fit" : "flex-1 gap-3",
             )}
           >
             <Logo priority />
@@ -398,7 +400,6 @@ function SideBarContent({
           />
         )}
       </div>
-
     </div>
   );
 }
@@ -448,6 +449,12 @@ export function SideBar() {
   }, [isDesktop, setCollapsed, setMobileOpen]);
 
   const visualExpanded = !collapsed || hoverExpanded;
+  const pinnedOpen = !collapsed;
+
+  const handleTogglePinned = React.useCallback(() => {
+    setCollapsed((current) => !current);
+    setHoverExpanded(false);
+  }, [setCollapsed]);
 
   const handleMouseEnter = () => {
     if (isDesktop && collapsed) {
@@ -465,7 +472,7 @@ export function SideBar() {
     <>
       <aside
         className={cn(
-          "hidden h-screen shrink-0 border-l border-border bg-card transition-[width] duration-300 lg:flex",
+          "relative hidden h-screen shrink-0 border-l border-border bg-card transition-[width] duration-300 lg:flex",
           visualExpanded ? "w-72.5" : "w-23",
         )}
       >
@@ -477,6 +484,29 @@ export function SideBar() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         />
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={handleTogglePinned}
+          title={pinnedOpen ? "طي الشريط الجانبي" : "تثبيت الشريط الجانبي"}
+          aria-label={pinnedOpen ? "طي الشريط الجانبي" : "تثبيت الشريط الجانبي"}
+          aria-pressed={pinnedOpen}
+          className={cn(
+            "absolute top-20 z-20 size-7 rounded-full border-border bg-card text-muted-foreground shadow-md",
+            "hover:bg-primary hover:text-primary-foreground hover:border-primary",
+            "focus-visible:ring-2 focus-visible:ring-primary/40",
+            // Sit on the content-facing edge of the right sidebar
+            "-left-3.5",
+          )}
+        >
+          {pinnedOpen ? (
+            <AppIcons.chevronRight className="size-3.5" />
+          ) : (
+            <AppIcons.chevronLeft className="size-3.5" />
+          )}
+        </Button>
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
