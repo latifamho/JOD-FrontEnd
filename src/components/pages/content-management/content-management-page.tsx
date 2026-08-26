@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -247,7 +248,8 @@ export function ContentManagementPage() {
               disabled={deleteMutation.isPending}
               onClick={handleDelete}
             >
-              حذف
+              {deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {deleteMutation.isPending ? "جاري الحذف..." : "حذف"}
             </Button>
           </DialogFooter>
         </DialogContent>

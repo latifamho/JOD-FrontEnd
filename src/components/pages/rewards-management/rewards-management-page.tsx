@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -298,7 +299,12 @@ export function RewardsManagementPage() {
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <Dialog open={deleteModal.isOpen} onOpenChange={deleteModal.onOpenChange}>
+      <Dialog
+        open={deleteModal.isOpen}
+        onOpenChange={(nextOpen) => {
+          if (!deleteMutation.isPending && !nextOpen) deleteModal.close();
+        }}
+      >
         <DialogContent dir="rtl" className="sm:max-w-md">
           <DialogHeader className="pe-12 text-right sm:text-right">
             <DialogTitle>حذف الشارة؟</DialogTitle>
@@ -315,7 +321,8 @@ export function RewardsManagementPage() {
                 deleteMutation.mutate(deleteBadgeId, { onSuccess: () => deleteModal.close() });
               }}
             >
-              حذف
+              {deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {deleteMutation.isPending ? "جاري الحذف..." : "حذف"}
             </Button>
           </DialogFooter>
         </DialogContent>

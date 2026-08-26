@@ -205,6 +205,7 @@ export function OrganizationsManagementPage() {
       <OrganizationDeleteDialog
         open={deleteModal.isOpen}
         organizationName={deleteTargetOrganization?.name ?? "-"}
+        isDeleting={deleteMutation.isPending}
         onOpenChange={deleteModal.onOpenChange}
         onConfirm={handleDeleteOrganization}
       />
