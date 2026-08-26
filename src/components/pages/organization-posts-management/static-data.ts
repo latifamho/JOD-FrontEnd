@@ -29,6 +29,7 @@ export type OrganizationPostItem = {
   applicationsCount: number;
   body?: string | null;
   images?: string[] | null;
+  videos?: string[] | null;
   media?: MediaItem[];
 };
 

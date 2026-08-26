@@ -64,9 +64,14 @@ export function normalizeApiError<TField extends string = string>(error: unknown
   if (axiosError.code === "ECONNABORTED" || axiosError.code === "ETIMEDOUT") return { status, message: API_ERROR_MESSAGES.timeout, fieldErrors };
   if (!axiosError.response) return { status: null, message: API_ERROR_MESSAGES.network, fieldErrors };
 
+  const serverMessage = axiosError.response?.data?.message ?? "";
+  const loginForbiddenMessage = serverMessage.toLowerCase().includes("organization")
+    ? "حساب المنظمة غير مفعّل أو غير موثّق بعد."
+    : "هذا الحساب غير مفعّل. تواصل مع الإدارة.";
+
   const message = status === 400 ? API_ERROR_MESSAGES.badRequest
     : status === 401 ? (options.isLogin ? API_ERROR_MESSAGES.invalidCredentials : API_ERROR_MESSAGES.sessionExpired)
-    : status === 403 ? API_ERROR_MESSAGES.forbidden
+    : status === 403 ? (options.isLogin ? loginForbiddenMessage : API_ERROR_MESSAGES.forbidden)
     : status === 404 ? API_ERROR_MESSAGES.notFound
     : status === 409 ? API_ERROR_MESSAGES.conflict
     : status === 422 ? API_ERROR_MESSAGES.validation

@@ -44,7 +44,7 @@ export function ReviewCampaignCard({
             <Badge variant="outline">
               {reviewCampaignCategoryLabels[campaign.category]}
             </Badge>
-            <Badge variant="outline">{campaign.id}</Badge>
+
           </div>
           <p className="text-xs text-muted-foreground">
             أُرسلت للمراجعة: {formatUtcDate(campaign.submittedAt)}

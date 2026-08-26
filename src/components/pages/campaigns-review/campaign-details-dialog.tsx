@@ -57,7 +57,7 @@ export function CampaignDetailsDialog({
             <Badge variant="outline">
               {reviewCampaignCategoryLabels[detail.category]}
             </Badge>
-            <Badge variant="outline">{detail.id}</Badge>
+
           </div>
 
           <div className="rounded-lg border border-border bg-muted/40 p-4">

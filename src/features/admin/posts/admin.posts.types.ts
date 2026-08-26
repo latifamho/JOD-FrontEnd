@@ -1,6 +1,7 @@
 import type { ApiListResponse, ApiSingleResponse } from '@/types/api.types'
 import type { ModerationStatus } from '@/components/shared'
 import type { ReviewPostItem, ReviewPostType } from '@/components/pages/posts-review/posts-review.types'
+import type { MediaItem } from '@/features/shared/media/media.types'
 
 export type ReviewSortOption =
   | 'title_asc'
@@ -39,6 +40,8 @@ export interface ReviewPostDetail extends ReviewPostItem {
   description: string | null
   body: string | null
   images: string[]
+  videos: string[]
+  media: MediaItem[]
   author?: UserSummary | null
   updatedBy?: UserSummary | null
   updatedByName?: string | null
@@ -46,6 +49,16 @@ export interface ReviewPostDetail extends ReviewPostItem {
 }
 
 export type AdminReviewPostDetailResponse = ApiSingleResponse<ReviewPostDetail>
+
+export interface AdminPostCreateRequest {
+  title: string
+  description: string
+}
+
+export interface AdminPostUpdateRequest {
+  title?: string
+  description?: string
+}
 
 export type AdminPostStatus =
   | 'draft'

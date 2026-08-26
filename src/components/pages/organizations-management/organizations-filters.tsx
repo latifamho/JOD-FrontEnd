@@ -11,9 +11,7 @@ import {
 } from "@/components/ui/select";
 import {
   organizationStatusLabels,
-  organizationVerificationLabels,
   type OrganizationStatus,
-  type OrganizationVerificationStatus,
 } from "@/components/pages/organizations-management/organizations-management.types";
 
 export type OrganizationsSortOption =
@@ -27,10 +25,6 @@ type OrganizationsFiltersProps = {
   onSearchFilterChange: (value: string) => void;
   statusFilter: "all" | OrganizationStatus;
   onStatusFilterChange: (value: "all" | OrganizationStatus) => void;
-  verificationFilter: "all" | OrganizationVerificationStatus;
-  onVerificationFilterChange: (
-    value: "all" | OrganizationVerificationStatus,
-  ) => void;
   locationFilter: string;
   locationOptions: string[];
   onLocationFilterChange: (value: string) => void;
@@ -45,8 +39,6 @@ export function OrganizationsFilters({
   onSearchFilterChange,
   statusFilter,
   onStatusFilterChange,
-  verificationFilter,
-  onVerificationFilterChange,
   locationFilter,
   locationOptions,
   onLocationFilterChange,
@@ -79,29 +71,6 @@ export function OrganizationsFilters({
           <SelectItem value="all" className="text-right text-xs">كل الحالات</SelectItem>
           {Object.entries(organizationStatusLabels).map(([status, label]) => (
             <SelectItem key={status} value={status} className="text-right text-xs">{label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        dir="rtl"
-        disabled={isLoading}
-        value={verificationFilter}
-        onValueChange={(value) =>
-          onVerificationFilterChange(value as "all" | OrganizationVerificationStatus)
-        }
-      >
-        <SelectTrigger className="w-full min-w-[160px] flex-1 text-right text-xs sm:max-w-[220px]">
-          <SelectValue placeholder="فلتر التوثيق" />
-        </SelectTrigger>
-        <SelectContent align="start" position="popper" className="text-right">
-          <SelectItem value="all" className="text-right text-xs">
-            كل المنظمات
-          </SelectItem>
-          {Object.entries(organizationVerificationLabels).map(([status, label]) => (
-            <SelectItem key={status} value={status} className="text-right text-xs">
-              {label}
-            </SelectItem>
           ))}
         </SelectContent>
       </Select>

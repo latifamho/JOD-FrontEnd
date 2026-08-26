@@ -84,7 +84,7 @@ export function OrganizationCampaignsTable({
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                       {campaign.summary}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">{campaign.id}</p>
+
                   </TableCell>
 
                   <TableCell>

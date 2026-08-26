@@ -1,6 +1,8 @@
 import { api } from '@/services/api'
 import { buildApiParams } from '@/lib/build-api-params'
 import type {
+  AdminPostCreateRequest,
+  AdminPostUpdateRequest,
   AdminReviewPostDetailResponse,
   AdminReviewPostsParams,
   AdminReviewPostsResponse,
@@ -21,6 +23,16 @@ export const adminPostsServices = {
 
   async getPostById(postId: string): Promise<AdminReviewPostDetailResponse> {
     const response = await api.get<AdminReviewPostDetailResponse>(POST_ENDPOINT(postId))
+    return response.data
+  },
+
+  async createPost(body: AdminPostCreateRequest): Promise<AdminReviewPostDetailResponse> {
+    const response = await api.post<AdminReviewPostDetailResponse>(POSTS_ENDPOINT, body)
+    return response.data
+  },
+
+  async updatePost(postId: string, body: AdminPostUpdateRequest): Promise<AdminReviewPostDetailResponse> {
+    const response = await api.patch<AdminReviewPostDetailResponse>(POST_ENDPOINT(postId), body)
     return response.data
   },
 

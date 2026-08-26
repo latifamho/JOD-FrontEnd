@@ -21,6 +21,25 @@ export function useAdminPostDetail(postId: string | null) {
   })
 }
 
+export function useCreateAdminPost() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: adminPostsServices.createPost,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminPostsKeys.reviewLists() }),
+  })
+}
+
+export function useUpdateAdminPost() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, body }: { postId: string; body: { title?: string; description?: string } }) => adminPostsServices.updatePost(postId, body),
+    onSuccess: (_data, { postId }) => {
+      queryClient.invalidateQueries({ queryKey: adminPostsKeys.reviewLists() })
+      queryClient.invalidateQueries({ queryKey: adminPostsKeys.detail(postId) })
+    },
+  })
+}
+
 function useInvalidateAdminPosts() {
   const queryClient = useQueryClient()
   return (postId: string) => {

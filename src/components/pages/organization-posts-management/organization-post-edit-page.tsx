@@ -61,6 +61,7 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
   const updateMutation = useUpdateOrgPost();
   const categoriesBrief = useOrgCategoriesBrief();
   const mediaQueue = useMediaUploadQueue(10);
+  const videoQueue = useMediaUploadQueue(10, "video");
   const [pendingDeleteIds, setPendingDeleteIds] = React.useState<Set<string>>(new Set());
   const [pendingReplacements, setPendingReplacements] = React.useState<Map<string, File>>(new Map());
   const [processingMedia, setProcessingMedia] = React.useState(false);
@@ -71,10 +72,13 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
   const campaignsBrief = useOrgCampaignsBrief(campaignRelated);
-  const target = { model: "post" as const, modelId: post.id, prop: "images" as const };
-  const existingMedia = (post.media ?? []).filter((media) => !pendingDeleteIds.has(media.id));
+  const imageTarget = { model: "post" as const, modelId: post.id, prop: "images" as const };
+  const videoTarget = { model: "post" as const, modelId: post.id, prop: "videos" as const };
+  const visibleMedia = (post.media ?? []).filter((media) => !pendingDeleteIds.has(media.id));
+  const existingImages = visibleMedia.filter((media) => media.prop === "images");
+  const existingVideos = visibleMedia.filter((media) => media.prop === "videos");
   const pendingMediaIds = new Set([...pendingDeleteIds, ...pendingReplacements.keys()]);
-  const isBusy = updateMutation.isPending || mediaQueue.isUploading || processingMedia;
+  const isBusy = updateMutation.isPending || mediaQueue.isUploading || videoQueue.isUploading || processingMedia;
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -89,7 +93,9 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
         try {
           for (const mediaId of pendingDeleteIds) {
             try {
-              await mediaServices.remove(target, mediaId);
+              const media = (post.media ?? []).find((item) => item.id === mediaId);
+              const mediaTarget = media?.prop === "videos" ? videoTarget : imageTarget;
+              await mediaServices.remove(mediaTarget, mediaId);
               setPendingDeleteIds((current) => { const next = new Set(current); next.delete(mediaId); return next; });
             } catch {
               failedOperations.push(`حذف صورة ${mediaId}`);
@@ -98,7 +104,9 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
 
           for (const [mediaId, file] of pendingReplacements) {
             try {
-              await mediaServices.replace(target, mediaId, file);
+              const media = (post.media ?? []).find((item) => item.id === mediaId);
+              const mediaTarget = media?.prop === "videos" ? videoTarget : imageTarget;
+              await mediaServices.replace(mediaTarget, mediaId, file);
               setPendingReplacements((current) => { const next = new Map(current); next.delete(mediaId); return next; });
             } catch {
               failedOperations.push(`استبدال ${file.name}`);
@@ -106,7 +114,11 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
           }
 
           if (mediaQueue.hasQueued) {
-            const result = await mediaQueue.uploadAll(target);
+            const result = await mediaQueue.uploadAll(imageTarget);
+            failedOperations.push(...result.failedFileNames.map((name) => `رفع ${name}`));
+          }
+          if (videoQueue.hasQueued) {
+            const result = await videoQueue.uploadAll(videoTarget);
             failedOperations.push(...result.failedFileNames.map((name) => `رفع ${name}`));
           }
         } finally {
@@ -148,13 +160,13 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
         <MediaUploadField
           label="صور المنشور"
           items={mediaQueue.items}
-          existingMedia={existingMedia}
+          existingMedia={existingImages}
           busyMediaIds={pendingMediaIds}
           maxItems={10}
           disabled={isBusy}
           onFilesSelected={mediaQueue.addFiles}
           onRemoveQueued={mediaQueue.removeItem}
-          onRetry={(id) => void mediaQueue.retryItem(target, id)}
+          onRetry={(id) => void mediaQueue.retryItem(imageTarget, id)}
           onDeleteExisting={(media) => {
             setPendingReplacements((current) => { const next = new Map(current); next.delete(media.id); return next; });
             setPendingDeleteIds((current) => new Set(current).add(media.id));
@@ -165,6 +177,26 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
           }}
         />
         <div className="flex gap-2 border-t pt-4">
+        <MediaUploadField
+          label="فيديوهات المنشور"
+          mediaKind="video"
+          items={videoQueue.items}
+          existingMedia={existingVideos}
+          busyMediaIds={pendingMediaIds}
+          maxItems={10}
+          disabled={isBusy}
+          onFilesSelected={videoQueue.addFiles}
+          onRemoveQueued={videoQueue.removeItem}
+          onRetry={(id) => void videoQueue.retryItem(videoTarget, id)}
+          onDeleteExisting={(media) => {
+            setPendingReplacements((current) => { const next = new Map(current); next.delete(media.id); return next; });
+            setPendingDeleteIds((current) => new Set(current).add(media.id));
+          }}
+          onReplaceExisting={(media, file) => {
+            setPendingDeleteIds((current) => { const next = new Set(current); next.delete(media.id); return next; });
+            setPendingReplacements((current) => new Map(current).set(media.id, file));
+          }}
+        />
           <Button type="submit" disabled={isBusy}>{updateMutation.isPending || mediaQueue.isUploading ? <Loader2 className="size-4 animate-spin" /> : null}حفظ التعديلات</Button>
           <Button type="button" variant="outline" disabled={isBusy} onClick={() => router.push(detailsRoute)}>إلغاء</Button>
         </div>

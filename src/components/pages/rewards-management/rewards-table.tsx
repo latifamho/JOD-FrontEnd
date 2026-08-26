@@ -114,7 +114,7 @@ export function RewardsTable({
                     <p className="font-medium text-foreground">
                       {displayOrDash(row.name)}
                     </p>
-                    <p className="text-xs text-muted-foreground">{row.id}</p>
+
                   </TableCell>
                   <TableCell>
                     <div className="inline-flex size-9 items-center justify-center rounded-md border border-border bg-muted/30 text-muted-foreground">

@@ -1,5 +1,5 @@
-import { ContentCreatePage } from "@/components/pages/content-management/content-create-page";
+import { redirect } from "next/navigation";
 
 export default function AdminContentCreatePage() {
-  return <ContentCreatePage />;
+  redirect("/dashboard/admin/content?modal=content-form&modalMode=create");
 }

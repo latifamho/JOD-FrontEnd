@@ -1,6 +1,6 @@
-export type MediaModel = "organization" | "campaign" | "post";
+export type MediaModel = "organization" | "campaign" | "post" | "article";
 
-export type MediaProp = "logo" | "images";
+export type MediaProp = "logo" | "images" | "videos";
 
 export interface MediaItem {
   id: string;

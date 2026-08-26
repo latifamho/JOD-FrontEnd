@@ -33,6 +33,8 @@ type ReviewPostsTableProps = {
   onApprove: (postId: string) => void;
   onReject: (postId: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
+  onEdit?: (post: ReviewPostItem) => void;
+  onEdit?: (post: ReviewPostItem) => void;
 };
 
 export function ReviewPostsTable({
@@ -42,6 +44,7 @@ export function ReviewPostsTable({
   onApprove,
   onReject,
   onOpenDetails,
+  onEdit,
 }: ReviewPostsTableProps) {
   const hasNonPending = posts.some((post) => post.status !== "pending");
 
@@ -75,6 +78,7 @@ export function ReviewPostsTable({
               onApprove={onApprove}
               onReject={onReject}
               onOpenDetails={onOpenDetails}
+              onEdit={onEdit}
             />
           ))}
         </TableBody>
@@ -92,6 +96,7 @@ function ReviewPostRow({
   onReject,
   onOpenDetails,
 }: {
+  onEdit,
   post: ReviewPostItem;
   showReviewedBy: boolean;
   approvingPostId?: string;
@@ -139,6 +144,17 @@ function ReviewPostRow({
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">عرض التفاصيل</TooltipContent>
             </Tooltip>
+
+            {post.status === "approved" && post.type === "general" && !post.organizationName && onEdit ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onEdit(post)}>
+                    <AppIcons.edit className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">تعديل المنشور</TooltipContent>
+              </Tooltip>
+            ) : null}
 
             {post.status === "pending" ? (
               <>

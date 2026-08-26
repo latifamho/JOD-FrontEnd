@@ -86,7 +86,7 @@ export function CategoriesTable({
                 <TableRow key={row.id} className="align-middle">
                   <TableCell>
                     <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
-                    <p className="text-xs text-muted-foreground">{row.id}</p>
+
                   </TableCell>
                   <TableCell className="max-w-[280px] text-sm text-muted-foreground">
                     {displayOrDash(row.description)}

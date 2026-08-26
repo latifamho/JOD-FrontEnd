@@ -164,7 +164,7 @@ export function OrganizationPendingApprovalPage() {
 
             <div className="mt-7 flex flex-wrap gap-3">
               <Button type="button" disabled={isChecking} onClick={checkStatus}>
-                <RefreshCw className={`size-4 ${isChecking ? "animate-spin" : ""}`} />
+                <RefreshCw className="size-4" />
                 {isChecking ? "جارٍ تحديث الحالة..." : "تحديث حالة الطلب"}
               </Button>
               <Button

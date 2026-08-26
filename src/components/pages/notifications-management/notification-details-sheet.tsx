@@ -72,7 +72,7 @@ export function NotificationDetailsSheet({
                 <Badge variant="outline">
                   {notificationCategoryLabels[notification.category]}
                 </Badge>
-                <Badge variant="outline">{notification.id}</Badge>
+
               </div>
               <SheetTitle className="text-right text-lg">
                 {notification.title}

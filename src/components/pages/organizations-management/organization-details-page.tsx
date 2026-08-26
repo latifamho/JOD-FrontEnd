@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
-import { OrganizationVideosSection } from "@/components/shared/organization-videos-section";
 import { routePaths } from "@/constant/routes";
 import {
   formatUtcDateOrDash,
@@ -16,14 +15,11 @@ import {
 import { displayOrDash } from "@/lib/text";
 import {
   getDisplayOrganizationStatus,
-  getDisplayVerificationStatus,
   getOrganizationStatusBadgeClass,
-  getOrganizationVerificationBadgeClass,
 } from "@/components/pages/organizations-management/helpers";
 import {
   organizationStatusLabels,
   organizationTypeLabels,
-  organizationVerificationLabels,
 } from "@/components/pages/organizations-management/organizations-management.types";
 import { AppIcons } from "@/constant/icons";
 import {
@@ -103,9 +99,8 @@ export function OrganizationDetailsPage({
     );
   }
 
-  const displayVerification = getDisplayVerificationStatus(organization);
   const displayStatus = getDisplayOrganizationStatus(organization);
-  const isAccepted = displayVerification === "verified";
+  const isAccepted = displayStatus === "active";
   const socialMediaEntries = organization.socialMedia
     ? (
         Object.entries(organization.socialMedia) as [
@@ -119,9 +114,8 @@ export function OrganizationDetailsPage({
     <section className="relative flex flex-1 flex-col gap-4">
       {isFetching && (
         <div className="absolute inset-x-0 top-0 z-10 flex justify-center">
-          <span className="inline-flex items-center gap-2 rounded-b-md bg-muted px-3 py-1 text-xs text-muted-foreground">
-            <Loader2 className="size-3 animate-spin" />
-            جاري التحديث...
+          <span className="inline-flex items-center rounded-b-md bg-background/90 px-3 py-2" role="status" aria-label="جاري تحديث البيانات">
+            <span className="h-1.5 w-32 animate-pulse rounded-full bg-muted" />
           </span>
         </div>
       )}
@@ -132,17 +126,10 @@ export function OrganizationDetailsPage({
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={getOrganizationVerificationBadgeClass(displayVerification)}
-              >
-                {organizationVerificationLabels[displayVerification]}
-              </Badge>
-              <Badge
-                variant="outline"
                 className={getOrganizationStatusBadgeClass(displayStatus)}
               >
                 {organizationStatusLabels[displayStatus]}
               </Badge>
-              <Badge variant="outline">{organization.id}</Badge>
             </div>
 
             <h2 className="text-xl font-semibold text-foreground">
@@ -291,13 +278,6 @@ export function OrganizationDetailsPage({
         </div>
       </div>
 
-      <OrganizationVideosSection
-        scope="admin"
-        organizationId={organization.id}
-        canManage
-        title="فيديوهات المنظمة"
-        description="إدارة فيديوهات المنظمة بفيديو واحد في كل اختيار. أي فيديو إضافي أثناء الرفع يدخل الرتل ويبدأ بعد الحالي تلقائيًا، مع دعم الإيقاف والمتابعة والاستبدال والإلغاء قبل الاكتمال."
-      />
 
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">
         <h3 className="text-sm font-semibold text-foreground">مرفقات التسجيل</h3>

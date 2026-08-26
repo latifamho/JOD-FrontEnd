@@ -88,7 +88,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
               </Badge>
               <Badge variant="outline">{organizationPostTypeLabels[post.type]}</Badge>
               <Badge variant="outline">{displayOrDash(categoryName)}</Badge>
-              <Badge variant="outline">{post.id}</Badge>
+
             </div>
             <div>
               <h2 className="text-xl font-semibold text-foreground">{post.title}</h2>
@@ -145,6 +145,23 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
                 src={url}
                 alt={`صورة المنشور ${index + 1}`}
                 className="aspect-video w-full rounded-xl border border-border object-cover"
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {(post.videos?.length ?? 0) > 0 ? (
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+          <h3 className="text-sm font-semibold text-foreground">الفيديوهات المرفقة</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {post.videos?.map((url, index) => (
+              <video
+                key={`${url}-${index}`}
+                src={url}
+                controls
+                preload="metadata"
+                className="aspect-video w-full rounded-xl border border-border bg-black object-contain"
               />
             ))}
           </div>

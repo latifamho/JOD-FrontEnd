@@ -37,7 +37,7 @@ export function ReviewPostCard({
           <div className="flex flex-wrap items-center gap-2">
             <ReviewStatusBadge status={post.status} />
             <Badge variant="outline">{postTypeLabels[post.type]}</Badge>
-            <Badge variant="outline">{post.id}</Badge>
+
           </div>
           <p className="text-xs text-muted-foreground">
             {post.status === "approved" && post.publishedAt

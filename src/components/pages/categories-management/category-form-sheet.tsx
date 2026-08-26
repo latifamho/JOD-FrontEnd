@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
+import { FormLoadingSkeleton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,10 +119,7 @@ export function CategoryFormSheet({
 
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {isLoadingDetails ? (
-              <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="size-6 animate-spin" />
-                <p className="text-sm">جاري تحميل بيانات التصنيف...</p>
-              </div>
+              <FormLoadingSkeleton count={4} />
             ) : (
               <>
                 <div className="space-y-2">

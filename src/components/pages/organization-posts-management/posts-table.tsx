@@ -121,7 +121,7 @@ export function PostsTable({
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                       {post.summary}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">{post.id}</p>
+
                   </TableCell>
 
                   <TableCell>

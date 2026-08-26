@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { MediaItem } from "@/features/shared/media/media.types";
-import type { MediaUploadQueueItem } from "@/hooks/use-media-upload-queue";
+import type { MediaUploadKind, MediaUploadQueueItem } from "@/hooks/use-media-upload-queue";
 
 type MediaUploadFieldProps = {
   label?: string;
@@ -14,6 +14,8 @@ type MediaUploadFieldProps = {
   maxItems: number;
   disabled?: boolean;
   multiple?: boolean;
+  mediaKind?: MediaUploadKind;
+  helpText?: string;
   existingMedia?: MediaItem[];
   busyMediaIds?: Set<string>;
   onFilesSelected: (files: File[]) => void;
@@ -36,6 +38,8 @@ export function MediaUploadField({
   maxItems,
   disabled = false,
   multiple = true,
+  mediaKind = "image",
+  helpText,
   existingMedia = [],
   busyMediaIds = new Set(),
   onFilesSelected,
@@ -57,7 +61,7 @@ export function MediaUploadField({
       <Input
         id="media-upload-input"
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={mediaKind === "video" ? "video/mp4,video/webm,video/quicktime" : "image/jpeg,image/png,image/webp"}
         multiple={multiple}
         disabled={!canAdd}
         onChange={(event) => {
@@ -68,7 +72,9 @@ export function MediaUploadField({
         }}
       />
       <p className="text-[11px] leading-5 text-muted-foreground">
-        JPG أو PNG أو WEBP، وبحد أقصى 5 ميجابايت لكل صورة. يتم رفع الصور واحدة تلو الأخرى.
+        {helpText ?? (mediaKind === "video"
+          ? "MP4 أو WEBM أو MOV، وبحد أقصى 100 ميجابايت لكل فيديو."
+          : "JPG أو PNG أو WEBP، وبحد أقصى 5 ميجابايت لكل صورة. يتم رفع الصور واحدة تلو الأخرى.")}
       </p>
 
       {(existingMedia.length > 0 || items.length > 0) ? (
@@ -78,7 +84,11 @@ export function MediaUploadField({
             return (
               <div key={media.id} className="space-y-2 rounded-lg border border-border p-2">
                 <div className="relative overflow-hidden rounded-md bg-muted">
-                  <img src={media.url} alt={media.originalName} className="aspect-square w-full object-cover" />
+                  {mediaKind === "video" ? (
+                    <video src={media.url} controls preload="metadata" className="aspect-video w-full bg-black object-contain" />
+                  ) : (
+                    <img src={media.url} alt={media.originalName} className="aspect-square w-full object-cover" />
+                  )}
                   {busy ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                       <Loader2 className="size-5 animate-spin" />
@@ -92,7 +102,7 @@ export function MediaUploadField({
                       استبدال
                       <input
                         type="file"
-                        accept="image/jpeg,image/png,image/webp"
+                        accept={mediaKind === "video" ? "video/mp4,video/webm,video/quicktime" : "image/jpeg,image/png,image/webp"}
                         className="sr-only"
                         disabled={disabled || busy}
                         onChange={(event) => {
@@ -113,7 +123,7 @@ export function MediaUploadField({
                       onClick={() => onDeleteExisting(media)}
                     >
                       <Trash2 className="size-3.5" />
-                      <span className="sr-only">حذف الصورة</span>
+                      <span className="sr-only">حذف {mediaKind === "video" ? "الفيديو" : "الصورة"}</span>
                     </Button>
                   ) : null}
                 </div>
@@ -124,7 +134,11 @@ export function MediaUploadField({
           {items.map((item) => (
             <div key={item.id} className="space-y-2 rounded-lg border border-border p-2">
               <div className="relative overflow-hidden rounded-md bg-muted">
-                <img src={item.previewUrl} alt={item.file.name} className="aspect-square w-full object-cover" />
+                {mediaKind === "video" ? (
+                  <video src={item.previewUrl} controls preload="metadata" className="aspect-video w-full bg-black object-contain" />
+                ) : (
+                  <img src={item.previewUrl} alt={item.file.name} className="aspect-square w-full object-cover" />
+                )}
                 <div className="absolute end-1 top-1 rounded-full bg-background/90 p-1 shadow-sm">
                   <StatusIcon item={item} />
                 </div>

@@ -160,9 +160,13 @@ export const api = axios.create({
   },
 });
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) =>
-  appendAuthorizationHeaders(config),
-);
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
+  }
+
+  return appendAuthorizationHeaders(config);
+});
 
 api.interceptors.response.use(
   (response: AxiosResponse) => {

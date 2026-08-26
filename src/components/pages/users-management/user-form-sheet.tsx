@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
+import { FormLoadingSkeleton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -218,8 +219,8 @@ export function UserFormSheet({
             </SheetHeader>
 
             {isLoadingDetails ? (
-              <div className="flex flex-1 items-center justify-center p-8">
-                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+              <div className="flex-1 p-4">
+                <FormLoadingSkeleton count={5} />
               </div>
             ) : (
               <div className="flex-1 space-y-4 overflow-y-auto p-4">

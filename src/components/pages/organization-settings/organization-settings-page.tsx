@@ -4,7 +4,6 @@ import * as React from 'react'
 import { Loader2 } from 'lucide-react'
 
 import { FormLoadingSkeleton, MediaUploadField } from '@/components/shared'
-import { OrganizationVideosSection } from '@/components/shared/organization-videos-section'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -149,12 +148,6 @@ export function OrganizationSettingsPage() {
         ) : null}
       </div>
 
-      <OrganizationVideosSection
-        scope="org"
-        organizationId={profile.id}
-        canManage={canUpdate}
-        description="اختر فيديو واحدًا في كل مرة. أثناء رفع فيديو يمكنك إضافة فيديو آخر إلى الرتل، وسيبدأ تلقائيًا بعد اكتمال الحالي. يمكن إيقاف الرفع ومتابعته بعد انقطاع الشبكة أو تحديث الصفحة."
-      />
 
       {canUpdate ? (
         <form className="space-y-4 rounded-xl border bg-card p-6" onSubmit={(event) => {

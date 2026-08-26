@@ -15,20 +15,12 @@ export interface AdminArticlesParams {
 
 export interface ArticleCreateRequest {
   title: string
-  slug?: string
-  excerpt: string
-  content: string
-  authorName: string
-  status: ArticleStatus
+  description: string
 }
 
 export interface ArticleUpdateRequest {
   title?: string
-  slug?: string
-  excerpt?: string
-  content?: string
-  authorName?: string
-  status?: ArticleStatus
+  description?: string
 }
 
 export type AdminArticlesResponse = ApiListResponse<ArticleItem>

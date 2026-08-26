@@ -17,14 +17,28 @@ export interface MediaUploadQueueItem {
   error?: string;
 }
 
+export type MediaUploadKind = "image" | "video";
+
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 function createLocalId(file: File): string {
   return `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
 }
 
-function validateImage(file: File): string | null {
+function validateMedia(file: File, kind: MediaUploadKind): string | null {
+  if (kind === "video") {
+    if (!ALLOWED_VIDEO_TYPES.has(file.type)) {
+      return "نوع الفيديو غير مدعوم. استخدم MP4 أو WEBM أو MOV.";
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      return "حجم الفيديو يجب ألا يتجاوز 100 ميجابايت.";
+    }
+    return null;
+  }
+
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return "نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP.";
   }
@@ -34,7 +48,7 @@ function validateImage(file: File): string | null {
   return null;
 }
 
-export function useMediaUploadQueue(maxItems: number) {
+export function useMediaUploadQueue(maxItems: number, kind: MediaUploadKind = "image") {
   const [items, setItems] = React.useState<MediaUploadQueueItem[]>([]);
   const itemsRef = React.useRef(items);
 
@@ -56,7 +70,7 @@ export function useMediaUploadQueue(maxItems: number) {
         return [
           ...current,
           ...accepted.map((file) => {
-            const validationError = validateImage(file);
+            const validationError = validateMedia(file, kind);
             return {
               id: createLocalId(file),
               file,
@@ -68,7 +82,7 @@ export function useMediaUploadQueue(maxItems: number) {
         ];
       });
     },
-    [maxItems],
+    [kind, maxItems],
   );
 
   const removeItem = React.useCallback((id: string) => {
@@ -81,7 +95,7 @@ export function useMediaUploadQueue(maxItems: number) {
 
   const uploadOne = React.useCallback(
     async (target: MediaTarget, item: MediaUploadQueueItem): Promise<boolean> => {
-      const validationError = validateImage(item.file);
+      const validationError = validateMedia(item.file, kind);
       if (validationError) {
         updateItem(item.id, { status: "error", error: validationError });
         return false;
@@ -95,12 +109,12 @@ export function useMediaUploadQueue(maxItems: number) {
       } catch (error) {
         updateItem(item.id, {
           status: "error",
-          error: normalizeApiError(error).message || "تعذر رفع الصورة.",
+          error: normalizeApiError(error).message || (kind === "video" ? "تعذر رفع الفيديو." : "تعذر رفع الصورة."),
         });
         return false;
       }
     },
-    [updateItem],
+    [kind, updateItem],
   );
 
   const uploadAll = React.useCallback(

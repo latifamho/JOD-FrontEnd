@@ -92,6 +92,7 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
   const campaignsBrief = useOrgCampaignsBrief(open && campaignRelated);
   const categoriesBrief = useOrgCategoriesBrief(open);
   const mediaQueue = useMediaUploadQueue(10);
+  const videoQueue = useMediaUploadQueue(10, "video");
   const [createdPostId, setCreatedPostId] = React.useState<string | null>(null);
   const [discardDialogOpen, setDiscardDialogOpen] = useQueryDisclosure(
     "post-discard-changes",
@@ -102,14 +103,16 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
     if (open) {
       reset(toPostFormFields(initialValues));
       mediaQueue.reset();
+      videoQueue.reset();
       setCreatedPostId(null);
     }
   }, [initialValues, open, reset]);
 
-  const isBusy = isSubmitting || mediaQueue.isUploading;
+  const isBusy = isSubmitting || mediaQueue.isUploading || videoQueue.isUploading;
   const formLocked = isBusy || Boolean(createdPostId);
   const hasUnsavedEditChanges = mode === "edit" && isDirty;
-  const target = createdPostId ? { model: "post" as const, modelId: createdPostId, prop: "images" as const } : null;
+  const imageTarget = createdPostId ? { model: "post" as const, modelId: createdPostId, prop: "images" as const } : null;
+  const videoTarget = createdPostId ? { model: "post" as const, modelId: createdPostId, prop: "videos" as const } : null;
 
   const closeSheetSafely = React.useCallback(() => {
     if (isBusy) return;
@@ -145,17 +148,21 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
               if (!postId) return;
               setCreatedPostId(postId);
 
-              if (!mediaQueue.hasQueued) {
+              if (!mediaQueue.hasQueued && !videoQueue.hasQueued) {
                 onOpenChange(false);
                 return;
               }
 
-              const result = await mediaQueue.uploadAll({ model: "post", modelId: postId, prop: "images" });
-              if (result.failed === 0) {
+              const [imagesResult, videosResult] = await Promise.all([
+                mediaQueue.uploadAll({ model: "post", modelId: postId, prop: "images" }),
+                videoQueue.uploadAll({ model: "post", modelId: postId, prop: "videos" }),
+              ]);
+              const failedFileNames = [...imagesResult.failedFileNames, ...videosResult.failedFileNames];
+              if (failedFileNames.length === 0) {
                 onOpenChange(false);
                 return;
               }
-              toast.error(`تم إنشاء البوست، لكن فشل رفع: ${result.failedFileNames.join("، ")}`);
+              toast.error(`تم إنشاء البوست، لكن فشل رفع: ${failedFileNames.join("، ")}`);
             })}
           >
             <SheetHeader className="border-b border-border pe-12 text-right">
@@ -258,14 +265,29 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                 disabled={isBusy || Boolean(createdPostId && mediaQueue.failedItems.length === 0)}
                 onFilesSelected={mediaQueue.addFiles}
                 onRemoveQueued={mediaQueue.removeItem}
-                onRetry={target ? async (id) => {
+                onRetry={imageTarget ? async (id) => {
                   const item = mediaQueue.items.find((candidate) => candidate.id === id);
-                  const succeeded = await mediaQueue.retryItem(target, id);
+                  const succeeded = await mediaQueue.retryItem(imageTarget, id);
                   if (!succeeded) toast.error(`تعذر رفع الصورة ${item?.file.name ?? ""}`);
                 } : undefined}
               />
 
-              {createdPostId && mediaQueue.failedItems.length > 0 ? (
+              <MediaUploadField
+                label="فيديوهات البوست - اختياري"
+                mediaKind="video"
+                items={videoQueue.items}
+                maxItems={10}
+                disabled={isBusy || Boolean(createdPostId && videoQueue.failedItems.length === 0)}
+                onFilesSelected={videoQueue.addFiles}
+                onRemoveQueued={videoQueue.removeItem}
+                onRetry={videoTarget ? async (id) => {
+                  const item = videoQueue.items.find((candidate) => candidate.id === id);
+                  const succeeded = await videoQueue.retryItem(videoTarget, id);
+                  if (!succeeded) toast.error(`تعذر رفع الفيديو ${item?.file.name ?? ""}`);
+                } : undefined}
+              />
+
+              {createdPostId && (mediaQueue.failedItems.length > 0 || videoQueue.failedItems.length > 0) ? (
                 <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
                   تم إنشاء البوست. أعد محاولة الصور الفاشلة أو أغلق النافذة للمتابعة بالصور التي نجحت.
                 </p>

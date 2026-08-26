@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,12 +20,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ContentTable } from "@/components/pages/content-management/content-table";
+import { ContentFormSheet } from "@/components/pages/content-management/content-form-sheet";
 import {
   articleStatusLabels,
   type ArticleStatus,
 } from "@/components/pages/content-management/content-management.types";
 import { AppIcons } from "@/constant/icons";
-import { routePaths } from "@/constant/routes";
 import { EmptyState, PaginationControls } from "@/components/shared";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
@@ -38,13 +37,12 @@ import {
 import { displayOrDash } from "@/lib/text";
 
 export function ContentManagementPage() {
-  const router = useRouter();
-
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const [searchFilter, setSearchFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | ArticleStatus>("all");
   const deleteModal = useQueryModal("article-delete");
+  const contentForm = useQueryModal("content-form");
   const deleteTargetId = deleteModal.id;
 
   const pagination = usePagination({ totalItems: apiTotal, pageSize });
@@ -80,9 +78,9 @@ export function ContentManagementPage() {
 
   const handleEdit = React.useCallback(
     (id: string) => {
-      router.push(routePaths.adminScope.contentEdit(id));
+      contentForm.open({ mode: "edit", id });
     },
-    [router],
+    [contentForm],
   );
 
   const handleResetFilters = React.useCallback(() => {
@@ -115,7 +113,7 @@ export function ContentManagementPage() {
           size="sm"
           className="w-fit"
           disabled={showTableLoading}
-          onClick={() => router.push(routePaths.adminScope.contentNew)}
+          onClick={() => contentForm.open({ mode: "create" })}
         >
           <AppIcons.content className="size-4" />
           مقال جديد
@@ -206,6 +204,15 @@ export function ContentManagementPage() {
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
+
+      <ContentFormSheet
+        open={contentForm.isOpen}
+        mode={contentForm.mode === "edit" ? "edit" : "create"}
+        articleId={contentForm.id ?? undefined}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) contentForm.close();
+        }}
       />
 
       <Dialog

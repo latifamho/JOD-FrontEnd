@@ -16,13 +16,10 @@ import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
   getOrganizationStatusBadgeClass,
-  getOrganizationVerificationBadgeClass,
   getDisplayOrganizationStatus,
-  getDisplayVerificationStatus,
 } from "@/components/pages/organizations-management/helpers";
 import {
   organizationStatusLabels,
-  organizationVerificationLabels,
   type AdminOrganizationItem,
 } from "@/components/pages/organizations-management/organizations-management.types";
 import { AppIcons } from "@/constant/icons";
@@ -39,7 +36,6 @@ type OrganizationsTableProps = {
   loadingRowIds: Set<string>;
   onViewOrganization: (organizationId: string) => void;
   onToggleOrganizationStatus: (organizationId: string) => void;
-  onToggleOrganizationVerification: (organizationId: string) => void;
   onDeleteOrganization: (organizationId: string) => void;
 };
 
@@ -49,7 +45,6 @@ export function OrganizationsTable({
   loadingRowIds,
   onViewOrganization,
   onToggleOrganizationStatus,
-  onToggleOrganizationVerification,
   onDeleteOrganization,
 }: OrganizationsTableProps) {
   return (
@@ -58,7 +53,6 @@ export function OrganizationsTable({
         <TableHeader className="bg-muted/35">
           <TableRow>
             <TableHead>المنظمة</TableHead>
-            <TableHead>التوثيق</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>بيانات التواصل</TableHead>
             <TableHead>الموقع</TableHead>
@@ -80,9 +74,6 @@ export function OrganizationsTable({
                   <SkeletonPulse className="h-5 w-16 rounded-full" />
                 </TableCell>
                 <TableCell>
-                  <SkeletonPulse className="h-5 w-16 rounded-full" />
-                </TableCell>
-                <TableCell>
                   <SkeletonPulse className="mb-1.5 h-3 w-36" />
                   <SkeletonPulse className="h-3 w-24" />
                 </TableCell>
@@ -99,7 +90,7 @@ export function OrganizationsTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {Array.from({ length: 4 }).map((_, j) => (
+                    {Array.from({ length: 3 }).map((_, j) => (
                       <SkeletonPulse key={j} className="h-8 w-8 rounded-md" />
                     ))}
                   </div>
@@ -109,9 +100,7 @@ export function OrganizationsTable({
           ) : rows.length > 0 ? (
             rows.map((organization) => {
               const isRowLoading = loadingRowIds.has(organization.id);
-              const displayVerification = getDisplayVerificationStatus(organization);
               const displayStatus = getDisplayOrganizationStatus(organization);
-              const isVerifiedActive = displayVerification === "verified";
 
               return (
                 <TableRow key={organization.id}>
@@ -119,18 +108,6 @@ export function OrganizationsTable({
                     <p className="font-semibold text-foreground">
                       {displayOrDash(organization.name)}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {displayOrDash(organization.id)}
-                    </p>
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={getOrganizationVerificationBadgeClass(displayVerification)}
-                    >
-                      {organizationVerificationLabels[displayVerification]}
-                    </Badge>
                   </TableCell>
 
                   <TableCell>
@@ -225,27 +202,6 @@ export function OrganizationsTable({
                         type="button"
                         size="icon"
                         variant="ghost"
-                        title={
-                          isVerifiedActive
-                            ? "إلغاء توثيق المنظمة"
-                            : "توثيق المنظمة"
-                        }
-                        disabled={isRowLoading}
-                        onClick={() =>
-                          onToggleOrganizationVerification(organization.id)
-                        }
-                        className="shadow-sm"
-                      >
-                        {isVerifiedActive ? (
-                          <AppIcons.BadgeMinus className="size-4 text-warning" />
-                        ) : (
-                          <AppIcons.verification className="size-4 text-success" />
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
                         title="حذف المنظمة"
                         disabled={isRowLoading}
                         onClick={() => onDeleteOrganization(organization.id)}
@@ -261,7 +217,7 @@ export function OrganizationsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={8}
+                colSpan={7}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد بيانات منظمات للعرض.

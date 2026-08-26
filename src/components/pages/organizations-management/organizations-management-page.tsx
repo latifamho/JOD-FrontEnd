@@ -14,15 +14,11 @@ import {
   type OrganizationsSortOption,
   OrganizationsFilters,
 } from "@/components/pages/organizations-management/organizations-filters";
-import {
-  type OrganizationStatus,
-  type OrganizationVerificationStatus,
-} from "@/components/pages/organizations-management/organizations-management.types";
+import { type OrganizationStatus } from "@/components/pages/organizations-management/organizations-management.types";
 import { routePaths } from "@/constant/routes";
 import {
   useAdminOrganizations,
   useToggleOrganizationStatus,
-  useToggleOrganizationVerification,
   useDeleteOrganization,
 } from "@/features/admin/organizations/admin.organizations.query";
 
@@ -41,10 +37,6 @@ export function OrganizationsManagementPage() {
   const [searchFilter, setSearchFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | OrganizationStatus>("all");
   const [locationFilter, setLocationFilter] = React.useState("all");
-
-  const [verificationFilter, setVerificationFilter] = React.useState<
-    "all" | OrganizationVerificationStatus
-  >("all");
   const [sortBy, setSortBy] = React.useState<OrganizationsSortOption>("created_newest");
 
   const deleteModal = useQueryModal("organization-delete");
@@ -61,7 +53,6 @@ export function OrganizationsManagementPage() {
     filter: {
       search: searchFilter.trim() || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
-      verificationStatus: verificationFilter !== "all" ? verificationFilter : undefined,
       location: locationFilter !== "all" ? locationFilter : undefined,
     },
   });
@@ -74,7 +65,7 @@ export function OrganizationsManagementPage() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, searchFilter, statusFilter, verificationFilter, locationFilter, sortBy, setCurrentPage]);
+  }, [pageSize, searchFilter, statusFilter, locationFilter, sortBy, setCurrentPage]);
 
   const organizations = data?.data ?? [];
   const locationOptions = React.useMemo(
@@ -88,7 +79,6 @@ export function OrganizationsManagementPage() {
     : null;
 
   const toggleStatusMutation = useToggleOrganizationStatus();
-  const toggleVerificationMutation = useToggleOrganizationVerification();
   const deleteMutation = useDeleteOrganization();
 
   const addLoadingRow = React.useCallback((id: string) => {
@@ -106,7 +96,6 @@ export function OrganizationsManagementPage() {
   const handleResetFilters = React.useCallback(() => {
     setSearchFilter("");
     setStatusFilter("all");
-    setVerificationFilter("all");
     setLocationFilter("all");
     setSortBy("created_newest");
   }, []);
@@ -140,30 +129,6 @@ export function OrganizationsManagementPage() {
     ],
   );
 
-  const handleToggleOrganizationVerification = React.useCallback(
-    (organizationId: string) => {
-      const org = organizations.find((o) => o.id === organizationId);
-      if (!org) return;
-      const nextVerified = org.verificationStatus !== "verified";
-      addLoadingRow(organizationId);
-      toggleVerificationMutation.mutate(
-        {
-          organizationId,
-          body: {
-            verificationStatus: nextVerified ? "verified" : "unverified",
-          },
-        },
-        { onSettled: () => removeLoadingRow(organizationId) },
-      );
-    },
-    [
-      organizations,
-      toggleVerificationMutation,
-      addLoadingRow,
-      removeLoadingRow,
-    ],
-  );
-
   const openDeleteDialog = React.useCallback(
     (organizationId: string) => deleteModal.open({ id: organizationId }),
     [deleteModal],
@@ -184,7 +149,7 @@ export function OrganizationsManagementPage() {
             إدارة المنظمات
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            مراجعة المنظمات وإدارة حالة التفعيل والتوثيق عبر الجدول.
+            مراجعة المنظمات وإدارة حالة الحساب الموحدة عبر الجدول.
           </p>
         </div>
       </div>
@@ -194,8 +159,6 @@ export function OrganizationsManagementPage() {
         onSearchFilterChange={setSearchFilter}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        verificationFilter={verificationFilter}
-        onVerificationFilterChange={setVerificationFilter}
         locationFilter={locationFilter}
         locationOptions={locationOptions}
         onLocationFilterChange={setLocationFilter}
@@ -222,7 +185,6 @@ export function OrganizationsManagementPage() {
         loadingRowIds={loadingRowIds}
         onViewOrganization={openOrganizationDetails}
         onToggleOrganizationStatus={handleToggleOrganizationStatus}
-        onToggleOrganizationVerification={handleToggleOrganizationVerification}
         onDeleteOrganization={openDeleteDialog}
       />
 
