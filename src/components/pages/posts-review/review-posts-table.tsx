@@ -34,7 +34,6 @@ type ReviewPostsTableProps = {
   onReject: (postId: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
   onEdit?: (post: ReviewPostItem) => void;
-  onEdit?: (post: ReviewPostItem) => void;
 };
 
 export function ReviewPostsTable({
@@ -95,8 +94,8 @@ function ReviewPostRow({
   onApprove,
   onReject,
   onOpenDetails,
-}: {
   onEdit,
+}: {
   post: ReviewPostItem;
   showReviewedBy: boolean;
   approvingPostId?: string;
@@ -104,6 +103,7 @@ function ReviewPostRow({
   onApprove: (postId: string) => void;
   onReject: (postId: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
+  onEdit?: (post: ReviewPostItem) => void;
 }) {
   const [rejectDialogOpen, setRejectDialogOpen] = useQueryDisclosure(`post-reject-${post.id}`);
   const isApproving = approvingPostId === post.id;
@@ -149,7 +149,7 @@ function ReviewPostRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onEdit(post)}>
-                    <AppIcons.edit className="size-4" />
+                    <AppIcons.PencilLine className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">تعديل المنشور</TooltipContent>

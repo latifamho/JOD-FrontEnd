@@ -39,7 +39,8 @@ const schema = z.object({
   endDate: z.string().min(1),
 }).refine((values) => values.endDate >= values.startDate, { path: ["endDate"], message: "تاريخ النهاية يجب ألا يسبق البداية" });
 
-type FormValues = z.infer<typeof schema>;
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
 
 type Props = { campaignId: string; scope: "owner" | "staff" };
 
@@ -66,7 +67,7 @@ function CampaignEditForm({ campaign, detailsRoute, refetch }: { campaign: NonNu
   const [pendingDeleteIds, setPendingDeleteIds] = React.useState<Set<string>>(new Set());
   const [pendingReplacements, setPendingReplacements] = React.useState<Map<string, File>>(new Map());
   const [processingMedia, setProcessingMedia] = React.useState(false);
-  const { register, control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, control, handleSubmit, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: campaign.title,
