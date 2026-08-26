@@ -11,7 +11,9 @@ import { ReviewStatusBadge } from "@/components/shared";
 import { formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
+  postAudienceLabels,
   postTypeLabels,
+  publisherTypeLabels,
   type ReviewPostItem,
 } from "@/components/pages/posts-review/posts-review.types";
 import { useAdminPostDetail } from "@/features/admin/posts/admin.posts.query";
@@ -76,15 +78,26 @@ export function PostDetailsDialog({
 
           <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs text-muted-foreground">الجهة الناشرة</p>
+              <p className="text-xs text-muted-foreground">الناشر</p>
               <p className="text-sm font-medium">
-                {displayOrDash(post.organizationName)}
+                {displayOrDash(detail?.publisher?.name ?? post.publisher?.name ?? post.organizationName ?? post.authorName)}
+              </p>
+              {(detail?.publisher ?? post.publisher) ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {publisherTypeLabels[(detail?.publisher ?? post.publisher)!.type]}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">التصنيف</p>
+              <p className="text-sm font-medium">
+                {displayOrDash(detail?.category?.name ?? post.category?.name)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">كاتب المنشور</p>
+              <p className="text-xs text-muted-foreground">الجمهور</p>
               <p className="text-sm font-medium">
-                {displayOrDash(post.authorName)}
+                {postAudienceLabels[detail?.audience ?? post.audience ?? "general"]}
               </p>
             </div>
             <div>
@@ -204,13 +217,13 @@ export function PostDetailsDialog({
             </>
           )}
 
-          {post.rejectionReason && (
+          {(detail?.rejectionReason ?? post.rejectionReason) && (
             <div className="rounded-lg border border-rose-200/70 bg-rose-50/80 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">
               <p className="mb-1 text-xs font-semibold text-rose-700 dark:text-rose-200">
                 سبب الرفض السابق
               </p>
               <p className="text-sm text-rose-700 dark:text-rose-100">
-                {post.rejectionReason}
+                {detail?.rejectionReason ?? post.rejectionReason}
               </p>
             </div>
           )}

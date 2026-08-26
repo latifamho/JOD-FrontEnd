@@ -45,10 +45,10 @@ export const adminPostsServices = {
     return response.data
   },
 
-  async rejectPost(postId: string): Promise<AdminReviewPostDetailResponse> {
+  async rejectPost(postId: string, rejectionReason: string): Promise<AdminReviewPostDetailResponse> {
     const response = await api.patch<AdminReviewPostDetailResponse>(
       POST_ENDPOINT(postId),
-      { status: 'rejected' },
+      { status: 'rejected', rejectionReason },
       { successMessageKey: 'rejected' },
     )
     return response.data

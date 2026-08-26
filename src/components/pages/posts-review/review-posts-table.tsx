@@ -22,7 +22,9 @@ import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { RejectPostDialog } from "@/components/pages/posts-review/reject-post-dialog";
 import {
+  postAudienceLabels,
   postTypeLabels,
+  publisherTypeLabels,
   type ReviewPostItem,
 } from "@/components/pages/posts-review/posts-review.types";
 
@@ -31,7 +33,7 @@ type ReviewPostsTableProps = {
   approvingPostId?: string;
   rejectingPostId?: string;
   onApprove: (postId: string) => void;
-  onReject: (postId: string) => void;
+  onReject: (postId: string, rejectionReason: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
   onEdit?: (post: ReviewPostItem) => void;
 };
@@ -54,8 +56,9 @@ export function ReviewPostsTable({
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-[100px] text-right font-semibold text-muted-foreground">الحالة</TableHead>
             <TableHead className="min-w-[200px] text-right font-semibold text-muted-foreground">العنوان</TableHead>
-            <TableHead className="min-w-[140px] text-right font-semibold text-muted-foreground">المنظمة</TableHead>
-            <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground md:table-cell">الكاتب</TableHead>
+            <TableHead className="min-w-[150px] text-right font-semibold text-muted-foreground">الناشر</TableHead>
+            <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground md:table-cell">التصنيف</TableHead>
+            <TableHead className="hidden w-[90px] text-right font-semibold text-muted-foreground lg:table-cell">الجمهور</TableHead>
             <TableHead className="hidden w-[110px] text-right font-semibold text-muted-foreground lg:table-cell">النوع</TableHead>
             {hasNonPending ? (
               <TableHead className="hidden min-w-[120px] text-right font-semibold text-muted-foreground lg:table-cell">راجعه</TableHead>
@@ -101,7 +104,7 @@ function ReviewPostRow({
   approvingPostId?: string;
   rejectingPostId?: string;
   onApprove: (postId: string) => void;
-  onReject: (postId: string) => void;
+  onReject: (postId: string, rejectionReason: string) => void;
   onOpenDetails: (post: ReviewPostItem) => void;
   onEdit?: (post: ReviewPostItem) => void;
 }) {
@@ -125,8 +128,14 @@ function ReviewPostRow({
             ) : null}
           </div>
         </TableCell>
-        <TableCell className="align-middle text-right text-sm">{displayOrDash(post.organizationName)}</TableCell>
-        <TableCell className="hidden align-middle text-right text-sm md:table-cell">{displayOrDash(post.authorName)}</TableCell>
+        <TableCell className="align-middle text-right text-sm">
+          <div className="flex flex-col gap-0.5">
+            <span>{displayOrDash(post.publisher?.name ?? post.organizationName ?? post.authorName)}</span>
+            <span className="text-xs text-muted-foreground">{post.publisher ? publisherTypeLabels[post.publisher.type] : "—"}</span>
+          </div>
+        </TableCell>
+        <TableCell className="hidden align-middle text-right text-sm md:table-cell">{displayOrDash(post.category?.name)}</TableCell>
+        <TableCell className="hidden align-middle text-right text-sm lg:table-cell">{postAudienceLabels[post.audience ?? "general"]}</TableCell>
         <TableCell className="hidden align-middle text-right lg:table-cell">
           <span className="text-sm text-muted-foreground">{postTypeLabels[post.type] ?? post.type}</span>
         </TableCell>
@@ -190,7 +199,7 @@ function ReviewPostRow({
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
         postTitle={title}
-        onConfirm={() => onReject(post.id)}
+        onConfirm={(reason) => onReject(post.id, reason)}
       />
     </>
   );

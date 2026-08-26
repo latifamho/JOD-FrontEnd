@@ -59,7 +59,7 @@ export function useApprovePost() {
 export function useRejectPost() {
   const invalidate = useInvalidateAdminPosts()
   return useMutation({
-    mutationFn: ({ postId }: { postId: string }) => adminPostsServices.rejectPost(postId),
+    mutationFn: ({ postId, rejectionReason }: { postId: string; rejectionReason: string }) => adminPostsServices.rejectPost(postId, rejectionReason),
     onSuccess: (_data, { postId }) => invalidate(postId),
   })
 }

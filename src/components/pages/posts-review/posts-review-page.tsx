@@ -80,7 +80,7 @@ export function PostsReviewPage({ status }: PostsReviewPageProps) {
   );
 
   const handleReject = React.useCallback(
-    (postId: string) => rejectMutation.mutate({ postId }),
+    (postId: string, rejectionReason: string) => rejectMutation.mutate({ postId, rejectionReason }),
     [rejectMutation],
   );
 
