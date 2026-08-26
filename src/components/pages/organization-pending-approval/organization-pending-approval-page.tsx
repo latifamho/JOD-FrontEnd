@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { CheckCircle2, Clock3, FileSearch, LogOut, RefreshCw, Sparkles } from "lucide-react";
@@ -20,20 +20,20 @@ import * as React from "react";
 const reviewSteps = [
   {
     icon: CheckCircle2,
-    title: "تم استلام الطلب",
-    description: "وصلت بيانات المنظمة وحساب المالك إلى منصة جود بنجاح.",
+    title: "طھظ… ط§ط³طھظ„ط§ظ… ط§ظ„ط·ظ„ط¨",
+    description: "ظˆطµظ„طھ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ظ†ط¸ظ…ط© ظˆط­ط³ط§ط¨ ط§ظ„ظ…ط§ظ„ظƒ ط¥ظ„ظ‰ ظ…ظ†طµط© ط¬ظˆط¯ ط¨ظ†ط¬ط§ط­.",
     done: true,
   },
   {
     icon: FileSearch,
-    title: "مراجعة البيانات",
-    description: "يقوم فريقنا الآن بمطابقة البيانات الرسمية والتحقق منها.",
+    title: "ظ…ط±ط§ط¬ط¹ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ",
+    description: "ظٹظ‚ظˆظ… ظپط±ظٹظ‚ظ†ط§ ط§ظ„ط¢ظ† ط¨ظ…ط·ط§ط¨ظ‚ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ ط§ظ„ط±ط³ظ…ظٹط© ظˆط§ظ„طھط­ظ‚ظ‚ ظ…ظ†ظ‡ط§.",
     done: false,
   },
   {
     icon: Sparkles,
-    title: "تفعيل مساحة العمل",
-    description: "بعد الموافقة ستصبح جميع أدوات إدارة المنظمة متاحة تلقائياً.",
+    title: "طھظپط¹ظٹظ„ ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„",
+    description: "ط¨ط¹ط¯ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط³طھطµط¨ط­ ط¬ظ…ظٹط¹ ط£ط¯ظˆط§طھ ط¥ط¯ط§ط±ط© ط§ظ„ظ…ظ†ط¸ظ…ط© ظ…طھط§ط­ط© طھظ„ظ‚ط§ط¦ظٹط§ظ‹.",
     done: false,
   },
 ];
@@ -76,9 +76,9 @@ export function OrganizationPendingApprovalPage() {
         router.replace(landing);
         return;
       }
-      setCheckMessage("ما زال الطلب قيد المراجعة. سنبقيك على اطلاع فور تحديث الحالة.");
+      setCheckMessage("ظ…ط§ ط²ط§ظ„ ط§ظ„ط·ظ„ط¨ ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©. ط³ظ†ط¨ظ‚ظٹظƒ ط¹ظ„ظ‰ ط§ط·ظ„ط§ط¹ ظپظˆط± طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط©.");
     } catch {
-      setCheckMessage("تعذّر تحديث الحالة الآن. جرّب مرة أخرى بعد قليل.");
+      setCheckMessage("طھط¹ط°ظ‘ط± طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط© ط§ظ„ط¢ظ†. ط¬ط±ظ‘ط¨ ظ…ط±ط© ط£ط®ط±ظ‰ ط¨ط¹ط¯ ظ‚ظ„ظٹظ„.");
     } finally {
       setIsChecking(false);
     }
@@ -94,7 +94,7 @@ export function OrganizationPendingApprovalPage() {
       <main className="flex min-h-screen items-center justify-center bg-background">
         <div className="space-y-3 text-center" role="status" aria-live="polite">
           <div className="mx-auto size-12 animate-pulse rounded-full bg-primary/15" />
-          <p className="text-sm text-muted-foreground">جارٍ التحقق من حالة الطلب...</p>
+          <p className="text-sm text-muted-foreground">ط¬ط§ط±ظچ ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨...</p>
         </div>
       </main>
     );
@@ -111,19 +111,19 @@ export function OrganizationPendingApprovalPage() {
           <div className="max-w-2xl">
             <Badge className="gap-2 rounded-full px-4 py-2" variant="secondary">
               <Clock3 className="size-4" />
-              طلب الانضمام قيد المراجعة
+              ط·ظ„ط¨ ط§ظ„ط§ظ†ط¶ظ…ط§ظ… ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©
             </Badge>
 
             <p className="mt-6 text-sm font-medium text-primary">
-              أهلاً {ownerName || "بك"} في جود
+              ط£ظ‡ظ„ط§ظ‹ {ownerName || "ط¨ظƒ"} ظپظٹ ط¬ظˆط¯
             </p>
             <h1 className="mt-2 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-              طلب منظمتك وصل بأمان، والباقي علينا
+              ط·ظ„ط¨ ظ…ظ†ط¸ظ…طھظƒ ظˆطµظ„ ط¨ط£ظ…ط§ظ†طŒ ظˆط§ظ„ط¨ط§ظ‚ظٹ ط¹ظ„ظٹظ†ط§
             </h1>
             <p className="mt-4 text-sm leading-8 text-muted-foreground sm:text-base">
-              نراجع الآن بيانات {organization?.name ? `منظمة ${organization.name}` : "منظمتك"}
-              {" "}بعناية. خلال هذه الفترة ستبقى مساحة العمل محمية، وعند اعتماد الطلب
-              ستتمكن من الدخول إلى لوحة المنظمة مباشرة بنفس الحساب.
+              ظ†ط±ط§ط¬ط¹ ط§ظ„ط¢ظ† ط¨ظٹط§ظ†ط§طھ {organization?.name ? `ظ…ظ†ط¸ظ…ط© ${organization.name}` : "ظ…ظ†ط¸ظ…طھظƒ"}
+              {" "}ط¨ط¹ظ†ط§ظٹط©. ط®ظ„ط§ظ„ ظ‡ط°ظ‡ ط§ظ„ظپطھط±ط© ط³طھط¨ظ‚ظ‰ ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„ ظ…ط­ظ…ظٹط©طŒ ظˆط¹ظ†ط¯ ط§ط¹طھظ…ط§ط¯ ط§ظ„ط·ظ„ط¨
+              ط³طھطھظ…ظƒظ† ظ…ظ† ط§ظ„ط¯ط®ظˆظ„ ط¥ظ„ظ‰ ظ„ظˆط­ط© ط§ظ„ظ…ظ†ط¸ظ…ط© ظ…ط¨ط§ط´ط±ط© ط¨ظ†ظپط³ ط§ظ„ط­ط³ط§ط¨.
             </p>
 
             <div className="mt-8 space-y-3">
@@ -165,7 +165,7 @@ export function OrganizationPendingApprovalPage() {
             <div className="mt-7 flex flex-wrap gap-3">
               <Button type="button" disabled={isChecking} onClick={checkStatus}>
                 <RefreshCw className="size-4" />
-                {isChecking ? "جارٍ تحديث الحالة..." : "تحديث حالة الطلب"}
+                {isChecking ? "ط¬ط§ط±ظچ طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط©..." : "طھط­ط¯ظٹط« ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"}
               </Button>
               <Button
                 type="button"
@@ -174,7 +174,7 @@ export function OrganizationPendingApprovalPage() {
                 onClick={() => logoutMutation.mutate()}
               >
                 <LogOut className="size-4" />
-                تسجيل الخروج
+                طھط³ط¬ظٹظ„ ط§ظ„ط®ط±ظˆط¬
               </Button>
             </div>
           </div>
@@ -183,16 +183,16 @@ export function OrganizationPendingApprovalPage() {
         <aside className="relative min-h-80 overflow-hidden bg-muted lg:min-h-full">
           <Image
             src={waitInviteImage}
-            alt="طلب تسجيل المنظمة قيد المراجعة"
+            alt="ط·ظ„ط¨ طھط³ط¬ظٹظ„ ط§ظ„ظ…ظ†ط¸ظ…ط© ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©"
             fill
             priority
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10">
-            <p className="text-xs font-medium text-white/75">رحلة منظمتك بدأت</p>
+            <p className="text-xs font-medium text-white/75">ط±ط­ظ„ط© ظ…ظ†ط¸ظ…طھظƒ ط¨ط¯ط£طھ</p>
             <p className="mt-2 max-w-md text-xl font-semibold leading-8">
-              كل أثر كبير يبدأ بخطوة موثوقة، وطلبك الآن في الطريق الصحيح.
+              ظƒظ„ ط£ط«ط± ظƒط¨ظٹط± ظٹط¨ط¯ط£ ط¨ط®ط·ظˆط© ظ…ظˆط«ظˆظ‚ط©طŒ ظˆط·ظ„ط¨ظƒ ط§ظ„ط¢ظ† ظپظٹ ط§ظ„ط·ط±ظٹظ‚ ط§ظ„طµط­ظٹط­.
             </p>
           </div>
         </aside>

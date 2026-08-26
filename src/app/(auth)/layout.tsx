@@ -9,7 +9,7 @@ type AuthLayoutProps = {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(64,93,114,0.18),transparent_48%),radial-gradient(circle_at_bottom_right,rgba(159,174,184,0.26),transparent_42%)]">
+    <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(74,151,130,0.18),transparent_48%),radial-gradient(circle_at_bottom_right,rgba(143,196,181,0.26),transparent_42%)]">
       <div
         dir="ltr"
         className="grid h-full min-h-0 w-full md:grid-cols-[1fr_1fr] md:overflow-hidden"

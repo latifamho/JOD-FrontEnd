@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CheckIcon, ChevronDown } from "lucide-react";
@@ -24,28 +23,14 @@ import {
   getPageTitle,
   getRoleFromPath,
   getRoleSettingsRoute,
-  type DashboardRole,
 } from "@/constant/routes";
 import { useLogout } from "@/features/shared/auth.services/auth.query";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
-type ThemeMode = "light" | "dark" | "system";
-
-const THEME_STORAGE_KEY = "jod:theme-mode";
-
-function getSystemThemeIsDark() {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-function applyThemeMode(themeMode: ThemeMode) {
-  const isDark =
-    themeMode === "dark" || (themeMode === "system" && getSystemThemeIsDark());
-  document.documentElement.classList.toggle("dark", isDark);
-}
-
 const THEME_CHOICES: {
-  mode: ThemeMode;
+  mode: "light" | "dark" | "system";
   label: string;
   Icon: typeof AppIcons.themeLight;
 }[] = [
@@ -61,8 +46,7 @@ export function Header() {
 
   const { user } = useAuth();
   const logoutMutation = useLogout();
-
-  const [themeMode, setThemeMode] = React.useState<ThemeMode>("system");
+  const { themeMode, setThemeMode } = useTheme();
 
   const displayName = user?.name ?? dashboardRoleLabels[role];
   const displayEmail = user?.email ?? "";
@@ -71,35 +55,6 @@ export function Header() {
 
   const ThemeIcon =
     THEME_CHOICES.find((t) => t.mode === themeMode)?.Icon ?? AppIcons.themeSystem;
-
-  React.useEffect(() => {
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    const safeThemeMode: ThemeMode =
-      storedTheme === "light" ||
-      storedTheme === "dark" ||
-      storedTheme === "system"
-        ? storedTheme
-        : "system";
-
-    setThemeMode(safeThemeMode);
-    applyThemeMode(safeThemeMode);
-  }, []);
-
-  React.useEffect(() => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
-    applyThemeMode(themeMode);
-
-    if (themeMode !== "system") {
-      return;
-    }
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleThemeChange = () => applyThemeMode("system");
-
-    media.addEventListener("change", handleThemeChange);
-    return () => media.removeEventListener("change", handleThemeChange);
-  }, [themeMode]);
-
   return (
     <header className="sticky top-0 z-30 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">

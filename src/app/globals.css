@@ -83,10 +83,10 @@
 }
 
 :root {
-  --primary-100: #eaedef;
-  --primary-200: #9faeb8;
-  --primary-400: #405d72;
-  --secondary-50: #f0edff;
+  --primary-100: #e8f5f1;
+  --primary-200: #8fc4b5;
+  --primary-400: #4a9782;
+  --secondary-50: #eef8f5;
   --light-50: #ffffff;
   --light-100: #fafafa;
   --light-200: #f4f2ff;
@@ -154,6 +154,9 @@
 }
 
 .dark {
+  --primary-100: #243832;
+  --primary-200: #4a9782;
+  --primary-400: #65b5a0;
   --background: var(--dark-300);
   --foreground: var(--light-50);
   --card: var(--dark-500);
