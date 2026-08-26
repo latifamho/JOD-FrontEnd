@@ -1,9 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
@@ -58,7 +56,7 @@ export function OrganizationsTable({
             <TableHead>الموقع</TableHead>
             <TableHead>النشاط</TableHead>
             <TableHead>التواريخ</TableHead>
-            <TableHead className="w-48">الإجراءات</TableHead>
+            <TableHead className="w-14">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -89,11 +87,7 @@ export function OrganizationsTable({
                   <SkeletonPulse className="h-3 w-32" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: 3 }).map((_, j) => (
-                      <SkeletonPulse key={j} className="h-8 w-8 rounded-md" />
-                    ))}
-                  </div>
+                  <SkeletonPulse className="h-8 w-8 rounded-md" />
                 </TableCell>
               </TableRow>
             ))
@@ -165,51 +159,36 @@ export function OrganizationsTable({
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center justify-start gap-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="عرض تفاصيل المنظمة"
-                        disabled={isRowLoading}
-                        onClick={() => onViewOrganization(organization.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.eye className="size-4 text-info" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title={
-                          displayStatus === "active"
-                            ? "إلغاء تفعيل المنظمة"
-                            : "تفعيل المنظمة"
-                        }
-                        disabled={isRowLoading}
-                        onClick={() =>
-                          onToggleOrganizationStatus(organization.id)
-                        }
-                        className="shadow-sm"
-                      >
-                        {isRowLoading ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <AppIcons.ShieldCheck className="size-4 text-warning" />
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="حذف المنظمة"
-                        disabled={isRowLoading}
-                        onClick={() => onDeleteOrganization(organization.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <TableRowActions
+                      loading={isRowLoading}
+                      actions={[
+                        {
+                          id: "view",
+                          label: "عرض تفاصيل المنظمة",
+                          icon: <AppIcons.eye className="size-4" />,
+                          onSelect: () => onViewOrganization(organization.id),
+                        },
+                        {
+                          id: "toggle",
+                          label:
+                            displayStatus === "active"
+                              ? "إلغاء تفعيل المنظمة"
+                              : "تفعيل المنظمة",
+                          icon: <AppIcons.ShieldCheck className="size-4" />,
+                          onSelect: () =>
+                            onToggleOrganizationStatus(organization.id),
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف المنظمة",
+                          icon: <AppIcons.Trash className="size-4" />,
+                          onSelect: () =>
+                            onDeleteOrganization(organization.id),
+                          destructive: true,
+                          separatorBefore: true,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

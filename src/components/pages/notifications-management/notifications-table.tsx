@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -48,7 +48,7 @@ export function NotificationsTable({
             <TableHead>المستلم</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>تاريخ الإرسال</TableHead>
-            <TableHead className="w-56">الإجراءات</TableHead>
+            <TableHead className="w-14">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -98,62 +98,46 @@ export function NotificationsTable({
                 </TableCell>
 
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="عرض التفاصيل"
-                      onClick={() => onOpenDetails(notification.id)}
-                      className="shadow-sm"
-                    >
-                      <AppIcons.eye className="size-4 text-info" />
-                    </Button>
-
-                    {mailbox === "inbox" ? (
-                      <>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          title={
-                            notification.status === "unread"
-                              ? "تعليم كمقروء"
-                              : "تعليم كغير مقروء"
-                          }
-                          onClick={() => onToggleReadStatus(notification.id)}
-                          className="shadow-sm"
-                        >
-                          {notification.status === "unread" ? (
-                            <AppIcons.mailOpen className="size-4 text-success" />
+                  <TableRowActions
+                    actions={[
+                      {
+                        id: "details",
+                        label: "عرض التفاصيل",
+                        icon: <AppIcons.eye className="size-4" />,
+                        onSelect: () => onOpenDetails(notification.id),
+                      },
+                      {
+                        id: "toggle-read",
+                        label:
+                          notification.status === "unread"
+                            ? "تعليم كمقروء"
+                            : "تعليم كغير مقروء",
+                        icon:
+                          notification.status === "unread" ? (
+                            <AppIcons.mailOpen className="size-4" />
                           ) : (
-                            <AppIcons.mail className="size-4 text-warning" />
-                          )}
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="إعادة إرسال"
-                        onClick={() => onResend(notification.id)}
-                      >
-                        <AppIcons.rotateCw className="size-4 text-info" />
-                      </Button>
-                    )}
-
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="حذف الإشعار"
-                      onClick={() => onDelete(notification.id)}
-                      className="shadow-sm"
-                    >
-                      <AppIcons.Trash className="size-4 text-destructive" />
-                    </Button>
-                  </div>
+                            <AppIcons.mail className="size-4" />
+                          ),
+                        onSelect: () => onToggleReadStatus(notification.id),
+                        hidden: mailbox !== "inbox",
+                      },
+                      {
+                        id: "resend",
+                        label: "إعادة إرسال",
+                        icon: <AppIcons.rotateCw className="size-4" />,
+                        onSelect: () => onResend(notification.id),
+                        hidden: mailbox === "inbox",
+                      },
+                      {
+                        id: "delete",
+                        label: "حذف الإشعار",
+                        icon: <AppIcons.Trash className="size-4" />,
+                        onSelect: () => onDelete(notification.id),
+                        destructive: true,
+                        separatorBefore: true,
+                      },
+                    ]}
+                  />
                 </TableCell>
               </TableRow>
             ))

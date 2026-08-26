@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDate } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -62,7 +62,7 @@ export function RolesTable({
             <TableHead className="text-right font-semibold text-muted-foreground">
               الحالة
             </TableHead>
-            <TableHead className="w-[170px] text-center font-semibold text-muted-foreground">
+            <TableHead className="w-14 text-center font-semibold text-muted-foreground">
               إجراءات
             </TableHead>
           </TableRow>
@@ -95,33 +95,29 @@ export function RolesTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    {onEditRole ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        title="تعديل صلاحيات الدور"
-                        onClick={() => onEditRole(row.id)}
-                      >
-                        <AppIcons.PencilLine className="size-4" />
-                      </Button>
-                    ) : null}
-                    {onDeleteRole ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        title={canDelete ? "حذف الدور" : "دور أساسي لا يمكن حذفه"}
-                        disabled={!canDelete}
-                        onClick={() => onDeleteRole(row.id)}
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
-                    ) : null}
-                  </div>
+                  <TableRowActions
+                    actions={[
+                      {
+                        id: "edit",
+                        label: "تعديل صلاحيات الدور",
+                        icon: <AppIcons.PencilLine className="size-4" />,
+                        onSelect: () => onEditRole?.(row.id),
+                        hidden: !onEditRole,
+                      },
+                      {
+                        id: "delete",
+                        label: canDelete
+                          ? "حذف الدور"
+                          : "دور أساسي لا يمكن حذفه",
+                        icon: <AppIcons.Trash className="size-4" />,
+                        onSelect: () => onDeleteRole?.(row.id),
+                        disabled: !canDelete,
+                        destructive: true,
+                        separatorBefore: true,
+                        hidden: !onDeleteRole,
+                      },
+                    ]}
+                  />
                 </TableCell>
               </TableRow>
             );
@@ -131,4 +127,3 @@ export function RolesTable({
     </div>
   );
 }
-

@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
@@ -55,7 +55,7 @@ export function ContentTable({
             <TableHead className="text-right font-semibold text-muted-foreground">
               التاريخ
             </TableHead>
-            <TableHead className="w-[120px] text-center font-semibold text-muted-foreground">
+            <TableHead className="w-14 text-center font-semibold text-muted-foreground">
               إجراءات
             </TableHead>
           </TableRow>
@@ -78,8 +78,7 @@ export function ContentTable({
                   <SkeletonPulse className="h-3 w-24" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-center gap-1">
-                    <SkeletonPulse className="h-8 w-8 rounded-md" />
+                  <div className="flex justify-center">
                     <SkeletonPulse className="h-8 w-8 rounded-md" />
                   </div>
                 </TableCell>
@@ -113,28 +112,24 @@ export function ContentTable({
                     : formatUtcDateOrDash(row.createdAt)}
                 </TableCell>
                 <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      title="تعديل"
-                      onClick={() => onEdit(row.id)}
-                    >
-                      <AppIcons.PencilLine className="size-4 text-info" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      title="حذف"
-                      onClick={() => onDelete(row.id)}
-                    >
-                      <AppIcons.Trash className="size-4 text-destructive" />
-                    </Button>
-                  </div>
+                  <TableRowActions
+                    actions={[
+                      {
+                        id: "edit",
+                        label: "تعديل",
+                        icon: <AppIcons.PencilLine className="size-4" />,
+                        onSelect: () => onEdit(row.id),
+                      },
+                      {
+                        id: "delete",
+                        label: "حذف",
+                        icon: <AppIcons.Trash className="size-4" />,
+                        onSelect: () => onDelete(row.id),
+                        destructive: true,
+                        separatorBefore: true,
+                      },
+                    ]}
+                  />
                 </TableCell>
               </TableRow>
             ))

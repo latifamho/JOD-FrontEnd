@@ -11,4 +11,8 @@ export {
   ListLoadingSkeleton,
 } from "@/components/shared/loading-skeletons";
 export { MediaUploadField } from "@/components/shared/media-upload/media-upload-field";
+export {
+  TableRowActions,
+  type TableRowAction,
+} from "@/components/shared/table-row-actions";
 

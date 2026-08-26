@@ -1,11 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
-import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -14,11 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTime } from "@/lib/date";
 import { ReportDetailsSheet } from "@/components/pages/reports-management/report-details-sheet";
@@ -76,7 +69,7 @@ export function ReportsTable({
             <TableHead className="w-[110px] text-left font-semibold text-muted-foreground">
               التاريخ
             </TableHead>
-            <TableHead className="w-[160px] text-center font-semibold text-muted-foreground">
+            <TableHead className="w-14 text-center font-semibold text-muted-foreground">
               إجراءات
             </TableHead>
           </TableRow>
@@ -159,48 +152,24 @@ function ReportRow({
           {formatUtcDateTime(report.createdAt)}
         </TableCell>
         <TableCell className="align-middle">
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  onClick={() => setDetailsOpen(true)}
-                >
-                  <AppIcons.profile className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                عرض التفاصيل
-              </TooltipContent>
-            </Tooltip>
-
-            {report.status === "new" && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="size-8"
-                    disabled={isClaimingThis}
-                    onClick={() => onClaim(report.id)}
-                  >
-                    {isClaimingThis ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <AppIcons.posts className="size-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  استلام
-                </TooltipContent>
-              </Tooltip>
-            )}
-
-          </div>
+          <TableRowActions
+            loading={isClaimingThis}
+            actions={[
+              {
+                id: "details",
+                label: "عرض التفاصيل",
+                icon: <AppIcons.profile className="size-4" />,
+                onSelect: () => setDetailsOpen(true),
+              },
+              {
+                id: "claim",
+                label: "استلام",
+                icon: <AppIcons.posts className="size-4" />,
+                onSelect: () => onClaim(report.id),
+                hidden: report.status !== "new",
+              },
+            ]}
+          />
         </TableCell>
       </TableRow>
 

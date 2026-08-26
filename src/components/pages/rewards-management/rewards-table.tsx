@@ -1,9 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
@@ -66,7 +64,7 @@ export function RewardsTable({
             <TableHead className="font-semibold text-muted-foreground">
               التاريخ
             </TableHead>
-            <TableHead className="w-[120px] font-semibold text-muted-foreground">
+            <TableHead className="w-14 font-semibold text-muted-foreground">
               إجراءات
             </TableHead>
           </TableRow>
@@ -95,10 +93,7 @@ export function RewardsTable({
                   <SkeletonPulse className="h-3 w-24" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <SkeletonPulse className="h-8 w-8 rounded-md" />
-                    <SkeletonPulse className="h-8 w-8 rounded-md" />
-                  </div>
+                  <SkeletonPulse className="h-8 w-8 rounded-md" />
                 </TableCell>
               </TableRow>
             ))
@@ -139,47 +134,37 @@ export function RewardsTable({
                     {formatUtcDateOrDash(row.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="تعديل الشارة"
-                        className="size-8 shadow-sm"
-                        disabled={isRowLoading}
-                        onClick={() => onEditReward(row.id)}
-                      >
-                        <AppIcons.PencilLine className="size-4 text-info" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 shadow-sm"
-                        title={row.isActive ? "تعطيل الشارة" : "تفعيل الشارة"}
-                        disabled={isRowLoading}
-                        onClick={() => onToggleRewardStatus(row.id)}
-                      >
-                        {isRowLoading ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : row.isActive ? (
-                          <AppIcons.ShieldOff className="size-4 text-warning" />
-                        ) : (
-                          <AppIcons.ShieldCheck className="size-4 text-success" />
-                        )}
-                      </Button>
-                    </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 shadow-sm"
-                        title="حذف الشارة"
-                        disabled={isRowLoading}
-                        onClick={() => onDeleteReward(row.id)}
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
+                    <TableRowActions
+                      loading={isRowLoading}
+                      actions={[
+                        {
+                          id: "edit",
+                          label: "تعديل الشارة",
+                          icon: <AppIcons.PencilLine className="size-4" />,
+                          onSelect: () => onEditReward(row.id),
+                        },
+                        {
+                          id: "toggle",
+                          label: row.isActive
+                            ? "تعطيل الشارة"
+                            : "تفعيل الشارة",
+                          icon: row.isActive ? (
+                            <AppIcons.ShieldOff className="size-4" />
+                          ) : (
+                            <AppIcons.ShieldCheck className="size-4" />
+                          ),
+                          onSelect: () => onToggleRewardStatus(row.id),
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف الشارة",
+                          icon: <AppIcons.Trash className="size-4" />,
+                          onSelect: () => onDeleteReward(row.id),
+                          destructive: true,
+                          separatorBefore: true,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

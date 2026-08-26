@@ -1,10 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
@@ -63,7 +60,7 @@ export function UsersTable({
             <TableHead>بيانات التواصل</TableHead>
             <TableHead>النشاط</TableHead>
             <TableHead>التواريخ</TableHead>
-            <TableHead className="w-48">الإجراءات</TableHead>
+            <TableHead className="w-14">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -93,11 +90,7 @@ export function UsersTable({
                   <SkeletonPulse className="h-3 w-32" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: 4 }).map((_, j) => (
-                      <SkeletonPulse key={j} className="h-8 w-8 rounded-md" />
-                    ))}
-                  </div>
+                  <SkeletonPulse className="h-8 w-8 rounded-md" />
                 </TableCell>
               </TableRow>
             ))
@@ -161,67 +154,55 @@ export function UsersTable({
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center justify-start gap-2">
-                      <Button type="button" size="icon" variant="ghost" title="عرض التفاصيل" asChild className="shadow-sm">
-                        <Link href={routePaths.adminScope.userDetails(user.id)}>
-                          <AppIcons.eye className="size-4 text-info" />
-                        </Link>
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="تعديل المستخدم"
-                        disabled={isToggleLoading}
-                        onClick={() => onEditUser(user.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.UserRoundPen className="size-4 text-info" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title={
-                          user.status === "active"
-                            ? "تعطيل المستخدم"
-                            : "تفعيل المستخدم"
-                        }
-                        disabled={isToggleLoading}
-                        onClick={() => onToggleUserStatus(user.id)}
-                        className="shadow-sm"
-                      >
-                        {isToggleLoading ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <AppIcons.UserRoundX className="size-4 text-warning" />
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="تغيير كلمة المرور"
-                        disabled={isToggleLoading}
-                        onClick={() => onChangeUserPassword(user.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.UserLock className="size-4 text-success" />
-                      </Button>
-                      {user.id !== currentUserId ? (
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          title="حذف المستخدم"
-                          disabled={isToggleLoading}
-                          onClick={() => onDeleteUser(user.id)}
-                          className="shadow-sm"
-                        >
-                          <AppIcons.Trash className="size-4 text-destructive" />
-                        </Button>
-                      ) : null}
-                    </div>
+                    <TableRowActions
+                      loading={isToggleLoading}
+                      actions={[
+                        {
+                          id: "view",
+                          label: "عرض التفاصيل",
+                          icon: <AppIcons.eye className="size-4 text-info" />,
+                          href: routePaths.adminScope.userDetails(user.id),
+                        },
+                        {
+                          id: "edit",
+                          label: "تعديل المستخدم",
+                          icon: (
+                            <AppIcons.UserRoundPen className="size-4 text-info" />
+                          ),
+                          onSelect: () => onEditUser(user.id),
+                        },
+                        {
+                          id: "toggle-status",
+                          label:
+                            user.status === "active"
+                              ? "تعطيل المستخدم"
+                              : "تفعيل المستخدم",
+                          icon: (
+                            <AppIcons.UserRoundX className="size-4 text-warning" />
+                          ),
+                          onSelect: () => onToggleUserStatus(user.id),
+                        },
+                        {
+                          id: "change-password",
+                          label: "تغيير كلمة المرور",
+                          icon: (
+                            <AppIcons.UserLock className="size-4 text-success" />
+                          ),
+                          onSelect: () => onChangeUserPassword(user.id),
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف المستخدم",
+                          icon: (
+                            <AppIcons.Trash className="size-4 text-destructive" />
+                          ),
+                          onSelect: () => onDeleteUser(user.id),
+                          destructive: true,
+                          separatorBefore: true,
+                          hidden: user.id === currentUserId,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

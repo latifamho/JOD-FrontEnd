@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -70,18 +70,26 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
                 </>
               )}
               <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  {onEditRow ? (
-                    <Button type="button" size="icon" variant="ghost" title="تعديل" className="shadow-sm" onClick={() => onEditRow(row)}>
-                      <AppIcons.PencilLine className="size-4 text-warning" />
-                    </Button>
-                  ) : null}
-                  {onDeleteRow ? (
-                    <Button type="button" size="icon" variant="ghost" title="حذف" className="shadow-sm" onClick={() => onDeleteRow(row)}>
-                      <AppIcons.Trash className="size-4 text-destructive" />
-                    </Button>
-                  ) : null}
-                </div>
+                <TableRowActions
+                  actions={[
+                    {
+                      id: "edit",
+                      label: "تعديل",
+                      icon: <AppIcons.PencilLine className="size-4" />,
+                      onSelect: () => onEditRow?.(row),
+                      hidden: !onEditRow,
+                    },
+                    {
+                      id: "delete",
+                      label: "حذف",
+                      icon: <AppIcons.Trash className="size-4" />,
+                      onSelect: () => onDeleteRow?.(row),
+                      destructive: true,
+                      separatorBefore: true,
+                      hidden: !onDeleteRow,
+                    },
+                  ]}
+                />
               </TableCell>
             </TableRow>
           ))}

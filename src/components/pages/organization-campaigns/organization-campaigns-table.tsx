@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { routePaths } from "@/constant/routes";
 import {
@@ -65,7 +64,7 @@ export function OrganizationCampaignsTable({
             <TableHead>المؤشرات</TableHead>
             <TableHead>الفترة</TableHead>
             <TableHead>آخر تحديث</TableHead>
-            <TableHead className="w-48">الإجراءات</TableHead>
+            <TableHead className="w-14">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -175,53 +174,43 @@ export function OrganizationCampaignsTable({
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center justify-start gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="تفاصيل الحملة"
-                        className="shadow-sm"
-                        asChild
-                      >
-                        <Link
-                          href={
-                            isStaffScope
-                              ? routePaths.organizationStaffScope.campaignDetails(campaign.id)
-                              : routePaths.organizationOwnerScope.campaignDetails(campaign.id)
-                          }
-                        >
-                          <AppIcons.eye className="size-4 text-info" />
-                        </Link>
-                      </Button>
-                      {canClose ? (
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="إغلاق الحملة"
-                        className="shadow-sm"
-                        onClick={() => onCloseCampaign(campaign.id)}
-                        disabled={campaign.status !== "active"}
-                      >
-                        <AppIcons.archive className="size-4 text-warning" />
-                      </Button>
-                      ) : null}
-                      {canDelete ? (
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="حذف الحملة"
-                        className="shadow-sm"
-                        onClick={() => onDeleteCampaign(campaign.id)}
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
-                      ) : null}
-                    </div>
+                    <TableRowActions
+                      actions={[
+                        {
+                          id: "details",
+                          label: "تفاصيل الحملة",
+                          icon: <AppIcons.eye className="size-4 text-info" />,
+                          href: isStaffScope
+                            ? routePaths.organizationStaffScope.campaignDetails(
+                                campaign.id,
+                              )
+                            : routePaths.organizationOwnerScope.campaignDetails(
+                                campaign.id,
+                              ),
+                        },
+                        {
+                          id: "close",
+                          label: "إغلاق الحملة",
+                          icon: (
+                            <AppIcons.archive className="size-4 text-warning" />
+                          ),
+                          onSelect: () => onCloseCampaign(campaign.id),
+                          disabled: campaign.status !== "active",
+                          hidden: !canClose,
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف الحملة",
+                          icon: (
+                            <AppIcons.Trash className="size-4 text-destructive" />
+                          ),
+                          onSelect: () => onDeleteCampaign(campaign.id),
+                          destructive: true,
+                          separatorBefore: true,
+                          hidden: !canDelete,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

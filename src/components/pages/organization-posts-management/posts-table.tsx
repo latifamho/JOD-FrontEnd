@@ -1,9 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateTime, formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -43,39 +41,14 @@ type PostsTableProps = {
   canDelete: boolean;
 };
 
-function WorkflowActionButton({
-  status,
-  isPending,
-  onClick,
-}: {
-  status: OrganizationPostItem["status"];
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const workflow = getWorkflowActionForStatus(status);
-
-  const icon =
-    workflow.key === "publish" ? (
-      <AppIcons.verification className="size-4 text-success" />
-    ) : workflow.key === "archive" ? (
-      <AppIcons.archive className="size-4 text-warning" />
-    ) : (
-      <AppIcons.rotateCw className="size-4 text-info" />
-    );
-
-  return (
-    <Button
-      type="button"
-      size="icon"
-      variant="ghost"
-      title={isPending ? "جاري تنفيذ الإجراء..." : workflow.label}
-      disabled={isPending}
-      onClick={onClick}
-      className="shadow-sm"
-    >
-      {isPending ? <Loader2 className="size-4 animate-spin" /> : icon}
-    </Button>
-  );
+function getWorkflowIcon(key: WorkflowAction) {
+  if (key === "publish") {
+    return <AppIcons.verification className="size-4 text-success" />;
+  }
+  if (key === "archive") {
+    return <AppIcons.archive className="size-4 text-warning" />;
+  }
+  return <AppIcons.rotateCw className="size-4 text-info" />;
 }
 
 export function PostsTable({
@@ -104,7 +77,7 @@ export function PostsTable({
             <TableHead>الموقع</TableHead>
             <TableHead>المؤشرات</TableHead>
             <TableHead>التواريخ</TableHead>
-            <TableHead className="w-48">الإجراءات</TableHead>
+            <TableHead className="w-14">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -113,6 +86,13 @@ export function PostsTable({
             rows.map((post) => {
               const normalizedStatus = normalizePostStatus(post.status);
               const workflowPending = workflowPendingPostIds.includes(post.id);
+              const workflow = getWorkflowActionForStatus(normalizedStatus);
+              const canRunWorkflow =
+                normalizedStatus === "draft"
+                  ? canPublish
+                  : normalizedStatus === "published"
+                    ? canArchive
+                    : canRestore;
 
               return (
                 <TableRow key={post.id}>
@@ -183,48 +163,38 @@ export function PostsTable({
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center justify-start gap-1">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="عرض التفاصيل"
-                        onClick={() => onOpenDetails(post.id)}
-                        className="shadow-sm"
-                      >
-                        <AppIcons.eye className="size-4 text-info" />
-                      </Button>
-
-                      {(normalizedStatus === "draft"
-                        ? canPublish
-                        : normalizedStatus === "published"
-                          ? canArchive
-                          : canRestore) ? (
-                        <WorkflowActionButton
-                          status={normalizedStatus}
-                          isPending={workflowPending}
-                          onClick={() =>
-                            onWorkflowAction(
-                              post.id,
-                              getWorkflowActionForStatus(normalizedStatus).key,
-                            )
-                          }
-                        />
-                      ) : null}
-
-                      {canDelete ? (
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          title="حذف البوست"
-                          onClick={() => onDeletePost(post.id)}
-                          className="shadow-sm"
-                        >
-                          <AppIcons.Trash className="size-4 text-destructive" />
-                        </Button>
-                      ) : null}
-                    </div>
+                    <TableRowActions
+                      loading={workflowPending}
+                      actions={[
+                        {
+                          id: "details",
+                          label: "عرض التفاصيل",
+                          icon: <AppIcons.eye className="size-4 text-info" />,
+                          onSelect: () => onOpenDetails(post.id),
+                        },
+                        {
+                          id: "workflow",
+                          label: workflowPending
+                            ? "جاري تنفيذ الإجراء..."
+                            : workflow.label,
+                          icon: getWorkflowIcon(workflow.key),
+                          onSelect: () =>
+                            onWorkflowAction(post.id, workflow.key),
+                          hidden: !canRunWorkflow,
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف البوست",
+                          icon: (
+                            <AppIcons.Trash className="size-4 text-destructive" />
+                          ),
+                          onSelect: () => onDeletePost(post.id),
+                          destructive: true,
+                          separatorBefore: true,
+                          hidden: !canDelete,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

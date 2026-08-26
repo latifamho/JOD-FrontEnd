@@ -1,9 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/shared";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import { AppIcons } from "@/constant/icons";
@@ -54,7 +52,7 @@ export function CategoriesTable({
             <TableHead className="font-semibold text-muted-foreground">الاستخدام</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الحالة</TableHead>
             <TableHead className="font-semibold text-muted-foreground">آخر تحديث</TableHead>
-            <TableHead className="w-[120px] font-semibold text-muted-foreground">إجراءات</TableHead>
+            <TableHead className="w-14 font-semibold text-muted-foreground">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -71,11 +69,7 @@ export function CategoriesTable({
                 <TableCell><SkeletonPulse className="h-5 w-16 rounded-full" /></TableCell>
                 <TableCell><SkeletonPulse className="h-3 w-24" /></TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 3 }).map((_, j) => (
-                      <SkeletonPulse key={j} className="h-8 w-8 rounded-md" />
-                    ))}
-                  </div>
+                  <SkeletonPulse className="h-8 w-8 rounded-md" />
                 </TableCell>
               </TableRow>
             ))
@@ -101,47 +95,39 @@ export function CategoriesTable({
                     {formatUtcDateOrDash(row.updatedAt)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="تعديل التصنيف"
-                        className="size-8 shadow-sm"
-                        disabled={isToggling}
-                        onClick={() => onEditCategory(row.id)}
-                      >
-                        <AppIcons.PencilLine className="size-4 text-info" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 shadow-sm"
-                        title={row.status === "active" ? "إيقاف التصنيف" : "تفعيل التصنيف"}
-                        disabled={isToggling}
-                        onClick={() => onToggleCategoryStatus(row.id)}
-                      >
-                        {isToggling ? (
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        ) : row.status === "active" ? (
-                          <AppIcons.ShieldOff className="size-4 text-warning" />
-                        ) : (
-                          <AppIcons.ShieldCheck className="size-4 text-success" />
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="حذف التصنيف"
-                        className="size-8 shadow-sm"
-                        disabled={isToggling}
-                        onClick={() => onDeleteCategory(row.id)}
-                      >
-                        <AppIcons.Trash className="size-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <TableRowActions
+                      loading={isToggling}
+                      actions={[
+                        {
+                          id: "edit",
+                          label: "تعديل التصنيف",
+                          icon: <AppIcons.PencilLine className="size-4" />,
+                          onSelect: () => onEditCategory(row.id),
+                        },
+                        {
+                          id: "toggle",
+                          label:
+                            row.status === "active"
+                              ? "إيقاف التصنيف"
+                              : "تفعيل التصنيف",
+                          icon:
+                            row.status === "active" ? (
+                              <AppIcons.ShieldOff className="size-4" />
+                            ) : (
+                              <AppIcons.ShieldCheck className="size-4" />
+                            ),
+                          onSelect: () => onToggleCategoryStatus(row.id),
+                        },
+                        {
+                          id: "delete",
+                          label: "حذف التصنيف",
+                          icon: <AppIcons.Trash className="size-4" />,
+                          onSelect: () => onDeleteCategory(row.id),
+                          destructive: true,
+                          separatorBefore: true,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

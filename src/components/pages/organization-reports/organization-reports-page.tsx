@@ -2,10 +2,9 @@
 
 import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ListLoadingSkeleton, PaginationControls } from '@/components/shared'
+import { ListLoadingSkeleton, PaginationControls, TableRowActions } from '@/components/shared'
+import { AppIcons } from '@/constant/icons'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
 import { useOrgReports, useUpdateOrgReportStatus } from '@/features/org/reports/org.reports.query'
 import type { OrgReportStatus } from '@/features/org/reports/org.reports.types'
@@ -53,9 +52,20 @@ export function OrganizationReportsPage() {
       ) : (
       <div className="overflow-auto rounded-md border bg-card">
         <Table>
-          <TableHeader><TableRow><TableHead>العنوان</TableHead><TableHead>الخطورة</TableHead><TableHead>الحالة</TableHead><TableHead>المبلّغ</TableHead><TableHead>التاريخ</TableHead><TableHead>الإجراء</TableHead></TableRow></TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableHead>العنوان</TableHead>
+              <TableHead>الخطورة</TableHead>
+              <TableHead>الحالة</TableHead>
+              <TableHead>المبلّغ</TableHead>
+              <TableHead>التاريخ</TableHead>
+              <TableHead className="w-14">الإجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const nextStatuses = allowedStatuses(row.status)
+              return (
               <TableRow key={row.id}>
                 <TableCell><p className="font-medium">{row.title}</p><p className="mt-1 max-w-md text-xs text-muted-foreground">{row.description}</p></TableCell>
                 <TableCell><Badge variant="outline">{row.severity}</Badge></TableCell>
@@ -63,15 +73,26 @@ export function OrganizationReportsPage() {
                 <TableCell>{row.reporterName ?? '-'}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{formatUtcDateTime(row.createdAt)}</TableCell>
                 <TableCell>
-                  {canUpdate && allowedStatuses(row.status).length > 0 ? (
-                    <Select onValueChange={(status) => updateStatus.mutate({ reportId: row.id, body: { status: status as Exclude<OrgReportStatus, 'new'> } })}>
-                      <SelectTrigger className="w-40"><SelectValue placeholder="تحديث الحالة" /></SelectTrigger>
-                      <SelectContent>{allowedStatuses(row.status).map((status) => <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>)}</SelectContent>
-                    </Select>
-                  ) : <Button variant="ghost" size="sm" disabled>لا يوجد إجراء</Button>}
+                  <TableRowActions
+                    loading={updateStatus.isPending}
+                    actions={
+                      canUpdate && nextStatuses.length > 0
+                        ? nextStatuses.map((status) => ({
+                            id: status,
+                            label: `نقل إلى: ${statusLabels[status]}`,
+                            icon: <AppIcons.posts className="size-4" />,
+                            onSelect: () =>
+                              updateStatus.mutate({
+                                reportId: row.id,
+                                body: { status },
+                              }),
+                          }))
+                        : []
+                    }
+                  />
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </div>

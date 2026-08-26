@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { ListLoadingSkeleton, PaginationControls } from "@/components/shared";
+import { ListLoadingSkeleton, PaginationControls, TableRowActions } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { orgNotificationCategoryLabels } from "@/components/pages/organization-notifications/static-data";
+import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import {
   useOrgNotifications,
@@ -139,7 +140,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                 <TableHead>الإشعار</TableHead>
                 <TableHead>النوع</TableHead>
                 <TableHead>التاريخ</TableHead>
-                <TableHead className="w-40">إجراءات</TableHead>
+                <TableHead className="w-14">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,14 +156,28 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                   <TableCell><Badge variant="outline">{orgNotificationCategoryLabels[row.category]}</Badge></TableCell>
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatUtcDateTime(row.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      <Button type="button" variant="outline" size="sm" onClick={() => detailsModal.open({ id: row.id })}>التفاصيل</Button>
-                      {mailbox === "inbox" ? (
-                        <Button type="button" variant="ghost" size="sm" disabled={updateReadState.isPending} onClick={() => toggleRead(row.id, row.read)}>
-                          {row.read ? "تعيين غير مقروء" : "تعيين مقروء"}
-                        </Button>
-                      ) : null}
-                    </div>
+                    <TableRowActions
+                      loading={updateReadState.isPending}
+                      actions={[
+                        {
+                          id: "details",
+                          label: "التفاصيل",
+                          icon: <AppIcons.eye className="size-4" />,
+                          onSelect: () => detailsModal.open({ id: row.id }),
+                        },
+                        {
+                          id: "toggle-read",
+                          label: row.read ? "تعيين غير مقروء" : "تعيين مقروء",
+                          icon: row.read ? (
+                            <AppIcons.mail className="size-4" />
+                          ) : (
+                            <AppIcons.mailOpen className="size-4" />
+                          ),
+                          onSelect: () => toggleRead(row.id, row.read),
+                          hidden: mailbox !== "inbox",
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

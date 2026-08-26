@@ -1,8 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,12 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ReviewStatusBadge } from "@/components/shared";
+import { ReviewStatusBadge, TableRowActions } from "@/components/shared";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -66,7 +59,7 @@ export function ReviewPostsTable({
             <TableHead className="w-[110px] text-left font-semibold text-muted-foreground">
               {hasNonPending ? "تاريخ النشر" : "تاريخ الإرسال"}
             </TableHead>
-            <TableHead className="w-[140px] text-center font-semibold text-muted-foreground">إجراءات</TableHead>
+            <TableHead className="w-14 text-center font-semibold text-muted-foreground">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -114,6 +107,11 @@ function ReviewPostRow({
   const isMutating = isApproving || isRejecting;
   const dateToShow = post.status === "approved" && post.publishedAt ? post.publishedAt : post.submittedAt;
   const title = post.title ?? "بدون عنوان";
+  const canEdit =
+    post.status === "approved" &&
+    post.type === "general" &&
+    !post.organizationName &&
+    Boolean(onEdit);
 
   return (
     <>
@@ -144,54 +142,40 @@ function ReviewPostRow({
         ) : null}
         <TableCell className="align-middle text-left text-xs text-muted-foreground">{formatUtcDateOrDash(dateToShow)}</TableCell>
         <TableCell className="align-middle">
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onOpenDetails(post)}>
-                  <AppIcons.eye className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">عرض التفاصيل</TooltipContent>
-            </Tooltip>
-
-            {post.status === "approved" && post.type === "general" && !post.organizationName && onEdit ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onEdit(post)}>
-                    <AppIcons.PencilLine className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">تعديل المنشور</TooltipContent>
-              </Tooltip>
-            ) : null}
-
-            {post.status === "pending" ? (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      size="icon"
-                      className="size-8 bg-emerald-600 text-white hover:bg-emerald-700"
-                      disabled={isMutating}
-                      onClick={() => onApprove(post.id)}
-                    >
-                      {isApproving ? <Loader2 className="size-4 animate-spin" /> : <AppIcons.posts className="size-4" />}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">قبول</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button type="button" variant="destructive" size="icon" className="size-8" disabled={isMutating} onClick={() => setRejectDialogOpen(true)}>
-                      {isRejecting ? <Loader2 className="size-4 animate-spin" /> : <AppIcons.reports className="size-4" />}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">رفض</TooltipContent>
-                </Tooltip>
-              </>
-            ) : null}
-          </div>
+          <TableRowActions
+            loading={isMutating}
+            actions={[
+              {
+                id: "details",
+                label: "عرض التفاصيل",
+                icon: <AppIcons.eye className="size-4" />,
+                onSelect: () => onOpenDetails(post),
+              },
+              {
+                id: "edit",
+                label: "تعديل المنشور",
+                icon: <AppIcons.PencilLine className="size-4" />,
+                onSelect: () => onEdit?.(post),
+                hidden: !canEdit,
+              },
+              {
+                id: "approve",
+                label: "قبول",
+                icon: <AppIcons.posts className="size-4" />,
+                onSelect: () => onApprove(post.id),
+                hidden: post.status !== "pending",
+              },
+              {
+                id: "reject",
+                label: "رفض",
+                icon: <AppIcons.reports className="size-4" />,
+                onSelect: () => setRejectDialogOpen(true),
+                destructive: true,
+                separatorBefore: true,
+                hidden: post.status !== "pending",
+              },
+            ]}
+          />
         </TableCell>
       </TableRow>
 
