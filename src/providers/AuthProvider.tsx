@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserState(null)
     setDashboardContextState(null)
     setIsAuthenticated(false)
-    router.push('/login')
+    router.push('/')
   }, [router])
 
   const login = useCallback(() => {
