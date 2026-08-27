@@ -156,7 +156,7 @@
 .dark {
   --primary-100: #243832;
   --primary-200: #4a9782;
-  --primary-400: #65b5a0;
+  --primary-400: #4a9782;
   --background: var(--dark-300);
   --foreground: var(--light-50);
   --card: var(--dark-500);
