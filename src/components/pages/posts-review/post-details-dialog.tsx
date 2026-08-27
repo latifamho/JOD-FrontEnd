@@ -71,7 +71,7 @@ export function PostDetailsDialog({
           ) : null}
 
           <div className={isLoading ? "hidden" : "contents"}>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <ReviewStatusBadge status={post.status} />
             <Badge variant="outline">{postTypeLabels[post.type]}</Badge>
           </div>
