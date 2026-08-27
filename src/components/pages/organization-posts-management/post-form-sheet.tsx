@@ -27,6 +27,7 @@ import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { toast } from "@/lib/toast";
+import { normalizeApiError } from "@/lib/api-errors";
 
 const postFormSchema = z
   .object({
@@ -136,15 +137,21 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
             className="flex h-full flex-col"
             onSubmit={handleSubmit(async (values) => {
               if (createdPostId) return;
-              const postId = await onSubmit({
-                title: values.title.trim(),
-                summary: values.summary.trim(),
-                categoryId: values.categoryId,
-                type: values.type,
-                status: values.status,
-                location: values.location,
-                campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : "",
-              });
+              let postId: string | null | undefined;
+              try {
+                postId = await onSubmit({
+                  title: values.title.trim(),
+                  summary: values.summary.trim(),
+                  categoryId: values.categoryId,
+                  type: values.type,
+                  status: values.status,
+                  location: values.location,
+                  campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : "",
+                });
+              } catch (error) {
+                toast.error(normalizeApiError(error).message);
+                return;
+              }
               if (!postId) return;
               setCreatedPostId(postId);
 

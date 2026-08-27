@@ -34,14 +34,17 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  organizationCampaignAudienceLabels,
   organizationCampaignStatusLabels,
   syrianGovernorateOptions,
+  type OrganizationCampaignAudience,
   type OrganizationCampaignStatus,
 } from "@/components/pages/organization-campaigns/static-data";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { toast } from "@/lib/toast";
+import { normalizeApiError } from "@/lib/api-errors";
 
 function getLocalDateInputValue(date = new Date()): string {
   const year = date.getFullYear();
@@ -55,6 +58,7 @@ const campaignFormSchema = z
     title: z.string().min(1, "عنوان الحملة مطلوب").max(255, "عنوان الحملة يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان الحملة مطلوب"),
     summary: z.string().min(1, "ملخص الحملة مطلوب").refine((value) => value.trim().length > 0, "ملخص الحملة مطلوب"),
     categoryId: z.string().min(1, "تصنيف الحملة مطلوب"),
+    audience: z.enum(["general", "student"]),
     status: z.enum(["draft", "active", "closed"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
@@ -86,6 +90,7 @@ export type CampaignFormValues = {
   title: string;
   summary: string;
   categoryId: string;
+  audience: OrganizationCampaignAudience;
   status: OrganizationCampaignStatus;
   location: string;
   goalAmount: number;
@@ -98,6 +103,7 @@ export const EMPTY_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   title: "",
   summary: "",
   categoryId: "",
+  audience: "general",
   status: "active",
   location: "",
   goalAmount: 0,
@@ -120,6 +126,7 @@ function toCampaignFormFields(values: CampaignFormValues): CampaignFormFields {
     title: values.title,
     summary: values.summary,
     categoryId: values.categoryId,
+    audience: values.audience,
     status: values.status,
     location: values.location,
     goalAmount: String(values.goalAmount),
@@ -189,17 +196,24 @@ export function CampaignFormSheet({ open, mode, initialValues, isSubmitting = fa
             className="flex h-full flex-col"
             onSubmit={handleSubmit(async (values) => {
               if (createdCampaignId) return;
-              const campaignId = await onSubmit({
-                title: values.title.trim(),
-                summary: values.summary.trim(),
-                categoryId: values.categoryId,
-                status: values.status,
-                location: values.location,
-                goalAmount: Number(values.goalAmount),
-                beneficiariesCount: Number(values.beneficiariesCount),
-                startDate: values.startDate,
-                endDate: values.endDate,
-              });
+              let campaignId: string | null | undefined;
+              try {
+                campaignId = await onSubmit({
+                  title: values.title.trim(),
+                  summary: values.summary.trim(),
+                  categoryId: values.categoryId,
+                  audience: values.audience,
+                  status: values.status,
+                  location: values.location,
+                  goalAmount: Number(values.goalAmount),
+                  beneficiariesCount: Number(values.beneficiariesCount),
+                  startDate: values.startDate,
+                  endDate: values.endDate,
+                });
+              } catch (error) {
+                toast.error(normalizeApiError(error).message);
+                return;
+              }
               if (!campaignId) return;
 
               setCreatedCampaignId(campaignId);
@@ -232,6 +246,23 @@ export function CampaignFormSheet({ open, mode, initialValues, isSubmitting = fa
                 <Label htmlFor="campaign-summary">ملخص الحملة</Label>
                 <Textarea id="campaign-summary" disabled={formLocked} aria-invalid={Boolean(errors.summary)} placeholder="وصف مختصر للحملة" className="min-h-28 text-sm" {...register("summary")} />
                 {errors.summary ? <p className="text-xs text-destructive">{errors.summary.message}</p> : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>الفئة المستهدفة</Label>
+                <Controller control={control} name="audience" render={({ field }) => (
+                  <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.audience)}>
+                      <SelectValue placeholder="اختر الفئة المستهدفة" />
+                    </SelectTrigger>
+                    <SelectContent align="start" position="popper" className="text-right">
+                      {Object.entries(organizationCampaignAudienceLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value} className="text-right text-xs">{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
+                {errors.audience ? <p className="text-xs text-destructive">{errors.audience.message}</p> : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

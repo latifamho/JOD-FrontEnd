@@ -23,6 +23,7 @@ import { normalizeApiError } from '@/lib/api-errors'
 import { toast } from '@/lib/toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
+import { authServices } from '@/features/shared/auth.services/auth.service'
 
 const EMPTY_PROFILE = {
   companyName: '', ownerName: '', organizationNumber: '', registrationNumber: '', bankAccountNumber: '',
@@ -30,7 +31,7 @@ const EMPTY_PROFILE = {
 }
 
 export function OrganizationSettingsPage() {
-  const { can } = useAuth()
+  const { can, setDashboardContext } = useAuth()
   const canUpdate = can('org.settings.update')
   const queryClient = useQueryClient()
   const profileQuery = useOrgSettingsProfile()
@@ -60,7 +61,9 @@ export function OrganizationSettingsPage() {
 
   const refreshProfile = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: orgSettingsKeys.profile })
-  }, [queryClient])
+    const context = await authServices.getDashboardContext()
+    setDashboardContext(context.data)
+  }, [queryClient, setDashboardContext])
 
   const target = profile ? { model: 'organization' as const, modelId: profile.id, prop: 'logo' as const } : null
   const existingLogo = profile?.logo ? [profile.logo] : []

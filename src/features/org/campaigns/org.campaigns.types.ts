@@ -1,5 +1,6 @@
 import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/types/api.types'
 import type {
+  OrganizationCampaignAudience,
   OrganizationCampaignItem,
   OrganizationCampaignStatus,
 } from '@/components/pages/organization-campaigns/static-data'
@@ -21,6 +22,7 @@ export interface CampaignCreateRequest {
   title: string
   summary: string
   categoryId: string
+  audience: OrganizationCampaignAudience
   status: OrganizationCampaignStatus
   location: string
   goalAmount: number
@@ -33,6 +35,7 @@ export interface CampaignUpdateRequest {
   title?: string
   summary?: string
   categoryId?: string
+  audience?: OrganizationCampaignAudience
   status?: OrganizationCampaignStatus
   location?: string
   goalAmount?: number

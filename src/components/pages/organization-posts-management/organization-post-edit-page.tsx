@@ -24,6 +24,7 @@ import { useOrgPost, useUpdateOrgPost } from "@/features/org/posts/org.posts.que
 import { mediaServices } from "@/features/shared/media/media.services";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { toast } from "@/lib/toast";
+import { normalizeApiError } from "@/lib/api-errors";
 import { useAuth } from "@/providers/AuthProvider";
 
 const schema = z.object({
@@ -84,10 +85,15 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
     <section className="flex flex-1 flex-col gap-4">
       <div><h2 className="text-lg font-semibold">تعديل المنشور</h2><p className="mt-1 text-sm text-muted-foreground">حدّث بيانات المنشور والصور ثم احفظ التغييرات.</p></div>
       <form noValidate className="space-y-5 rounded-xl border bg-card p-4 sm:p-6" onSubmit={handleSubmit(async (values) => {
-        await updateMutation.mutateAsync({ postId: post.id, body: {
-          title: values.title.trim(), summary: values.summary.trim(), categoryId: values.categoryId, type: values.type, location: values.location,
-          campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : undefined,
-        }});
+        try {
+          await updateMutation.mutateAsync({ postId: post.id, body: {
+            title: values.title.trim(), summary: values.summary.trim(), categoryId: values.categoryId, type: values.type, location: values.location,
+            campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : undefined,
+          }});
+        } catch (error) {
+          toast.error(normalizeApiError(error).message);
+          return;
+        }
         setProcessingMedia(true);
         const failedOperations: string[] = [];
         try {

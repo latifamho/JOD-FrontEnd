@@ -122,6 +122,7 @@ export function OrganizationCampaignsPage({
         title: values.title,
         summary: values.summary,
         categoryId: values.categoryId,
+        audience: values.audience,
         status: values.status,
         location: values.location,
         goalAmount: values.goalAmount,

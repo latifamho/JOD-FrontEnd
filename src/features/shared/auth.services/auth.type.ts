@@ -137,6 +137,7 @@ export interface DashboardOrganization {
   name: string;
   status: string;
   verificationStatus: string;
+  image: string | null;
 }
 
 export interface DashboardStaffRole {

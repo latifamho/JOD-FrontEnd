@@ -313,7 +313,7 @@ function SideBarContent({
   onMouseLeave,
   onLinkClick,
 }: SideBarContentProps) {
-  const { dashboardRole, can } = useAuth();
+  const { dashboardRole, can, dashboardContext } = useAuth();
   const role = dashboardRole === "admin"
     ? "admin"
     : dashboardRole === "org_staff"
@@ -359,7 +359,23 @@ function SideBarContent({
               !visualExpanded ? "w-fit" : "flex-1 gap-3",
             )}
           >
-            <Logo priority />
+            {dashboardContext?.organization?.image ? (
+              <div className={cn("flex min-w-0 items-center", visualExpanded && "gap-3")}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={dashboardContext.organization.image}
+                  alt={dashboardContext.organization.name}
+                  className="size-12 shrink-0 rounded-xl border border-border bg-background object-cover shadow-sm"
+                />
+                {visualExpanded ? (
+                  <span className="truncate text-base font-bold text-primary">
+                    {dashboardContext.organization.name}
+                  </span>
+                ) : null}
+              </div>
+            ) : (
+              <Logo priority />
+            )}
           </Link>
         </div>
 

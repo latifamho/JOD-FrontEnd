@@ -2,6 +2,8 @@ import type { MediaItem } from "@/features/shared/media/media.types";
 
 export type OrganizationCampaignStatus = "draft" | "active" | "closed";
 
+export type OrganizationCampaignAudience = "general" | "student";
+
 export type OrganizationCampaignCategory =
   | "health"
   | "education"
@@ -36,6 +38,7 @@ export type OrganizationCampaignItem = {
   summary: string;
   categoryId?: string | null;
   category?: OrganizationCampaignCategory;
+  audience?: OrganizationCampaignAudience;
   status: OrganizationCampaignStatus;
   location: string;
   goalAmount: number;
@@ -60,6 +63,14 @@ export const organizationCampaignStatusLabels: Record<
   draft: "مسودة",
   active: "نشطة",
   closed: "مغلقة",
+};
+
+export const organizationCampaignAudienceLabels: Record<
+  OrganizationCampaignAudience,
+  string
+> = {
+  general: "مساعدات عامة",
+  student: "مساعدات طلابية",
 };
 
 export const organizationCampaignCategoryLabels: Record<
