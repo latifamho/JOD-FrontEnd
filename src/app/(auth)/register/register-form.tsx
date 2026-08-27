@@ -21,6 +21,8 @@ import { normalizeApiError } from "@/lib/api-errors";
 
 const phaseOneFields = new Set<RegisterFieldName>(["ownerName", "password", "passwordConfirmation"]);
 const registrationFieldAliases: Record<string, RegisterFieldName> = { password_confirmation: "passwordConfirmation" };
+const SYRIAN_MOBILE_PATTERN = /^\+9639\d{8}$/;
+const SYRIA_PREFIX = "+963";
 
 export function RegisterForm() {
   const [phase, setPhase] = React.useState<RegisterPhase>("phase-1");
@@ -36,6 +38,12 @@ export function RegisterForm() {
     const field = name as RegisterFieldName;
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined, root: undefined }));
+  }, []);
+
+  const updateCompanyPhone = React.useCallback((value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 9);
+    setValues((current) => ({ ...current, companyPhone: digits ? `${SYRIA_PREFIX}${digits}` : "" }));
+    setErrors((current) => ({ ...current, companyPhone: undefined, root: undefined }));
   }, []);
 
   function validatePhaseOne(): RegisterFieldErrors {
@@ -54,7 +62,8 @@ export function RegisterForm() {
     if (!values.bankAccountNumber.trim()) next.bankAccountNumber = "رقم الحساب البنكي مطلوب.";
     if (!values.companyEmail.trim()) next.companyEmail = "البريد الرسمي مطلوب.";
     else if (!/^\S+@\S+\.\S+$/.test(values.companyEmail)) next.companyEmail = "صيغة البريد الرسمي غير صحيحة.";
-    if (!values.companyPhone.trim()) next.companyPhone = "الهاتف الرسمي مطلوب.";
+    if (!values.companyPhone.trim()) next.companyPhone = "رقم الموبايل الرسمي مطلوب.";
+    else if (!SYRIAN_MOBILE_PATTERN.test(values.companyPhone)) next.companyPhone = "أدخل رقم موبايل سوري صحيحاً بعد +963 بصيغة 9XXXXXXXX.";
     if (!values.location.trim()) next.location = "الموقع مطلوب.";
     if (values.website && !/^https?:\/\//i.test(values.website)) next.website = "ابدأ رابط الموقع بـ http:// أو https://";
     if (!acceptTerms || !confirmAccuracy) next.root = "يجب الموافقة على الشروط والإقرار بصحة البيانات قبل الإرسال.";
@@ -143,6 +152,7 @@ export function RegisterForm() {
                 onAcceptTermsChange={(checked) => { setAcceptTerms(checked); setErrors((current) => ({ ...current, root: undefined })); }}
                 onConfirmAccuracyChange={(checked) => { setConfirmAccuracy(checked); setErrors((current) => ({ ...current, root: undefined })); }}
                 onInputChange={updateValue}
+                onCompanyPhoneChange={updateCompanyPhone}
               />
             </TabsContent>
           </div>
@@ -153,7 +163,7 @@ export function RegisterForm() {
           <div className="flex items-center gap-2">
             {phase === "phase-2" ? <Button type="button" variant="outline" disabled={registerMutation.isPending} onClick={() => setPhase("phase-1")}>السابق</Button> : null}
             {phase === "phase-1" ? (
-              <Button type="button" disabled={registerMutation.isPending} onClick={moveToPhaseTwo}>التالي: بيانات المنظمة</Button>
+              <Button type="button" disabled={registerMutation.isPending} onClick={(event) => { event.preventDefault(); event.stopPropagation(); moveToPhaseTwo(); }}>التالي: بيانات المنظمة</Button>
             ) : (
               <Button type="submit" disabled={registerMutation.isPending}>{registerMutation.isPending ? "جارٍ إنشاء الحساب ورفع الشعار..." : "إرسال طلب التسجيل"}</Button>
             )}

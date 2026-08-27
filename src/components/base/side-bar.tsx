@@ -360,15 +360,15 @@ function SideBarContent({
             )}
           >
             {dashboardContext?.organization?.image ? (
-              <div className={cn("flex min-w-0 items-center", visualExpanded && "gap-3")}>
+              <div className="flex min-w-0 flex-col items-center justify-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={dashboardContext.organization.image}
-                  alt={dashboardContext.organization.name}
+                  alt={dashboardContext.organization.name || "شعار المنظمة"}
                   className="size-12 shrink-0 rounded-xl border border-border bg-background object-cover shadow-sm"
                 />
-                {visualExpanded ? (
-                  <span className="truncate text-base font-bold text-primary">
+                {visualExpanded && dashboardContext.organization.name ? (
+                  <span className="max-w-48 truncate text-center text-sm font-bold text-primary">
                     {dashboardContext.organization.name}
                   </span>
                 ) : null}

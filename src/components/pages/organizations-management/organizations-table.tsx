@@ -153,9 +153,11 @@ export function OrganizationsTable({
                     <p className="text-xs text-muted-foreground">
                       الإنشاء: {formatUtcDateTime(organization.createdAt)}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      آخر نشاط: {formatUtcDateTime(organization.lastActiveAt)}
-                    </p>
+                    {organization.lastActiveAt ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        آخر نشاط: {formatUtcDateTime(organization.lastActiveAt)}
+                      </p>
+                    ) : null}
                   </TableCell>
 
                   <TableCell>

@@ -165,9 +165,6 @@ export type SectionTabLink = {
   icon: AppIconName;
 };
 
-const organizationNotificationsEnabled =
-  process.env.NEXT_PUBLIC_ORG_NOTIFICATIONS_ENABLED === "true";
-
 export function getOrganizationPermissionForPath(pathname: string): string | null {
   if (pathname.includes("/campaigns")) return "org.campaigns.view";
   if (pathname.includes("/posts")) return "org.posts.view";
@@ -179,8 +176,8 @@ export function getOrganizationPermissionForPath(pathname: string): string | nul
   return pathname.includes("/dashboard/org-") ? "dashboard.view" : null;
 }
 
-export function isOrganizationRouteEnabled(pathname: string): boolean {
-  return organizationNotificationsEnabled || !pathname.includes("/notifications");
+export function isOrganizationRouteEnabled(_pathname: string): boolean {
+  return true;
 }
 export type AppNavLink = {
   label: string;
