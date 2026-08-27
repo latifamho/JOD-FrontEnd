@@ -60,10 +60,6 @@ export interface AdminPostUpdateRequest {
   description?: string
 }
 
-export type AdminPostStatus =
-  | 'draft'
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'published'
-  | 'archived'
+export type UserPostModerationStatus = 'pending' | 'published' | 'blocked'
+export type AdminOwnedPostStatus = 'draft' | 'published'
+export type AdminPostStatus = UserPostModerationStatus | AdminOwnedPostStatus

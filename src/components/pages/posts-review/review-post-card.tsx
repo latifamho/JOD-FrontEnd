@@ -40,7 +40,7 @@ export function ReviewPostCard({
 
           </div>
           <p className="text-xs text-muted-foreground">
-            {post.status === "approved" && post.publishedAt
+            {post.status === "published" && post.publishedAt
               ? `نُشر: ${formatUtcDateOrDash(post.publishedAt)}`
               : `أرسلت للمراجعة: ${formatUtcDateOrDash(post.submittedAt)}`}
           </p>
@@ -68,10 +68,10 @@ export function ReviewPostCard({
           </p>
         </div>
 
-        {post.rejectionReason && (
+        {post.blockReason && (
           <div className="mt-3 rounded-lg border border-rose-200/70 bg-rose-50/80 p-3 text-xs text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-100">
             <p className="font-semibold">سبب الرفض:</p>
-            <p className="mt-1 line-clamp-2">{post.rejectionReason}</p>
+            <p className="mt-1 line-clamp-2">{post.blockReason}</p>
           </div>
         )}
 

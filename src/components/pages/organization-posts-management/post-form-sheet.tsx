@@ -35,7 +35,7 @@ const postFormSchema = z
     summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
     categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
     type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
-    status: z.enum(["draft", "published", "archived"]),
+    status: z.enum(["draft", "published"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
       "اختر محافظة سورية صحيحة",
@@ -226,7 +226,6 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                       <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.status)}><SelectValue /></SelectTrigger>
                       <SelectContent align="start" position="popper" className="text-right">
                         {Object.entries(organizationPostStatusLabels)
-                          .filter(([status]) => mode === "edit" || status !== "archived")
                           .map(([status, label]) => <SelectItem key={status} value={status} className="text-right text-xs">{label}</SelectItem>)}
                       </SelectContent>
                     </Select>

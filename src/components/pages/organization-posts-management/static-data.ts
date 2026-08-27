@@ -1,9 +1,6 @@
 import type { MediaItem } from "@/features/shared/media/media.types";
 
-export type OrganizationPostStatus =
-  | "draft"
-  | "published"
-  | "archived";
+export type OrganizationPostStatus = "draft" | "published";
 
 export type OrganizationPostType =
   | "general"
@@ -36,8 +33,7 @@ export type OrganizationPostItem = {
 export const organizationPostStatusLabels: Record<OrganizationPostStatus, string> =
   {
     draft: "مسودة",
-    published: "نشط",
-    archived: "مؤرشف",
+    published: "منشور",
   };
 
 export const organizationPostTypeLabels: Record<OrganizationPostType, string> = {
@@ -161,7 +157,7 @@ export const organizationPostsStaticData: OrganizationPostItem[] = [
     summary:
       "عرض نسبة الإنجاز الحالية وأبرز الأعمال المنفذة في مشروع ترميم منازل الأسر المتضررة.",
     type: "campaign_update",
-    status: "archived",
+    status: "draft",
     location: "أبها",
     campaignTitle: "حملة ترميم منازل الأسر المتضررة",
     createdAt: "2026-01-20T10:05:00",

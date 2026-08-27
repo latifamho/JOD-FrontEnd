@@ -217,13 +217,13 @@ export function PostDetailsDialog({
             </>
           )}
 
-          {(detail?.rejectionReason ?? post.rejectionReason) && (
+          {(detail?.blockReason ?? post.blockReason) && (
             <div className="rounded-lg border border-rose-200/70 bg-rose-50/80 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">
               <p className="mb-1 text-xs font-semibold text-rose-700 dark:text-rose-200">
                 سبب الرفض السابق
               </p>
               <p className="text-sm text-rose-700 dark:text-rose-100">
-                {detail?.rejectionReason ?? post.rejectionReason}
+                {detail?.blockReason ?? post.blockReason}
               </p>
             </div>
           )}

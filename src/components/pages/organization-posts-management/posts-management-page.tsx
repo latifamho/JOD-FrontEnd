@@ -35,13 +35,9 @@ import {
   useOrgPosts,
   useCreateOrgPost,
   usePublishOrgPost,
-  useArchiveOrgPost,
-  useRestoreOrgPost,
   useDeleteOrgPost,
 } from "@/features/org/posts/org.posts.query";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
-
-type WorkflowAction = "publish" | "archive" | "restore";
 
 type OrganizationPostsManagementPageProps = {
   status: "all" | OrganizationPostStatus;
@@ -70,8 +66,6 @@ function OrganizationPostsManagementPageContent({
   const { can } = useAuth();
   const canCreate = can("org.posts.create");
   const canPublish = can("org.posts.publish");
-  const canArchive = can("org.posts.archive");
-  const canRestore = can("org.posts.restore");
   const canDelete = can("org.posts.delete");
   const pathname = usePathname();
   const router = useRouter();
@@ -123,15 +117,8 @@ function OrganizationPostsManagementPageContent({
 
   const createMutation = useCreateOrgPost();
   const publishMutation = usePublishOrgPost();
-  const archiveMutation = useArchiveOrgPost();
-  const restoreMutation = useRestoreOrgPost();
   const deleteMutation = useDeleteOrgPost();
 
-  const workflowPendingPostIds = [
-    publishMutation.isPending ? publishMutation.variables : undefined,
-    archiveMutation.isPending ? archiveMutation.variables : undefined,
-    restoreMutation.isPending ? restoreMutation.variables : undefined,
-  ].filter((postId): postId is string => typeof postId === "string");
 
   const openCreateSheet = React.useCallback(() => {
     formModal.open();
@@ -168,18 +155,6 @@ function OrganizationPostsManagementPageContent({
     [createMutation],
   );
 
-  const handleWorkflowAction = React.useCallback(
-    (postId: string, action: WorkflowAction) => {
-      if (action === "publish") {
-        publishMutation.mutate(postId);
-      } else if (action === "archive") {
-        archiveMutation.mutate(postId);
-      } else {
-        restoreMutation.mutate(postId);
-      }
-    },
-    [publishMutation, archiveMutation, restoreMutation],
-  );
 
   const openDeleteDialog = React.useCallback(
     (postId: string) => deleteModal.open({ id: postId }),
@@ -251,12 +226,10 @@ function OrganizationPostsManagementPageContent({
           rows={posts}
           categories={categories}
           onOpenDetails={openDetails}
-          onWorkflowAction={handleWorkflowAction}
+          onPublish={(postId) => publishMutation.mutate(postId)}
           onDeletePost={openDeleteDialog}
-          workflowPendingPostIds={workflowPendingPostIds}
+          publishingPostId={publishMutation.isPending ? publishMutation.variables : undefined}
           canPublish={canPublish}
-          canArchive={canArchive}
-          canRestore={canRestore}
           canDelete={canDelete}
         />
       )}
