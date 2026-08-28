@@ -37,6 +37,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
 import {
   useAgreeDonation,
@@ -209,7 +215,10 @@ export function OrganizationDonationsPage() {
               {list.data.data.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    <p className="font-medium">{row.name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="font-medium">{row.name}</p>
+                      {row.isAnonymous ? <AnonymousBadge /> : null}
+                    </div>
                     <p className="text-xs text-muted-foreground">{row.phone || row.email || '-'}</p>
                   </TableCell>
                   <TableCell>{row.campaignTitle}</TableCell>
@@ -273,6 +282,19 @@ export function OrganizationDonationsPage() {
                 <Field label="طريقة التواصل" value={donation.contactMethod} />
                 <Field label="طريقة الدفع" value={donation.paymentMethod} />
               </div>
+
+              {donation.isAnonymous ? (
+                <div className="space-y-1 rounded-md border border-dashed p-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">الخصوصية العامة</span>
+                    <Badge variant="secondary">مجهول علنًا</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    بيانات المتبرع أعلاه متاحة لكم لإدارة التبرع والتواصل معه، لكن لا يجب إظهار
+                    هويته في أي محتوى عام.
+                  </p>
+                </div>
+              ) : null}
 
               {donation.notes ? (
                 <div className="rounded-md bg-muted p-3 text-sm">
@@ -370,6 +392,21 @@ export function OrganizationDonationsPage() {
         </DialogContent>
       </Dialog>
     </section>
+  )
+}
+
+function AnonymousBadge() {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="secondary" className="cursor-default">
+            مجهول علنًا
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>اختار المتبرع عدم إظهار هويته علنًا.</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
