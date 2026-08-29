@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableRowActions } from "@/components/shared";
+import { Badge } from "@/components/ui/badge";
 import { AppIcons } from "@/constant/icons";
 import { formatUtcDateOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
@@ -52,7 +53,14 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell className="text-right">
-                <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
+                  {row.isAnonymous ? (
+                    <Badge variant="secondary" title="اختار المتبرع عدم إظهار هويته علنًا.">
+                      مجهول علنًا
+                    </Badge>
+                  ) : null}
+                </div>
                 <p className="text-xs text-muted-foreground" dir="ltr">
                   {isApplicants ? displayOrDash(row.phone) : displayOrDash(row.email)}
                 </p>

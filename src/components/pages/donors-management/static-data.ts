@@ -7,6 +7,8 @@ export type DonorEntryItem = {
   campaignTitle?: string | null;
   applicantStatus?: string | null;
   appliedAt?: string | null;
+  /** Donors only. Publicly anonymous — staff keep the contact details but must not publish the identity. */
+  isAnonymous?: boolean;
 };
 
 export const applicantStatusOptions = [

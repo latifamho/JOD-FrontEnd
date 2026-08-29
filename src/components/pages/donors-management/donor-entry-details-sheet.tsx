@@ -6,6 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 import { formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
 import {
@@ -55,6 +56,18 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view }: Dono
             </>
           )}
         </div>
+        {!isApplicants && entry.isAnonymous ? (
+          <div className="mt-4 space-y-1 rounded-lg border border-dashed border-border p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">الخصوصية العامة</span>
+              <Badge variant="secondary">مجهول علنًا</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              بيانات المتبرع أعلاه متاحة لكم لإدارة التبرع والتواصل معه، لكن لا يجب إظهار هويته في
+              أي محتوى عام.
+            </p>
+          </div>
+        ) : null}
       </SheetContent>
     </Sheet>
   );
