@@ -7,6 +7,7 @@ import type { OrganizationOverviewStat } from '@/features/org/overview/org.overv
 import { formatUtcDateTimeOrDash } from '@/lib/date'
 
 const iconMap: Record<OrganizationOverviewStat['id'], keyof typeof AppIcons> = {
+  followers: 'users',
   campaigns: 'campaigns',
   posts: 'posts',
   donors: 'donors',
@@ -16,6 +17,7 @@ const iconMap: Record<OrganizationOverviewStat['id'], keyof typeof AppIcons> = {
 }
 
 const labelMap: Record<OrganizationOverviewStat['id'], string> = {
+  followers: 'المتابعون',
   campaigns: 'الحملات',
   posts: 'المنشورات',
   donors: 'المتبرعون',
@@ -23,6 +25,10 @@ const labelMap: Record<OrganizationOverviewStat['id'], string> = {
   staff: 'الموظفون',
   reports: 'البلاغات',
 }
+
+// The backend may add stats faster than this map; render an unknown id rather than
+// crashing on `AppIcons[undefined]`.
+const FALLBACK_STAT_ICON: keyof typeof AppIcons = 'users'
 
 export function OrganizationOverviewPage({ owner }: { owner: boolean }) {
   const overview = useOrgOverview()
@@ -45,12 +51,12 @@ export function OrganizationOverviewPage({ owner }: { owner: boolean }) {
       ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => {
-          const Icon = AppIcons[iconMap[stat.id]]
+          const Icon = AppIcons[iconMap[stat.id] ?? FALLBACK_STAT_ICON]
           return (
             <article key={stat.id} className="rounded-xl border bg-card p-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></div>
-                <div><p className="text-sm text-muted-foreground">{labelMap[stat.id]}</p><p className="text-2xl font-bold">{stat.value}</p><p className="text-xs text-muted-foreground">{stat.hint}</p></div>
+                <div><p className="text-sm text-muted-foreground">{labelMap[stat.id] ?? stat.label}</p><p className="text-2xl font-bold">{stat.value}</p><p className="text-xs text-muted-foreground">{stat.hint}</p></div>
               </div>
             </article>
           )

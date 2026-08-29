@@ -1,5 +1,5 @@
 export interface OrganizationOverviewStat {
-  id: 'campaigns' | 'posts' | 'donors' | 'applicants' | 'staff' | 'reports'
+  id: 'followers' | 'campaigns' | 'posts' | 'donors' | 'applicants' | 'staff' | 'reports'
   label: string
   value: number
   hint: string
