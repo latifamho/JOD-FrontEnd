@@ -1,10 +1,20 @@
 "use client";
 
+import * as React from "react";
+
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DetailsLoadingSkeleton, EmptyState } from "@/components/shared";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { DetailsLoadingSkeleton, EmptyState, ListLoadingSkeleton } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
 import {
   formatUtcDate,
@@ -20,6 +30,7 @@ import {
 import { organizationCampaignStatusLabels } from "@/components/pages/organization-campaigns/static-data";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
+import { useOrgDonations } from "@/features/org/donations/org.donations.query";
 import { useAuth } from "@/providers/AuthProvider";
 
 type OrganizationCampaignDetailsPageProps = {
@@ -35,6 +46,23 @@ export function OrganizationCampaignDetailsPage({
   const campaignQuery = useOrgCampaign(campaignId);
   const campaign = campaignQuery.data?.data;
   const categoriesBrief = useOrgCategoriesBrief();
+  const canViewDonors = can("org.donors.view");
+  const [donationsPage, setDonationsPage] = React.useState(1);
+  const donationsQuery = useOrgDonations(
+    {
+      page: donationsPage,
+      perPage: 10,
+      status: "completed",
+      campaignId,
+    },
+    Boolean(campaign) && canViewDonors,
+  );
+  const completedDonations = donationsQuery.data?.data ?? [];
+  const donationsLastPage = Math.max(1, donationsQuery.data?.meta.lastPage ?? 1);
+  const donationsCurrentPage = Math.min(
+    Math.max(1, donationsQuery.data?.meta.currentPage ?? donationsPage),
+    donationsLastPage,
+  );
 
   if (campaignQuery.isLoading) {
     return <DetailsLoadingSkeleton className="rounded-xl border border-border bg-card" />;
@@ -197,6 +225,104 @@ export function OrganizationCampaignDetailsPage({
           </div>
         </div>
       </div>
+
+      {canViewDonors ? (
+        <div className="rounded-md border border-border bg-background p-4 shadow-xs">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">المتبرعون بالحملة</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                تظهر هنا التبرعات المكتملة والمحتسبة ضمن المبلغ المحصّل للحملة.
+              </p>
+            </div>
+            <Badge variant="outline">
+              {campaign.donorsCount} متبرع
+            </Badge>
+          </div>
+
+          {donationsQuery.isError ? (
+            <div className="mt-4 flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <p className="flex-1 text-sm text-destructive">تعذّر تحميل متبرعي الحملة.</p>
+              <Button type="button" size="sm" variant="outline" onClick={() => donationsQuery.refetch()}>
+                إعادة المحاولة
+              </Button>
+            </div>
+          ) : donationsQuery.isLoading ? (
+            <div className="mt-4">
+              <ListLoadingSkeleton />
+            </div>
+          ) : completedDonations.length > 0 ? (
+            <>
+              <div className="mt-4 overflow-auto rounded-md border border-border">
+                <Table className="min-w-[640px] bg-background">
+                  <TableHeader className="bg-muted/35">
+                    <TableRow>
+                      <TableHead>المتبرع</TableHead>
+                      <TableHead>مبلغ التبرع</TableHead>
+                      <TableHead>تاريخ التبرع</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {completedDonations.map((donation) => (
+                      <TableRow key={donation.id}>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-foreground">{donation.name}</span>
+                            {donation.isAnonymous ? (
+                              <Badge variant="secondary">مجهول علنًا</Badge>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatAmount(Number(donation.amount))} ر.س
+                        </TableCell>
+                        <TableCell>
+                          {formatUtcDateTimeOrDash(donation.completedAt ?? donation.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {donationsLastPage > 1 ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    الصفحة {donationsCurrentPage} من {donationsLastPage}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={donationsCurrentPage <= 1 || donationsQuery.isFetching}
+                      onClick={() => setDonationsPage((page) => Math.max(1, page - 1))}
+                    >
+                      السابق
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={donationsCurrentPage >= donationsLastPage || donationsQuery.isFetching}
+                      onClick={() => setDonationsPage((page) => Math.min(donationsLastPage, page + 1))}
+                    >
+                      التالي
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm font-medium text-foreground">لا توجد تبرعات مكتملة بعد</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                ستظهر بيانات المتبرعين هنا بعد تأكيد استلام التبرعات.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {campaign.closedReason && (
         <div className="rounded-md border border-slate-200/70 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-500/40 dark:bg-slate-500/10 dark:text-slate-100">
