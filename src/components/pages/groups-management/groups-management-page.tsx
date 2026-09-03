@@ -20,7 +20,6 @@ import { GroupsToolbar } from "@/components/pages/groups-management/groups-toolb
 import {
   groupStatusLabels,
   type AdminGroupStatus,
-  type GroupVisibility,
 } from "@/components/pages/groups-management/groups-management.types";
 
 const ALL_OPTION = "all";
@@ -34,9 +33,9 @@ const sortToApiSort: Record<AdminGroupSortOption, string> = {
 };
 
 const emptyStateDescriptions: Record<AdminGroupStatus, string> = {
-  pending: "لا توجد طلبات إنشاء مجموعات بانتظار المراجعة حالياً.",
-  active: "لا توجد مجموعات مقبولة تطابق البحث أو الفلاتر المختارة.",
-  rejected: "لا توجد مجموعات مرفوضة تطابق البحث أو الفلاتر المختارة.",
+  pending: "لا توجد طلبات إنشاء فرق تطوعية بانتظار المراجعة حالياً.",
+  active: "لا توجد فرق تطوعية مقبولة تطابق البحث أو الفلاتر المختارة.",
+  rejected: "لا توجد فرق تطوعية مرفوضة تطابق البحث أو الفلاتر المختارة.",
 };
 
 type GroupsManagementPageProps = {
@@ -46,9 +45,6 @@ type GroupsManagementPageProps = {
 export function GroupsManagementPage({ status }: GroupsManagementPageProps) {
   const [search, setSearch] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<string>(ALL_OPTION);
-  const [visibilityFilter, setVisibilityFilter] = React.useState<
-    typeof ALL_OPTION | GroupVisibility
-  >(ALL_OPTION);
   const [sortBy, setSortBy] = React.useState<AdminGroupSortOption>("created_at_newest");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
@@ -63,7 +59,6 @@ export function GroupsManagementPage({ status }: GroupsManagementPageProps) {
     perPage: pageSize,
     status,
     category: categoryFilter !== ALL_OPTION ? categoryFilter : undefined,
-    visibility: visibilityFilter !== ALL_OPTION ? visibilityFilter : undefined,
     search: debouncedSearch || undefined,
     sort: sortToApiSort[sortBy],
   });
@@ -76,7 +71,7 @@ export function GroupsManagementPage({ status }: GroupsManagementPageProps) {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [status, debouncedSearch, categoryFilter, visibilityFilter, sortBy, pageSize, setCurrentPage]);
+  }, [status, debouncedSearch, categoryFilter, sortBy, pageSize, setCurrentPage]);
 
   const approveMutation = useApproveGroup();
   const rejectMutation = useRejectGroup();
@@ -110,8 +105,6 @@ export function GroupsManagementPage({ status }: GroupsManagementPageProps) {
         onSearchChange={setSearch}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
-        visibilityFilter={visibilityFilter}
-        onVisibilityFilterChange={setVisibilityFilter}
         sortBy={sortBy}
         onSortByChange={setSortBy}
         totalResults={apiTotal}
@@ -128,7 +121,7 @@ export function GroupsManagementPage({ status }: GroupsManagementPageProps) {
       {!isLoading && groups.length === 0 ? (
         <EmptyState
           icon="groups"
-          title={`لا توجد مجموعات ضمن حالة ${groupStatusLabels[status]}`}
+          title={`لا توجد فرق تطوعية ضمن حالة ${groupStatusLabels[status]}`}
           description={emptyStateDescriptions[status]}
         />
       ) : null}

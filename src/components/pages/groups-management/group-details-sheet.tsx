@@ -16,7 +16,6 @@ import { useAdminGroupDetail } from "@/features/admin/groups/admin.groups.query"
 import { GroupStatusBadge } from "@/components/pages/groups-management/group-status-badge";
 import {
   groupRoleLabels,
-  groupVisibilityLabels,
   type AdminGroupItem,
   type AdminGroupPerson,
 } from "@/components/pages/groups-management/groups-management.types";
@@ -46,13 +45,13 @@ function PersonRow({ person }: { person: AdminGroupPerson }) {
 
 function DetailsSkeleton() {
   return (
-    <div className="space-y-4" aria-label="جاري تحميل تفاصيل المجموعة">
+    <div className="space-y-4" aria-label="جاري تحميل تفاصيل الفريق التطوعي">
       <div className="flex gap-2">
         <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
         <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
       </div>
       <div className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 sm:grid-cols-2">
-        {["category", "location", "visibility", "owner", "submitted", "reviewed"].map((key) => (
+        {["category", "location", "owner", "submitted", "reviewed"].map((key) => (
           <div key={key} className="space-y-2">
             <div className="h-3 w-20 animate-pulse rounded bg-muted" />
             <div className="h-4 w-32 animate-pulse rounded bg-muted" />
@@ -100,7 +99,7 @@ export function GroupDetailsSheet({
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <GroupStatusBadge status={group.status} />
               <Badge variant="outline">{group.category}</Badge>
-              <Badge variant="outline">{groupVisibilityLabels[group.visibility]}</Badge>
+              <Badge variant="outline">فريق تطوعي عام</Badge>
               {group.isVerifiedOrganization ? (
                 <Badge variant="outline" className="gap-1.5">
                   <AppIcons.verification className="size-3.5" />
@@ -173,7 +172,7 @@ export function GroupDetailsSheet({
 
             <div className="rounded-lg border border-border p-4">
               <p className="mb-3 text-xs text-muted-foreground">
-                قوانين المجموعة — يوافق عليها العضو قبل الانضمام
+                قوانين الفريق — يوافق عليها العضو قبل الانضمام
               </p>
               {detail && detail.rules.length > 0 ? (
                 <ol className="list-inside list-decimal space-y-2 text-sm leading-7 text-foreground">

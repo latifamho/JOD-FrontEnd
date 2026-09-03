@@ -38,9 +38,9 @@ export function DeleteGroupDialog({
     >
       <DialogContent dir="rtl" className="sm:max-w-md">
         <DialogHeader className="pe-12 text-right sm:text-right">
-          <DialogTitle>حذف المجموعة</DialogTitle>
+          <DialogTitle>حذف الفريق التطوعي</DialogTitle>
           <DialogDescription>
-            سيتم حذف المجموعة{" "}
+            سيتم حذف الفريق التطوعي{" "}
             <span className="font-semibold text-foreground">{groupName}</span> ومنشوراتها
             وعضويّاتها نهائياً. لا يمكن التراجع عن هذا الإجراء.
           </DialogDescription>

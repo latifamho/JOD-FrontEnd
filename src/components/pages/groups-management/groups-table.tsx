@@ -17,7 +17,6 @@ import { DeleteGroupDialog } from "@/components/pages/groups-management/delete-g
 import { GroupReasonDialog } from "@/components/pages/groups-management/group-reason-dialog";
 import { GroupStatusBadge } from "@/components/pages/groups-management/group-status-badge";
 import {
-  groupVisibilityLabels,
   type AdminGroupItem,
   type AdminGroupStatus,
 } from "@/components/pages/groups-management/groups-management.types";
@@ -86,7 +85,7 @@ function buildRowActions({
     },
     {
       id: "delete",
-      label: "حذف المجموعة",
+      label: "حذف الفريق التطوعي",
       icon: <AppIcons.Trash className="size-4" />,
       onSelect: openDeleteDialog,
       hidden: group.status === "pending",
@@ -136,9 +135,6 @@ function GroupRow({ group, isBusy, isDeleting, ...handlers }: GroupRowProps) {
         <TableCell className="hidden lg:table-cell">
           {displayOrDash(group.location)}
         </TableCell>
-        <TableCell className="hidden lg:table-cell">
-          {groupVisibilityLabels[group.visibility]}
-        </TableCell>
         <TableCell className="hidden md:table-cell">{group.membersCount}</TableCell>
         <TableCell>{formatUtcDateOrDash(getRowDate(group))}</TableCell>
 
@@ -158,8 +154,8 @@ function GroupRow({ group, isBusy, isDeleting, ...handlers }: GroupRowProps) {
       <GroupReasonDialog
         open={rejectOpen}
         onOpenChange={setRejectOpen}
-        title="رفض المجموعة"
-        description="أدخل سبب الرفض ليصل إلى منشئ المجموعة ويظهر له مع إشعار المراجعة."
+        title="رفض الفريق التطوعي"
+        description="أدخل سبب الرفض ليصل إلى منشئ الفريق ويظهر له مع إشعار المراجعة."
         groupName={group.name}
         fieldLabel="سبب الرفض"
         placeholder="مثال: الوصف والقوانين غير كافية لتحديد هدف المجموعة. يمكن إعادة الإرسال بعد التوضيح..."
@@ -197,7 +193,6 @@ export function GroupsTable({
             <TableHead>المالك</TableHead>
             <TableHead className="hidden md:table-cell">التصنيف</TableHead>
             <TableHead className="hidden lg:table-cell">المحافظة</TableHead>
-            <TableHead className="hidden lg:table-cell">الخصوصية</TableHead>
             <TableHead className="hidden md:table-cell">الأعضاء</TableHead>
             <TableHead>{dateColumnLabel}</TableHead>
             <TableHead>إجراءات</TableHead>
