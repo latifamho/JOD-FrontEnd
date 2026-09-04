@@ -5,40 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { DetailsLoadingSkeleton, FormLoadingSkeleton } from '@/components/shared'
-import { useRecommendationInspector, useRecommendationSettings, useUpdateRecommendationSettings } from '@/features/admin/recommendations/admin.recommendations.query'
-import type { RecommendationSettings } from '@/features/admin/recommendations/admin.recommendations.types'
+import { DetailsLoadingSkeleton } from '@/components/shared'
+import { useRecommendationInspector } from '@/features/admin/recommendations/admin.recommendations.query'
 
 const weightLabels: Record<string,string> = {
   followed_publisher:'ناشر متابَع', explicit_interest:'اهتمام صريح', behavioral_interest:'اهتمام سلوكي', same_city:'نفس المدينة', intent_match:'تطابق النية', freshness:'حداثة المحتوى', urgency:'الاستعجال', repeated_unengaged_view:'مشاهدة متكررة دون تفاعل',
-}
-
-function SettingsForm({settings}:{settings:RecommendationSettings}){
-  const mutation=useUpdateRecommendationSettings()
-  const [candidateLimit,setCandidateLimit]=React.useState(String(settings.candidateLimit))
-  const [popularityCap,setPopularityCap]=React.useState(String(settings.popularityCap))
-  const [explorationRatio,setExplorationRatio]=React.useState(String(Math.round(settings.explorationRatio*100)))
-  const [weights,setWeights]=React.useState<Record<string,string>>(()=>Object.fromEntries(settings.activeWeightKeys.map(key=>[key,String(settings.weights[key]??0)])))
-  const [message,setMessage]=React.useState('')
-
-  const submit=async(e:React.FormEvent)=>{
-    e.preventDefault(); setMessage('')
-    try{
-      await mutation.mutateAsync({candidateLimit:Number(candidateLimit),popularityCap:Number(popularityCap),explorationRatio:Number(explorationRatio)/100,weights:Object.fromEntries(Object.entries(weights).map(([key,value])=>[key,Number(value)]))})
-      setMessage('تم حفظ إعدادات التوصيات وتسجيل التغيير في سجل التدقيق.')
-    }catch{setMessage('تعذر حفظ الإعدادات. تحقق من القيم والصلاحيات.')}
-  }
-
-  return <form onSubmit={submit} className="space-y-5">
-    <div className="grid gap-4 md:grid-cols-3">
-      <div className="space-y-2"><Label>حد المرشحين</Label><Input type="number" min={20} max={500} value={candidateLimit} onChange={e=>setCandidateLimit(e.target.value)}/></div>
-      <div className="space-y-2"><Label>سقف الشعبية</Label><Input type="number" min={0} max={100} step="0.5" value={popularityCap} onChange={e=>setPopularityCap(e.target.value)}/></div>
-      <div className="space-y-2"><Label>نسبة الاستكشاف %</Label><Input type="number" min={0} max={50} step="1" value={explorationRatio} onChange={e=>setExplorationRatio(e.target.value)}/></div>
-    </div>
-    <div><h3 className="mb-3 font-semibold">أوزان الترتيب الفعالة</h3><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">{settings.activeWeightKeys.map(key=><div key={key} className="space-y-2 rounded-lg border p-3"><Label>{weightLabels[key]??key}</Label><Input type="number" min={-200} max={200} step="1" value={weights[key]??'0'} onChange={e=>setWeights(current=>({...current,[key]:e.target.value}))}/><p className="text-[11px] text-muted-foreground">{key}</p></div>)}</div></div>
-    {message?<p className="text-sm text-muted-foreground">{message}</p>:null}
-    <Button type="submit" disabled={mutation.isPending}>{mutation.isPending?'جارٍ الحفظ...':'حفظ الإعدادات'}</Button>
-  </form>
 }
 
 function InspectorPanel(){
@@ -64,11 +35,8 @@ function InspectorPanel(){
 }
 
 export function RecommendationManagementPage(){
-  const settings=useRecommendationSettings()
-  const [tab,setTab]=React.useState<'inspector'|'settings'>('inspector')
   return <section className="space-y-5">
-    <div><h2 className="text-lg font-semibold">إدارة محرك التوصيات</h2><p className="text-sm text-muted-foreground">فحص سبب ظهور المحتوى وإدارة أوزان الترتيب ونسبة الاستكشاف.</p></div>
-    <div className="flex gap-2"><Button variant={tab==='inspector'?'default':'outline'} onClick={()=>setTab('inspector')}>Recommendation Inspector</Button><Button variant={tab==='settings'?'default':'outline'} onClick={()=>setTab('settings')}>إعدادات التوصيات</Button></div>
-    {tab==='inspector'?<InspectorPanel/>:settings.isLoading?<FormLoadingSkeleton count={8}/>:settings.data?.data?<SettingsForm key={settings.data.data.updatedAt??'default'} settings={settings.data.data}/>:<div className="rounded-lg border p-6 text-sm text-muted-foreground">تعذر تحميل إعدادات التوصيات.</div>}
+    <div><h2 className="text-lg font-semibold">فحص محرك التوصيات</h2><p className="text-sm text-muted-foreground">فحص سبب ظهور محتوى محدد لمستخدم معيّن. إعدادات وأوزان الخوارزمية غير قابلة للتعديل من الواجهة.</p></div>
+    <InspectorPanel/>
   </section>
 }
