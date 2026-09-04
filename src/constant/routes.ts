@@ -40,6 +40,7 @@ export const routePaths = {
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
     recommendationAnalytics: "/dashboard/admin/analytics/recommendations",
+    helpMatching: "/dashboard/admin/help-matching",
   },
   organizationOwnerScope: {
     overview: "/dashboard/org-owner",
