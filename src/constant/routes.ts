@@ -40,6 +40,7 @@ export const routePaths = {
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
     recommendationAnalytics: "/dashboard/admin/analytics/recommendations",
+    recommendations: "/dashboard/admin/recommendations",
     helpMatching: "/dashboard/admin/help-matching",
   },
   organizationOwnerScope: {
@@ -313,6 +314,12 @@ const adminLinks: AppNavLink[] = [
     label: "تحليلات التوصيات",
     href: routePaths.adminScope.recommendationAnalytics,
     icon: "analytics",
+    section: "الإدارة",
+  },
+  {
+    label: "إدارة التوصيات",
+    href: routePaths.adminScope.recommendations,
+    icon: "settings",
     section: "الإدارة",
   },
   {
