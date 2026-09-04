@@ -4,6 +4,7 @@ export type AdminCategoryItem = {
   id: string;
   name: string;
   description: string;
+  keywords: string[];
   usageCount: number;
   status: CategoryStatus;
   createdAt: string;

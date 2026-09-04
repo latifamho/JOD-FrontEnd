@@ -126,6 +126,7 @@ export function CategoriesManagementPage() {
         setFormInitialValues({
           name: category.name,
           description: category.description,
+          keywords: category.keywords ?? [],
           status: category.status,
         });
       } catch {
@@ -143,6 +144,7 @@ export function CategoriesManagementPage() {
       const body = {
         name: values.name,
         description: values.description,
+        keywords: values.keywords,
         status: values.status,
       };
 

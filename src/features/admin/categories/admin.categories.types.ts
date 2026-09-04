@@ -19,12 +19,14 @@ export interface AdminCategoriesParams {
 export interface CategoryCreateRequest {
   name: string
   description: string
+  keywords: string[]
   status: CategoryStatus
 }
 
 export interface CategoryUpdateRequest {
   name: string
   description: string
+  keywords: string[]
   status: CategoryStatus
 }
 

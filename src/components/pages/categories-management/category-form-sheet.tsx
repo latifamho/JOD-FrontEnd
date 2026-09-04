@@ -37,18 +37,21 @@ const categoryFormSchema = z.object({
     .min(1, "وصف التصنيف مطلوب")
     .max(1000, "وصف التصنيف يجب ألا يتجاوز 1000 حرف"),
   status: z.enum(["active", "inactive"]),
+  keywordsText: z.string().max(2000, "كلمات البحث طويلة جداً"),
 });
 
 export type CategoryFormValues = {
   name: string;
   description: string;
   status: CategoryStatus;
+  keywords: string[];
 };
 
 export const EMPTY_CATEGORY_FORM_VALUES: CategoryFormValues = {
   name: "",
   description: "",
   status: "active",
+  keywords: [],
 };
 
 type CategoryFormSheetProps = {
@@ -82,6 +85,7 @@ export function CategoryFormSheet({
       name: initialValues.name,
       description: initialValues.description,
       status: initialValues.status,
+      keywordsText: initialValues.keywords.join("\n"),
     },
   });
 
@@ -91,6 +95,7 @@ export function CategoryFormSheet({
         name: initialValues.name,
         description: initialValues.description,
           status: initialValues.status,
+      keywordsText: initialValues.keywords.join("\n"),
       });
     }
   }, [initialValues, open, reset]);
@@ -108,6 +113,7 @@ export function CategoryFormSheet({
               name: values.name.trim(),
               description: values.description.trim(),
               status: values.status,
+              keywords: values.keywordsText.split(/[\n,]+/).map((value) => value.trim()).filter(Boolean),
             });
           })}
         >
@@ -152,6 +158,12 @@ export function CategoryFormSheet({
                       {errors.description.message}
                     </p>
                   ) : null}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category-keywords">كلمات البحث والمرادفات</Label>
+                  <Textarea id="category-keywords" disabled={isFormLocked} rows={4} placeholder="تعليم\nدراسة\nجامعة\nمنحة" {...register("keywordsText")} />
+                  <p className="text-xs text-muted-foreground">أدخل كلمة في كل سطر أو افصل الكلمات بفاصلة.</p>
                 </div>
 
                 <div className="space-y-2">
