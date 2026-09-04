@@ -41,6 +41,10 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
     scope === "staff"
       ? routePaths.organizationStaffScope.postEdit(postId)
       : routePaths.organizationOwnerScope.postEdit(postId);
+  const helpRequestRoute =
+    scope === "staff"
+      ? routePaths.organizationStaffScope.helpRequestDetails(postId)
+      : routePaths.organizationOwnerScope.helpRequestDetails(postId);
 
   if (postQuery.isLoading) {
     return <DetailsLoadingSkeleton className="rounded-xl border border-border bg-card" />;
@@ -76,6 +80,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
   const normalizedStatus = normalizePostStatus(post.status);
   const campaignRelated = isCampaignRelatedPostType(post.type);
   const categoryName = (categoriesBrief.data?.data ?? []).find((category) => category.id === post.categoryId)?.name;
+  const isHelpRequest = post.type === "help_request";
 
   return (
     <section className="flex flex-1 flex-col gap-4">
@@ -87,7 +92,8 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
                 {organizationPostStatusLabels[normalizedStatus]}
               </Badge>
               <Badge variant="outline">{organizationPostTypeLabels[post.type]}</Badge>
-              <Badge variant="outline">{displayOrDash(categoryName)}</Badge>
+              <Badge variant="outline">{displayOrDash(post.category?.name ?? categoryName)}</Badge>
+              {isHelpRequest ? <Badge variant="secondary">{post.helpStatus ?? "open"}</Badge> : null}
 
             </div>
             <div>
@@ -101,6 +107,7 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
           <Button asChild variant="outline">
             <Link href={postsRoute}>الرجوع إلى المنشورات</Link>
           </Button>
+          {isHelpRequest ? <Button asChild><Link href={helpRequestRoute}>إدارة الطلب</Link></Button> : null}
         </div>
       </div>
 
@@ -115,6 +122,13 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
             {campaignRelated ? (
               <DetailItem label="الحملة المرتبطة" value={displayOrDash(post.campaignTitle)} />
             ) : null}
+            {isHelpRequest ? <>
+              <DetailItem label="الاستعجال" value={displayOrDash(post.urgency)} />
+              <DetailItem label="سبب الاستعجال" value={displayOrDash(post.urgencyReason)} />
+              <DetailItem label="مطلوب حتى" value={formatUtcDateTimeOrDash(post.expiresAt ?? undefined)} />
+              <DetailItem label="حالة المساعدة" value={displayOrDash(post.helpStatus)} />
+              <DetailItem label="عدد العروض" value={String(post.helpOffersCount ?? 0)} />
+            </> : null}
           </div>
         </div>
 
@@ -129,7 +143,9 @@ export function OrganizationPostDetailsPage({ postId, scope }: OrganizationPostD
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
-        <h3 className="text-sm font-semibold text-foreground">محتوى المنشور</h3>
+        <h3 className="text-sm font-semibold text-foreground">محتوى المنشور</h3>      {isHelpRequest && post.requiredCapabilities?.length ? <div className="rounded-xl border border-border bg-card p-4 shadow-sm"><h3 className="text-sm font-semibold">أنواع المساعدة المطلوبة</h3><div className="mt-3 flex flex-wrap gap-2">{post.requiredCapabilities.map((capability) => <Badge key={capability.id} variant="outline">{capability.name}</Badge>)}</div></div> : null}
+
+
         <p className="mt-3 whitespace-pre-wrap text-sm leading-8 text-foreground">
           {post.body ?? post.summary}
         </p>

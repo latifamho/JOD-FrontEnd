@@ -7,7 +7,11 @@ export type OrganizationPostType =
   | "job_opportunity"
   | "campaign_teaser"
   | "campaign_update"
-  | "campaign_summary";
+  | "campaign_summary"
+  | "service_offer"
+  | "volunteer_opportunity"
+  | "awareness"
+  | "help_request";
 
 export type OrganizationPostItem = {
   id: string;
@@ -18,6 +22,15 @@ export type OrganizationPostItem = {
   status: OrganizationPostStatus;
   location: string;
   campaignTitle?: string;
+  urgency?: "normal" | "important" | "urgent" | "critical";
+  urgencyReason?: string | null;
+  expiresAt?: string | null;
+  helpStatus?: "open" | "in_progress" | "fulfilled" | "partially_fulfilled" | "not_fulfilled" | "expired" | null;
+  helpOffersCount?: number | null;
+  activeHelpOffersCount?: number | null;
+  completedHelpOffersCount?: number | null;
+  category?: { id: string; name: string } | null;
+  requiredCapabilities?: Array<{ id: string; name: string; slug: string }>;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
@@ -42,6 +55,10 @@ export const organizationPostTypeLabels: Record<OrganizationPostType, string> = 
   campaign_teaser: "تمهيد حملة",
   campaign_update: "تحديث حملة",
   campaign_summary: "ملخص حملة",
+  service_offer: "خدمة مقدمة",
+  volunteer_opportunity: "فرصة تطوع",
+  awareness: "محتوى توعوي",
+  help_request: "طلب مساعدة",
 };
 
 export const organizationPostsStaticData: OrganizationPostItem[] = [

@@ -149,6 +149,10 @@ function OrganizationPostsManagementPageContent({
         status: values.status,
         location: values.location,
         campaignTitle,
+        urgency: values.type === "help_request" ? values.urgency : undefined,
+        urgencyReason: values.type === "help_request" && values.urgencyReason ? values.urgencyReason : undefined,
+        expiresAt: values.type === "help_request" && values.expiresAt ? new Date(values.expiresAt).toISOString() : undefined,
+        requiredCapabilityIds: values.type === "help_request" ? values.requiredCapabilityIds : undefined,
       });
       return response.data?.id ?? null;
     },

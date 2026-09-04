@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 
 import { EmptyState, FormLoadingSkeleton, MediaUploadField } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +21,7 @@ import { organizationPostTypeLabels, type OrganizationPostItem } from "@/compone
 import { routePaths } from "@/constant/routes";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
+import { useOrgCapabilitiesBrief } from "@/features/org/capabilities/org.capabilities.query";
 import { useOrgPost, useUpdateOrgPost } from "@/features/org/posts/org.posts.query";
 import { mediaServices } from "@/features/shared/media/media.services";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
@@ -31,12 +33,22 @@ const schema = z.object({
   title: z.string().trim().min(1, "عنوان المنشور مطلوب"),
   summary: z.string().trim().min(1, "محتوى المنشور مطلوب"),
   categoryId: z.string().min(1, "تصنيف المنشور مطلوب"),
-  type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
+  type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
   location: z.string().refine((value) => syrianGovernorateOptions.some((option) => option.value === value), "اختر محافظة سورية صحيحة"),
   campaignTitle: z.string(),
+  urgency: z.enum(["normal", "important", "urgent"]),
+  urgencyReason: z.string(),
+  expiresAt: z.string(),
+  requiredCapabilityIds: z.array(z.string()).max(20),
 }).superRefine((values, context) => {
   if (isCampaignRelatedPostType(values.type) && !values.campaignTitle.trim()) {
     context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة" });
+  }
+  if (values.type === "help_request" && values.urgency === "urgent" && values.urgencyReason.trim().length < 8) {
+    context.addIssue({ code: "custom", path: ["urgencyReason"], message: "سبب الاستعجال مطلوب للحالة العاجلة وبحد أدنى 8 أحرف" });
+  }
+  if (values.type === "help_request" && values.expiresAt && new Date(values.expiresAt).getTime() <= Date.now()) {
+    context.addIssue({ code: "custom", path: ["expiresAt"], message: "يجب أن يكون الموعد في المستقبل" });
   }
 });
 
@@ -68,10 +80,12 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
   const [processingMedia, setProcessingMedia] = React.useState(false);
   const { register, control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: post.title, summary: post.summary, categoryId: post.categoryId ?? "", type: post.type, location: post.location, campaignTitle: post.campaignTitle ?? "" },
+    defaultValues: { title: post.title, summary: post.summary, categoryId: post.categoryId ?? "", type: post.type, location: post.location, campaignTitle: post.campaignTitle ?? "", urgency: post.urgency === "important" || post.urgency === "urgent" ? post.urgency : "normal", urgencyReason: post.urgencyReason ?? "", expiresAt: post.expiresAt ? new Date(new Date(post.expiresAt).getTime() - new Date(post.expiresAt).getTimezoneOffset() * 60000).toISOString().slice(0,16) : "", requiredCapabilityIds: post.requiredCapabilities?.map((item) => item.id) ?? [] },
   });
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
+  const helpRequest = selectedType === "help_request";
+  const capabilitiesBrief = useOrgCapabilitiesBrief(helpRequest);
   const campaignsBrief = useOrgCampaignsBrief(campaignRelated);
   const imageTarget = { model: "post" as const, modelId: post.id, prop: "images" as const };
   const videoTarget = { model: "post" as const, modelId: post.id, prop: "videos" as const };
@@ -89,6 +103,10 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
           await updateMutation.mutateAsync({ postId: post.id, body: {
             title: values.title.trim(), summary: values.summary.trim(), categoryId: values.categoryId, type: values.type, location: values.location,
             campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : undefined,
+            urgency: values.type === "help_request" ? values.urgency : undefined,
+            urgencyReason: values.type === "help_request" && values.urgencyReason.trim() ? values.urgencyReason.trim() : undefined,
+            expiresAt: values.type === "help_request" && values.expiresAt ? new Date(values.expiresAt).toISOString() : undefined,
+            requiredCapabilityIds: values.type === "help_request" ? values.requiredCapabilityIds : undefined,
           }});
         } catch (error) {
           toast.error(normalizeApiError(error).message);
@@ -162,6 +180,19 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
               </Select>
             )} />
           </Field>
+        ) : null}
+        {helpRequest ? (
+          <div className="space-y-4 rounded-xl border bg-muted/20 p-4">
+            <div><h3 className="font-semibold">تفاصيل طلب المساعدة</h3><p className="text-xs text-muted-foreground">يمكن تحديث الاستعجال والموعد والقدرات المطلوبة.</p></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="الاستعجال"><Controller control={control} name="urgency" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="normal">عادي</SelectItem><SelectItem value="important">مهم</SelectItem><SelectItem value="urgent">عاجل</SelectItem></SelectContent></Select>} /><p className="text-[11px] text-muted-foreground">الحالات الحرجة تعتمدها إدارة المنصة فقط.</p></Field>
+              <Field label="مطلوب حتى" error={errors.expiresAt?.message}><Input type="datetime-local" disabled={isBusy} {...register("expiresAt")} /></Field>
+            </div>
+            <Field label="سبب الاستعجال" error={errors.urgencyReason?.message}><Textarea disabled={isBusy} placeholder="اشرح سبب الاستعجال عند اختيار عاجل" {...register("urgencyReason")} /></Field>
+            <Field label="نوع المساعدة المطلوبة">
+              <Controller control={control} name="requiredCapabilityIds" render={({ field }) => <div className="grid gap-2 sm:grid-cols-2">{(capabilitiesBrief.data?.data ?? []).map((capability) => { const checked = field.value.includes(capability.id); return <label key={capability.id} className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm"><Checkbox checked={checked} disabled={isBusy} onCheckedChange={(next) => field.onChange(Boolean(next) ? [...field.value, capability.id] : field.value.filter((id) => id !== capability.id))} /><span>{capability.name}</span></label> })}</div>} />
+            </Field>
+          </div>
         ) : null}
         <MediaUploadField
           label="صور المنشور"

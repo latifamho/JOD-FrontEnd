@@ -25,6 +25,10 @@ export interface PostCreateRequest {
   status: OrganizationPostStatus
   location: string
   campaignTitle?: string
+  urgency?: 'normal' | 'important' | 'urgent'
+  urgencyReason?: string
+  expiresAt?: string
+  requiredCapabilityIds?: string[]
 }
 
 export interface PostUpdateRequest {
@@ -34,8 +38,11 @@ export interface PostUpdateRequest {
   type?: OrganizationPostType
   location?: string
   campaignTitle?: string
+  urgency?: 'normal' | 'important' | 'urgent'
+  urgencyReason?: string
+  expiresAt?: string
+  requiredCapabilityIds?: string[]
 }
-
 
 export type OrgPostsResponse = ApiListResponse<OrganizationPostItem>
 export type OrgPostDetailResponse = ApiSingleResponse<OrganizationPostItem>

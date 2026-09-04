@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 
 import { MediaUploadField } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ import {
 } from "@/components/pages/organization-posts-management/static-data";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
+import { useOrgCapabilitiesBrief } from "@/features/org/capabilities/org.capabilities.query";
 import { useMediaUploadQueue } from "@/hooks/use-media-upload-queue";
 import { useQueryDisclosure } from "@/hooks/use-query-modal";
 import { toast } from "@/lib/toast";
@@ -34,17 +36,27 @@ const postFormSchema = z
     title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
     summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
     categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
-    type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary"]),
+    type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
     status: z.enum(["draft", "published"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
       "اختر محافظة سورية صحيحة",
     ),
     campaignTitle: z.string(),
+    urgency: z.enum(["normal", "important", "urgent"]),
+    urgencyReason: z.string(),
+    expiresAt: z.string(),
+    requiredCapabilityIds: z.array(z.string()).max(20),
   })
   .superRefine((values, context) => {
     if (isCampaignRelatedPostType(values.type) && values.campaignTitle.trim().length === 0) {
       context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة لهذا النوع من البوستات" });
+    }
+    if (values.type === "help_request" && values.urgency === "urgent" && values.urgencyReason.trim().length < 8) {
+      context.addIssue({ code: "custom", path: ["urgencyReason"], message: "سبب الاستعجال مطلوب للحالة العاجلة وبحد أدنى 8 أحرف" });
+    }
+    if (values.type === "help_request" && values.expiresAt && new Date(values.expiresAt).getTime() <= Date.now()) {
+      context.addIssue({ code: "custom", path: ["expiresAt"], message: "يجب أن يكون الموعد في المستقبل" });
     }
   });
 
@@ -58,6 +70,10 @@ export type PostFormValues = {
   status: OrganizationPostStatus;
   location: string;
   campaignTitle: string;
+  urgency: "normal" | "important" | "urgent";
+  urgencyReason: string;
+  expiresAt: string;
+  requiredCapabilityIds: string[];
 };
 
 export const EMPTY_POST_FORM_VALUES: PostFormValues = {
@@ -68,6 +84,10 @@ export const EMPTY_POST_FORM_VALUES: PostFormValues = {
   status: "published",
   location: "",
   campaignTitle: "",
+  urgency: "normal",
+  urgencyReason: "",
+  expiresAt: "",
+  requiredCapabilityIds: [],
 };
 
 type PostFormSheetProps = {
@@ -90,8 +110,10 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
   });
   const selectedType = useWatch({ control, name: "type" });
   const campaignRelated = isCampaignRelatedPostType(selectedType);
+  const helpRequest = selectedType === "help_request";
   const campaignsBrief = useOrgCampaignsBrief(open && campaignRelated);
   const categoriesBrief = useOrgCategoriesBrief(open);
+  const capabilitiesBrief = useOrgCapabilitiesBrief(open && helpRequest);
   const mediaQueue = useMediaUploadQueue(10);
   const videoQueue = useMediaUploadQueue(10, "video");
   const [createdPostId, setCreatedPostId] = React.useState<string | null>(null);
@@ -147,6 +169,10 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                   status: values.status,
                   location: values.location,
                   campaignTitle: isCampaignRelatedPostType(values.type) ? values.campaignTitle.trim() : "",
+                  urgency: values.type === "help_request" ? values.urgency : "normal",
+                  urgencyReason: values.type === "help_request" ? values.urgencyReason.trim() : "",
+                  expiresAt: values.type === "help_request" ? values.expiresAt : "",
+                  requiredCapabilityIds: values.type === "help_request" ? values.requiredCapabilityIds : [],
                 });
               } catch (error) {
                 toast.error(normalizeApiError(error).message);
@@ -261,6 +287,49 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                   )} />
                   {errors.campaignTitle ? <p className="text-xs text-destructive">{errors.campaignTitle.message}</p> : null}
                   {campaignsBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل الحملات المتاحة.</p> : null}
+                </div>
+              ) : null}
+
+              {helpRequest ? (
+                <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold">تفاصيل طلب المساعدة</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">حدد درجة الاستعجال والموعد والقدرات المطلوبة لتحسين المطابقة.</p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>الاستعجال</Label>
+                      <Controller control={control} name="urgency" render={({ field }) => (
+                        <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full text-right"><SelectValue /></SelectTrigger>
+                          <SelectContent align="start"><SelectItem value="normal">عادي</SelectItem><SelectItem value="important">مهم</SelectItem><SelectItem value="urgent">عاجل</SelectItem></SelectContent>
+                        </Select>
+                      )} />
+                      <p className="text-[11px] text-muted-foreground">الحالات الحرجة يتم اعتمادها من إدارة المنصة.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="post-expires-at">مطلوب حتى</Label>
+                      <Input id="post-expires-at" type="datetime-local" disabled={formLocked} aria-invalid={Boolean(errors.expiresAt)} {...register("expiresAt")} />
+                      {errors.expiresAt ? <p className="text-xs text-destructive">{errors.expiresAt.message}</p> : <p className="text-[11px] text-muted-foreground">بعد انتهاء الموعد لن يظهر الطلب ضمن المطابقة النشطة.</p>}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="post-urgency-reason">سبب الاستعجال</Label>
+                    <Textarea id="post-urgency-reason" disabled={formLocked} aria-invalid={Boolean(errors.urgencyReason)} placeholder="اشرح سبب الاستعجال عند اختيار عاجل" {...register("urgencyReason")} />
+                    {errors.urgencyReason ? <p className="text-xs text-destructive">{errors.urgencyReason.message}</p> : null}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>نوع المساعدة المطلوبة</Label>
+                    <Controller control={control} name="requiredCapabilityIds" render={({ field }) => (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {(capabilitiesBrief.data?.data ?? []).map((capability) => {
+                          const checked = field.value.includes(capability.id);
+                          return <label key={capability.id} className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm"><Checkbox checked={checked} disabled={formLocked} onCheckedChange={(next) => field.onChange(Boolean(next) ? [...field.value, capability.id] : field.value.filter((id) => id !== capability.id))} /><span>{capability.name}</span></label>;
+                        })}
+                      </div>
+                    )} />
+                    {capabilitiesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل أنواع المساعدة.</p> : null}
+                  </div>
                 </div>
               ) : null}
 

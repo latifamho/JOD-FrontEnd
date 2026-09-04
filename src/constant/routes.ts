@@ -60,6 +60,12 @@ export const routePaths = {
     postDetailsTemplate: "/dashboard/org-owner/posts/:id",
     postEdit: (id = ":id") => `/dashboard/org-owner/posts/${id}/edit`,
     postEditTemplate: "/dashboard/org-owner/posts/:id/edit",
+    helpRequests: "/dashboard/org-owner/help-requests",
+    helpRequestDetails: (id = ":id") => `/dashboard/org-owner/help-requests/${id}`,
+    helpRequestDetailsTemplate: "/dashboard/org-owner/help-requests/:id",
+    helpOffers: "/dashboard/org-owner/help-offers",
+    recommendationAnalytics: "/dashboard/org-owner/analytics/recommendations",
+    contentAnalytics: "/dashboard/org-owner/analytics/content",
     donors: "/dashboard/org-owner/donors",
     donations: "/dashboard/org-owner/donations",
     donorsApplicants: "/dashboard/org-owner/donors/applicants",
@@ -87,6 +93,12 @@ export const routePaths = {
     postDetailsTemplate: "/dashboard/org-staff/posts/:id",
     postEdit: (id = ":id") => `/dashboard/org-staff/posts/${id}/edit`,
     postEditTemplate: "/dashboard/org-staff/posts/:id/edit",
+    helpRequests: "/dashboard/org-staff/help-requests",
+    helpRequestDetails: (id = ":id") => `/dashboard/org-staff/help-requests/${id}`,
+    helpRequestDetailsTemplate: "/dashboard/org-staff/help-requests/:id",
+    helpOffers: "/dashboard/org-staff/help-offers",
+    recommendationAnalytics: "/dashboard/org-staff/analytics/recommendations",
+    contentAnalytics: "/dashboard/org-staff/analytics/content",
     donors: "/dashboard/org-staff/donors",
     donations: "/dashboard/org-staff/donations",
     donorsApplicants: "/dashboard/org-staff/donors/applicants",
@@ -171,6 +183,8 @@ export type SectionTabLink = {
 };
 
 export function getOrganizationPermissionForPath(pathname: string): string | null {
+  if (pathname.includes("/help-requests") || pathname.includes("/help-offers")) return "org.posts.view";
+  if (pathname.includes("/analytics")) return "dashboard.view";
   if (pathname.includes("/campaigns")) return "org.campaigns.view";
   if (pathname.includes("/posts")) return "org.posts.view";
   if (pathname.includes("/donations")) return "org.donors.view";
@@ -317,7 +331,7 @@ const adminLinks: AppNavLink[] = [
     section: "الإدارة",
   },
   {
-    label: "إدارة التوصيات",
+    label: "فحص التوصيات",
     href: routePaths.adminScope.recommendations,
     icon: "settings",
     section: "الإدارة",
@@ -398,6 +412,26 @@ const organizationOwnerLinks: AppNavLink[] = [
         href: routePaths.organizationOwnerScope.postsPublished,
         icon: "posts",
       },
+    ],
+  },
+  {
+    label: "المساعدة",
+    href: routePaths.organizationOwnerScope.helpRequests,
+    icon: "donors",
+    section: "الإدارة",
+    tabs: [
+      { label: "طلبات المساعدة", href: routePaths.organizationOwnerScope.helpRequests, icon: "posts" },
+      { label: "العروض الواردة", href: routePaths.organizationOwnerScope.helpOffers, icon: "donors" },
+    ],
+  },
+  {
+    label: "التحليلات",
+    href: routePaths.organizationOwnerScope.recommendationAnalytics,
+    icon: "analytics",
+    section: "المتابعة",
+    tabs: [
+      { label: "نظرة عامة", href: routePaths.organizationOwnerScope.recommendationAnalytics, icon: "analytics" },
+      { label: "أداء المحتوى", href: routePaths.organizationOwnerScope.contentAnalytics, icon: "posts" },
     ],
   },
   {
@@ -525,6 +559,26 @@ const organizationStaffLinks: AppNavLink[] = [
         href: routePaths.organizationStaffScope.postsPublished,
         icon: "posts",
       },
+    ],
+  },
+  {
+    label: "المساعدة",
+    href: routePaths.organizationStaffScope.helpRequests,
+    icon: "donors",
+    section: "الإدارة",
+    tabs: [
+      { label: "طلبات المساعدة", href: routePaths.organizationStaffScope.helpRequests, icon: "posts" },
+      { label: "العروض الواردة", href: routePaths.organizationStaffScope.helpOffers, icon: "donors" },
+    ],
+  },
+  {
+    label: "التحليلات",
+    href: routePaths.organizationStaffScope.recommendationAnalytics,
+    icon: "analytics",
+    section: "المتابعة",
+    tabs: [
+      { label: "نظرة عامة", href: routePaths.organizationStaffScope.recommendationAnalytics, icon: "analytics" },
+      { label: "أداء المحتوى", href: routePaths.organizationStaffScope.contentAnalytics, icon: "posts" },
     ],
   },
   {
