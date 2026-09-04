@@ -25,6 +25,7 @@ export const routePaths = {
     userDetails: (id = ":id") => `/dashboard/admin/users/${id}`,
     userDetailsTemplate: "/dashboard/admin/users/:id",
     categories: "/dashboard/admin/categories",
+    capabilities: "/dashboard/admin/capabilities",
     organizations: "/dashboard/admin/organizations",
     organizationDetails: (id = ":id") => `/dashboard/admin/organizations/${id}`,
     organizationDetailsTemplate: "/dashboard/admin/organizations/:id",
@@ -38,6 +39,7 @@ export const routePaths = {
     contentEdit: (id = ":id") => `/dashboard/admin/content/${id}/edit`,
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
     analytics: "/dashboard/admin/analytics",
+    recommendationAnalytics: "/dashboard/admin/analytics/recommendations",
   },
   organizationOwnerScope: {
     overview: "/dashboard/org-owner",
@@ -277,6 +279,12 @@ const adminLinks: AppNavLink[] = [
     section: "الإدارة",
   },
   {
+    label: "طرق المساعدة",
+    href: routePaths.adminScope.capabilities,
+    icon: "categories",
+    section: "الإدارة",
+  },
+  {
     label: "إدارة المنظمات",
     href: routePaths.adminScope.organizations,
     icon: "organizations",
@@ -297,6 +305,12 @@ const adminLinks: AppNavLink[] = [
   {
     label: "التحليلات",
     href: routePaths.adminScope.analytics,
+    icon: "analytics",
+    section: "الإدارة",
+  },
+  {
+    label: "تحليلات التوصيات",
+    href: routePaths.adminScope.recommendationAnalytics,
     icon: "analytics",
     section: "الإدارة",
   },

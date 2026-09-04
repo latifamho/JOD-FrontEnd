@@ -46,6 +46,10 @@ export interface ReviewPostDetail extends ReviewPostItem {
   updatedBy?: UserSummary | null
   updatedByName?: string | null
   reviewedByUser?: UserSummary | null
+  urgency?: 'normal'|'important'|'urgent'|'critical'
+  urgencyReason?: string | null
+  expiresAt?: string | null
+  fulfillmentStatus?: 'open'|'in_progress'|'fulfilled'|'partially_fulfilled'|'not_fulfilled'|'expired'|null
 }
 
 export type AdminReviewPostDetailResponse = ApiSingleResponse<ReviewPostDetail>
@@ -59,6 +63,8 @@ export interface AdminPostUpdateRequest {
   title?: string
   description?: string
 }
+
+export interface HelpRequestLifecycleInput { urgency?: 'normal'|'important'|'urgent'|'critical'; urgencyReason?: string|null; expiresAt?: string|null; fulfillmentStatus?: 'open'|'in_progress'|'fulfilled'|'partially_fulfilled'|'not_fulfilled'|'expired' }
 
 export type UserPostModerationStatus = 'pending' | 'published' | 'blocked'
 export type AdminOwnedPostStatus = 'draft' | 'published'

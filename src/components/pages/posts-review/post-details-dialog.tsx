@@ -17,6 +17,7 @@ import {
   type ReviewPostItem,
 } from "@/components/pages/posts-review/posts-review.types";
 import { useAdminPostDetail } from "@/features/admin/posts/admin.posts.query";
+import { HelpRequestLifecyclePanel } from "@/components/pages/posts-review/help-request-lifecycle-panel";
 
 type PostDetailsDialogProps = {
   open: boolean;
@@ -216,6 +217,8 @@ export function PostDetailsDialog({
               )}
             </>
           )}
+
+          {detail?.type === "help_request" ? <HelpRequestLifecyclePanel post={detail} /> : null}
 
           {(detail?.blockReason ?? post.blockReason) && (
             <div className="rounded-lg border border-rose-200/70 bg-rose-50/80 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">

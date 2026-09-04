@@ -18,3 +18,5 @@ export interface AdminUserDonationItem { id: string; campaignId: string | null; 
 export interface AdminUserActivityParams { page?: number; perPage?: number }
 export type AdminUserPostsResponse = ApiListResponse<AdminUserPostItem>
 export type AdminUserDonationsResponse = ApiListResponse<AdminUserDonationItem>
+export interface AdminUserPersonalization { onboardingCompleted:boolean; onboardingCompletedAt:string|null; intent:'giver'|'receiver'|'both'|null; preferredCity:string|null; preferredGovernorate:string|null; preferredRadiusKm:number|null; remoteHelpEnabled:boolean; availabilityStatus:string|null; interests:{category:{id:string;name:string};selectedByUser:boolean;explicitWeight:number;behavioralWeight:number}[]; capabilities:{id:string;name:string;slug:string}[]; feedback:{interested:number;notInterested:number;hiddenPosts:number;hiddenPublishers:number} }
+export type AdminUserPersonalizationResponse = ApiSingleResponse<AdminUserPersonalization>
