@@ -97,11 +97,12 @@ function buildRowActions({
 
 type GroupRowProps = GroupsTableHandlers & {
   group: AdminGroupItem;
+  index: number;
   isBusy: boolean;
   isDeleting: boolean;
 };
 
-function GroupRow({ group, isBusy, isDeleting, ...handlers }: GroupRowProps) {
+function GroupRow({ group, index, isBusy, isDeleting, ...handlers }: GroupRowProps) {
   const [rejectOpen, setRejectOpen] = useQueryDisclosure(`group-reject-${group.id}`);
   const [deleteOpen, setDeleteOpen] = useQueryDisclosure(`group-delete-${group.id}`);
   const reason = getRowReason(group);
@@ -109,6 +110,7 @@ function GroupRow({ group, isBusy, isDeleting, ...handlers }: GroupRowProps) {
   return (
     <>
       <TableRow>
+        <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
         <TableCell>
           <GroupStatusBadge status={group.status} />
         </TableCell>
@@ -188,6 +190,7 @@ export function GroupsTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12">#</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>المجموعة</TableHead>
             <TableHead>المالك</TableHead>
@@ -199,10 +202,11 @@ export function GroupsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {groups.map((group) => (
+          {groups.map((group, index) => (
             <GroupRow
               key={group.id}
               group={group}
+              index={index}
               isBusy={busyGroupId === group.id}
               isDeleting={deletingGroupId === group.id}
               {...handlers}

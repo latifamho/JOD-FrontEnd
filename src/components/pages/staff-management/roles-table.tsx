@@ -44,6 +44,9 @@ export function RolesTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 text-right font-semibold text-muted-foreground">
+              #
+            </TableHead>
             <TableHead className="text-right font-semibold text-muted-foreground">
               الدور
             </TableHead>
@@ -69,11 +72,14 @@ export function RolesTable({
         </TableHeader>
 
         <TableBody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const canDelete = !row.isSystem;
 
             return (
               <TableRow key={row.id}>
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="outline">{row.role}</Badge>
                 </TableCell>

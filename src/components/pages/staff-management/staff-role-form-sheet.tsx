@@ -175,16 +175,18 @@ export function StaffRoleFormSheet({
                         <Table>
                           <TableHeader>
                             <TableRow>
+                              <TableHead className="w-10 text-right">#</TableHead>
                               <TableHead className="w-16 text-right">اختيار</TableHead>
                               <TableHead className="text-right">الصلاحية</TableHead>
                               <TableHead className="text-right">الوصف</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {permissionOptions.map((option) => {
+                            {permissionOptions.map((option, index) => {
                               const checked = field.value.includes(option.id);
                               return (
                                 <TableRow key={option.id}>
+                                  <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
                                   <TableCell>
                                     <Checkbox
                                       disabled={isFormLocked}

@@ -47,6 +47,7 @@ export function CategoriesTable({
       <Table className="min-w-210 bg-background">
         <TableHeader className="bg-muted/35">
           <TableRow>
+            <TableHead className="w-12 font-semibold text-muted-foreground">#</TableHead>
             <TableHead className="font-semibold text-muted-foreground">التصنيف</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الوصف</TableHead>
             <TableHead className="font-semibold text-muted-foreground">الاستخدام</TableHead>
@@ -60,6 +61,7 @@ export function CategoriesTable({
           {isLoading ? (
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
               <TableRow key={i}>
+                <TableCell><SkeletonPulse className="h-3 w-6" /></TableCell>
                 <TableCell>
                   <SkeletonPulse className="h-3.5 w-28 mb-1.5" />
                   <SkeletonPulse className="h-3 w-16" />
@@ -74,10 +76,11 @@ export function CategoriesTable({
               </TableRow>
             ))
           ) : rows.length > 0 ? (
-            rows.map((row) => {
+            rows.map((row, index) => {
               const isToggling = togglingRowIds.has(row.id);
               return (
                 <TableRow key={row.id} className="align-middle">
+                  <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>
                     <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
 
@@ -135,7 +138,7 @@ export function CategoriesTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد تصنيفات للعرض.

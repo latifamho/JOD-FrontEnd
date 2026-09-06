@@ -257,14 +257,16 @@ export function OrganizationCampaignDetailsPage({
                 <Table className="min-w-[640px] bg-background">
                   <TableHeader className="bg-muted/35">
                     <TableRow>
+                      <TableHead className="w-12">#</TableHead>
                       <TableHead>المتبرع</TableHead>
                       <TableHead>مبلغ التبرع</TableHead>
                       <TableHead>تاريخ التبرع</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {completedDonations.map((donation) => (
+                    {completedDonations.map((donation, index) => (
                       <TableRow key={donation.id}>
+                        <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-medium text-foreground">{donation.name}</span>

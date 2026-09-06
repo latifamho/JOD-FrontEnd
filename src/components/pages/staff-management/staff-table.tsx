@@ -35,6 +35,9 @@ export function StaffTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 text-right font-semibold text-muted-foreground">
+              #
+            </TableHead>
             <TableHead className="text-right font-semibold text-muted-foreground">
               الموظف
             </TableHead>
@@ -50,7 +53,7 @@ export function StaffTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const canDelete =
               !!onDelete &&
               row.id !== currentUserId &&
@@ -59,6 +62,9 @@ export function StaffTable({
 
             return (
               <TableRow key={row.id}>
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="text-right">
                   <p className="font-medium text-foreground">
                     {displayOrDash(row.name)}

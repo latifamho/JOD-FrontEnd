@@ -43,6 +43,9 @@ export function ContentTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 text-right font-semibold text-muted-foreground">
+              #
+            </TableHead>
             <TableHead className="text-right font-semibold text-muted-foreground">
               العنوان
             </TableHead>
@@ -65,6 +68,9 @@ export function ContentTable({
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
               <TableRow key={i}>
                 <TableCell>
+                  <SkeletonPulse className="h-3 w-6" />
+                </TableCell>
+                <TableCell>
                   <SkeletonPulse className="mb-1.5 h-3.5 w-40" />
                   <SkeletonPulse className="h-3 w-24" />
                 </TableCell>
@@ -85,8 +91,11 @@ export function ContentTable({
               </TableRow>
             ))
           ) : (
-            rows.map((row) => (
+            rows.map((row, index) => (
               <TableRow key={row.id}>
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="text-right">
                   <p className="font-medium text-foreground">
                     {displayOrDash(row.title)}

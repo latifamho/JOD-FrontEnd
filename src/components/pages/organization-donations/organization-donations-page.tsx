@@ -202,6 +202,7 @@ export function OrganizationDonationsPage() {
           <Table className="min-w-[900px] bg-background">
             <TableHeader className="bg-muted/35">
               <TableRow>
+                <TableHead className="w-12">#</TableHead>
                 <TableHead>المتبرع</TableHead>
                 <TableHead>الحملة</TableHead>
                 <TableHead>المبلغ</TableHead>
@@ -212,8 +213,9 @@ export function OrganizationDonationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {list.data.data.map((row) => (
+              {list.data.data.map((row, index) => (
                 <TableRow key={row.id}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="font-medium">{row.name}</p>

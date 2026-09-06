@@ -50,6 +50,7 @@ export function OrganizationsTable({
       <Table className="min-w-300 bg-background">
         <TableHeader className="bg-muted/35">
           <TableRow>
+            <TableHead className="w-12">#</TableHead>
             <TableHead>المنظمة</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>بيانات التواصل</TableHead>
@@ -64,6 +65,9 @@ export function OrganizationsTable({
           {isLoading ? (
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
               <TableRow key={i}>
+                <TableCell>
+                  <SkeletonPulse className="h-3 w-6" />
+                </TableCell>
                 <TableCell>
                   <SkeletonPulse className="mb-1.5 h-3.5 w-28" />
                   <SkeletonPulse className="h-3 w-16" />
@@ -92,12 +96,16 @@ export function OrganizationsTable({
               </TableRow>
             ))
           ) : rows.length > 0 ? (
-            rows.map((organization) => {
+            rows.map((organization, index) => {
               const isRowLoading = loadingRowIds.has(organization.id);
               const displayStatus = getDisplayOrganizationStatus(organization);
 
               return (
                 <TableRow key={organization.id}>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {index + 1}
+                  </TableCell>
+
                   <TableCell>
                     <p className="font-semibold text-foreground">
                       {displayOrDash(organization.name)}
@@ -198,7 +206,7 @@ export function OrganizationsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد بيانات منظمات للعرض.

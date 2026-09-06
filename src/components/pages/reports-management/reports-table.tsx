@@ -51,6 +51,9 @@ export function ReportsTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 text-right font-semibold text-muted-foreground">
+              #
+            </TableHead>
             <TableHead className="w-[100px] text-right font-semibold text-muted-foreground">
               الحالة
             </TableHead>
@@ -75,10 +78,11 @@ export function ReportsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reports.map((report) => (
+          {reports.map((report, index) => (
             <ReportRow
               key={report.id}
               report={report}
+              index={index}
               onClaim={onClaim}
               onCloseReport={onCloseReport}
               isClaiming={isClaiming}
@@ -95,6 +99,7 @@ export function ReportsTable({
 
 type ReportRowProps = {
   report: ReportItem;
+  index: number;
   onClaim: (reportId: string) => void;
   onCloseReport: (reportId: string, note: string) => Promise<void>;
   isClaiming: boolean;
@@ -105,6 +110,7 @@ type ReportRowProps = {
 
 function ReportRow({
   report,
+  index,
   onClaim,
   onCloseReport,
   isClaiming,
@@ -118,6 +124,9 @@ function ReportRow({
   return (
     <>
       <TableRow className="group">
+        <TableCell className="align-middle text-right text-sm text-muted-foreground">
+          {index + 1}
+        </TableCell>
         <TableCell className="align-middle text-right">
           <Badge variant="outline" className={getStatusBadgeClass(report.status)}>
             {reportStatusLabels[report.status]}

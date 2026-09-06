@@ -33,6 +33,7 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 text-right font-semibold text-muted-foreground">#</TableHead>
             <TableHead className="text-right font-semibold text-muted-foreground">{isApplicants ? "المتقدم" : "المتبرع"}</TableHead>
             {isApplicants ? (
               <>
@@ -50,8 +51,9 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <TableRow key={row.id}>
+              <TableCell className="text-right text-sm text-muted-foreground">{index + 1}</TableCell>
               <TableCell className="text-right">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>

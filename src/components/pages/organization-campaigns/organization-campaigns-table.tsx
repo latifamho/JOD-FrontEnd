@@ -57,6 +57,7 @@ export function OrganizationCampaignsTable({
       <Table className="min-w-340 bg-background">
         <TableHeader className="bg-muted/35">
           <TableRow>
+            <TableHead className="w-12">#</TableHead>
             <TableHead>الحملة</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>الفئة</TableHead>
@@ -70,7 +71,7 @@ export function OrganizationCampaignsTable({
 
         <TableBody>
           {rows.length > 0 ? (
-            rows.map((campaign) => {
+            rows.map((campaign, index) => {
               const progress = getProgress(
                 campaign.goalAmount,
                 campaign.raisedAmount,
@@ -78,6 +79,10 @@ export function OrganizationCampaignsTable({
 
               return (
                 <TableRow key={campaign.id}>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {index + 1}
+                  </TableCell>
+
                   <TableCell>
                     <p className="font-semibold text-foreground">{campaign.title}</p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
@@ -218,7 +223,7 @@ export function OrganizationCampaignsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={8}
+                colSpan={9}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد حملات مطابقة لخيارات العرض الحالية.

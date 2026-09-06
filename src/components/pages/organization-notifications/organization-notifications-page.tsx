@@ -136,6 +136,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
           <Table className="min-w-[min(100%,720px)] bg-background">
             <TableHeader className="bg-muted/35">
               <TableRow>
+                <TableHead className="w-12">#</TableHead>
                 <TableHead className="w-10" />
                 <TableHead>الإشعار</TableHead>
                 <TableHead>النوع</TableHead>
@@ -144,8 +145,9 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {rows.map((row, index) => (
                 <TableRow key={row.id} className={row.read ? "" : "bg-sky-500/5"}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>
                     <span className={row.read ? "inline-block size-2 rounded-full bg-muted-foreground/25" : "inline-block size-2 rounded-full bg-sky-500"} />
                   </TableCell>

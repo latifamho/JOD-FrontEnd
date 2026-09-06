@@ -43,6 +43,7 @@ export function NotificationsTable({
       <Table className="min-w-260 bg-background">
         <TableHeader className="bg-muted/35">
           <TableRow>
+            <TableHead className="w-12">#</TableHead>
             <TableHead>الإشعار</TableHead>
             <TableHead>النوع</TableHead>
             <TableHead>المستلم</TableHead>
@@ -54,8 +55,12 @@ export function NotificationsTable({
 
         <TableBody>
           {rows.length > 0 ? (
-            rows.map((notification) => (
+            rows.map((notification, index) => (
               <TableRow key={notification.id}>
+                <TableCell className="text-sm text-muted-foreground">
+                  {index + 1}
+                </TableCell>
+
                 <TableCell>
                   <p className="font-semibold text-foreground">
                     {notification.title}
@@ -144,7 +149,7 @@ export function NotificationsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد إشعارات مطابقة.

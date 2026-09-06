@@ -54,6 +54,7 @@ export function UsersTable({
       <Table className="min-w-255 bg-background">
         <TableHeader className="bg-muted/35">
           <TableRow>
+            <TableHead className="w-12">#</TableHead>
             <TableHead>المستخدم</TableHead>
             <TableHead>النوع</TableHead>
             <TableHead>الحالة</TableHead>
@@ -68,6 +69,9 @@ export function UsersTable({
           {isLoading ? (
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
               <TableRow key={i}>
+                <TableCell>
+                  <SkeletonPulse className="h-3 w-6" />
+                </TableCell>
                 <TableCell>
                   <SkeletonPulse className="h-3.5 w-28" />
                 </TableCell>
@@ -95,10 +99,14 @@ export function UsersTable({
               </TableRow>
             ))
           ) : rows.length > 0 ? (
-            rows.map((user) => {
+            rows.map((user, index) => {
               const isToggleLoading = loadingRowIds.has(user.id);
               return (
                 <TableRow key={user.id}>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {index + 1}
+                  </TableCell>
+
                   <TableCell>
                     <p className="font-semibold text-foreground">
                       {displayOrDash(user.name)}
@@ -210,7 +218,7 @@ export function UsersTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 لا توجد بيانات مستخدمين للعرض.
