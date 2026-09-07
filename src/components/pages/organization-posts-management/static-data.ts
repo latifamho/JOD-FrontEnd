@@ -8,6 +8,7 @@ export type OrganizationPostType =
   | "campaign_teaser"
   | "campaign_update"
   | "campaign_summary"
+  | "donation_campaign"
   | "service_offer"
   | "volunteer_opportunity"
   | "awareness"
@@ -55,6 +56,7 @@ export const organizationPostTypeLabels: Record<OrganizationPostType, string> = 
   campaign_teaser: "تمهيد حملة",
   campaign_update: "تحديث حملة",
   campaign_summary: "ملخص حملة",
+  donation_campaign: "دعوة للتبرع بالحملة",
   service_offer: "خدمة مقدمة",
   volunteer_opportunity: "فرصة تطوع",
   awareness: "محتوى توعوي",

@@ -8,8 +8,9 @@ function normalizeSingle(payload: OrgDonationEnvelope): OrgDonation { if (payloa
 export const orgDonationsServices = {
   async list(params: OrgDonationsParams) { const response = await api.get<OrgDonationEnvelope>(ENDPOINT, { params }); return normalizeList(response.data, params); },
   async detail(id: string) { const response = await api.get<OrgDonationEnvelope>(`${ENDPOINT}/${id}`); return normalizeSingle(response.data); },
+  async accept(id: string) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/accept`, {}, { successMessage: 'تم قبول طلب التبرع.' }); return normalizeSingle(response.data); },
   async contact(id: string) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/contact`, {}, { successMessage: 'تم تسجيل بدء التواصل.' }); return normalizeSingle(response.data); },
   async agree(id: string) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/agree`, {}, { successMessage: 'تم تسجيل الاتفاق.' }); return normalizeSingle(response.data); },
-  async complete(id: string) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/complete`, {}, { successMessage: 'تم تأكيد استلام التبرع.' }); return normalizeSingle(response.data); },
+  async complete(id: string, amount: number) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/complete`, { amount }, { successMessage: 'تم تأكيد استلام التبرع.' }); return normalizeSingle(response.data); },
   async cancel(id: string, reason: string) { const response = await api.patch<OrgDonationEnvelope>(`${ENDPOINT}/${id}/cancel`, { reason }, { successMessage: 'تم إلغاء طلب التبرع.' }); return normalizeSingle(response.data); },
 }

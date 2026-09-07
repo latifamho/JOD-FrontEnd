@@ -107,7 +107,7 @@ export function DonorsManagementPage({
     filter: {
       campaignId: campaignFilter !== "all" ? campaignFilter : undefined,
       status: donorStatusFilter !== "all"
-        ? donorStatusFilter as "pending" | "contacting" | "agreed" | "completed" | "cancelled"
+        ? donorStatusFilter as "pending" | "accepted" | "contacting" | "agreed" | "completed" | "cancelled"
         : undefined,
     },
   }, view === "donors" && canView);
@@ -311,7 +311,8 @@ export function DonorsManagementPage({
             <SelectTrigger className="w-48 text-right text-xs"><SelectValue placeholder="حالة التبرع" /></SelectTrigger>
             <SelectContent align="start" position="popper" className="text-right">
               <SelectItem value="all" className="text-right text-xs">كل الحالات</SelectItem>
-              <SelectItem value="pending" className="text-right text-xs">بانتظار التواصل</SelectItem>
+              <SelectItem value="pending" className="text-right text-xs">بانتظار الموافقة</SelectItem>
+              <SelectItem value="accepted" className="text-right text-xs">تم قبول الطلب</SelectItem>
               <SelectItem value="contacting" className="text-right text-xs">جاري التواصل</SelectItem>
               <SelectItem value="agreed" className="text-right text-xs">تم الاتفاق</SelectItem>
               <SelectItem value="completed" className="text-right text-xs">تم التبرع</SelectItem>
@@ -402,6 +403,7 @@ export function DonorsManagementPage({
         <DonorsTable
           rows={rows}
           view={view}
+          onViewRow={(row) => { setDetailsEntry(row); setDetailsOpen(true); }}
           onEditRow={canEdit ? (row) => openEdit(row) : undefined}
           onDeleteRow={canDelete ? (row) => openDelete(row) : undefined}
         />

@@ -39,11 +39,22 @@ function useTransition(
   })
 }
 
+export const useAcceptDonation = () => useTransition(orgDonationsServices.accept)
 export const useStartDonationContact = () =>
   useTransition(orgDonationsServices.contact)
 export const useAgreeDonation = () => useTransition(orgDonationsServices.agree)
-export const useCompleteDonation = () =>
-  useTransition(orgDonationsServices.complete, true)
+
+export function useCompleteDonation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, amount }: { id: string; amount: number }) =>
+      orgDonationsServices.complete(id, amount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: orgDonationsKeys.all })
+      queryClient.invalidateQueries({ queryKey: orgCampaignsKeys.all })
+    },
+  })
+}
 
 export function useCancelDonation() {
   const queryClient = useQueryClient()

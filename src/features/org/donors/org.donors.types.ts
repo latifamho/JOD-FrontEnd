@@ -4,7 +4,7 @@ import type { DonorEntryItem } from '@/components/pages/donors-management/static
 export interface OrgDonorsFilter {
   campaignId?: string
   city?: string
-  status?: 'pending' | 'contacting' | 'agreed' | 'completed' | 'cancelled'
+  status?: 'pending' | 'accepted' | 'contacting' | 'agreed' | 'completed' | 'cancelled'
   sourceType?: 'campaign' | 'manual'
   search?: string
 }

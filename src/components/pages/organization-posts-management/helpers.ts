@@ -36,6 +36,10 @@ export function getPostStatusBadgeClass(status: OrganizationPostStatus | string)
     : "border-amber-200/70 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-100";
 }
 
+export function isCampaignRequiredPostType(type: OrganizationPostType): boolean {
+  return type === "campaign_teaser" || type === "campaign_update" || type === "campaign_summary" || type === "donation_campaign";
+}
+
 export function isCampaignRelatedPostType(type: OrganizationPostType): boolean {
-  return type === "campaign_teaser" || type === "campaign_update" || type === "campaign_summary";
+  return isCampaignRequiredPostType(type) || type === "volunteer_opportunity";
 }

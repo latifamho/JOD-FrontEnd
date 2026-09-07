@@ -2,7 +2,7 @@ import type { ApiListResponse, ApiSingleResponse } from '@/types/api.types'
 import type { OrganizationPostItem } from '@/components/pages/organization-posts-management/static-data'
 
 export type HelpRequestStatus = 'open' | 'in_progress' | 'fulfilled' | 'partially_fulfilled' | 'not_fulfilled' | 'expired'
-export type HelpOfferStatus = 'pending' | 'accepted' | 'contacting' | 'agreed' | 'completed' | 'rejected'
+export type HelpOfferStatus = 'pending' | 'accepted' | 'contacting' | 'agreed' | 'completed' | 'rejected' | 'cancelled'
 
 export interface OrgHelpRequestsParams {
   page?: number
@@ -24,14 +24,26 @@ export interface OrgHelpOfferItem {
   description?: string | null
   status: HelpOfferStatus
   contactMethod?: string | null
+  contactValue?: string | null
   phone?: string | null
   rejectionReason?: string | null
   createdAt?: string | null
   acceptedAt?: string | null
   contactedAt?: string | null
   agreedAt?: string | null
+  helperAgreedAt?: string | null
+  receiverAgreedAt?: string | null
+  helperConfirmedAt?: string | null
+  receiverConfirmedAt?: string | null
   completedAt?: string | null
-  can: { accept: boolean; reject: boolean; contact: boolean; confirmReceived: boolean }
+  cancelledAt?: string | null
+  can: {
+    accept: boolean
+    reject: boolean
+    contact: boolean
+    agree: boolean
+    confirmReceived: boolean
+  }
 }
 
 export interface OrgHelpOffersParams {

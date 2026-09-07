@@ -22,8 +22,10 @@ import type {
 const ENDPOINTS = {
   DONORS: '/org/donors',
   DONOR: (id: string) => `/org/donors/${id}`,
+  DONATION_ACTION: (id: string, action: 'accept' | 'contact' | 'agree' | 'complete' | 'cancel') => `/org/donations/${id}/${action}`,
   APPLICANTS: '/org/applicants',
   APPLICANT: (id: string) => `/org/applicants/${id}`,
+  APPLICANT_ACTION: (id: string, action: 'accept' | 'contact' | 'complete' | 'reject') => `/org/applicants/${id}/${action}`,
 } as const
 
 export const orgDonorsServices = {
@@ -54,6 +56,11 @@ export const orgDonorsServices = {
     return response.data
   },
 
+  async runDonationAction(donorId: string, action: 'accept' | 'contact' | 'agree' | 'complete' | 'cancel', body?: { amount?: number; reason?: string }): Promise<OrgDonorDetailResponse> {
+    const response = await api.patch<OrgDonorDetailResponse>(ENDPOINTS.DONATION_ACTION(donorId, action), body ?? {})
+    return response.data
+  },
+
   async getApplicants(params: OrgApplicantsParams): Promise<OrgApplicantsResponse> {
     const response = await api.get<OrgApplicantsResponse>(ENDPOINTS.APPLICANTS, {
       params: buildApiParams(params),
@@ -73,6 +80,11 @@ export const orgDonorsServices = {
 
   async updateApplicant(applicantId: string, body: ApplicantUpdateRequest): Promise<UpdateApplicantResponse> {
     const response = await api.patch<UpdateApplicantResponse>(ENDPOINTS.APPLICANT(applicantId), body)
+    return response.data
+  },
+
+  async runApplicantAction(applicantId: string, action: 'accept' | 'contact' | 'complete' | 'reject'): Promise<OrgApplicantDetailResponse> {
+    const response = await api.patch<OrgApplicantDetailResponse>(ENDPOINTS.APPLICANT_ACTION(applicantId, action))
     return response.data
   },
 

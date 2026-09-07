@@ -60,6 +60,18 @@ export function useDeleteOrgDonor() {
   })
 }
 
+export function useOrgDonationWorkflowAction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ donorId, action, amount, reason }: { donorId: string; action: 'accept' | 'contact' | 'agree' | 'complete' | 'cancel'; amount?: number; reason?: string }) =>
+      orgDonorsServices.runDonationAction(donorId, action, { amount, reason }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: orgDonorsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orgDonorsKeys.detail(variables.donorId) })
+    },
+  })
+}
+
 export function useOrgApplicants(params: OrgApplicantsParams, enabled = true) {
   return useQuery({
     queryKey: orgApplicantsKeys.list(params),
@@ -93,6 +105,18 @@ export function useUpdateOrgApplicant() {
       orgDonorsServices.updateApplicant(applicantId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orgApplicantsKeys.lists() })
+    },
+  })
+}
+
+export function useOrgApplicantWorkflowAction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ applicantId, action }: { applicantId: string; action: 'accept' | 'contact' | 'complete' | 'reject' }) =>
+      orgDonorsServices.runApplicantAction(applicantId, action),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: orgApplicantsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orgApplicantsKeys.detail(variables.applicantId) })
     },
   })
 }

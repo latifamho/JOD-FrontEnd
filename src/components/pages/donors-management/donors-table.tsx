@@ -18,14 +18,31 @@ import {
   type DonorEntryItem,
 } from "@/components/pages/donors-management/static-data";
 
+const donorStatusLabels: Record<string, string> = {
+  pending: "بانتظار الموافقة",
+  accepted: "تم قبول الطلب",
+  contacting: "جاري التواصل",
+  agreed: "تم الاتفاق",
+  completed: "تم التبرع",
+  cancelled: "ملغي",
+};
+
+function amountLabel(row: DonorEntryItem) {
+  const value = row.confirmedAmount ?? row.requestedAmount ?? row.amount;
+  if (value === null || value === undefined || value === "") return "—";
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number.toLocaleString("ar-SY")} ل.س` : String(value);
+}
+
 type DonorsTableProps = {
   rows: DonorEntryItem[];
   view?: "donors" | "applicants";
+  onViewRow?: (row: DonorEntryItem) => void;
   onEditRow?: (row: DonorEntryItem) => void;
   onDeleteRow?: (row: DonorEntryItem) => void;
 };
 
-export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: DonorsTableProps) {
+export function DonorsTable({ rows, view = "donors", onViewRow, onEditRow, onDeleteRow }: DonorsTableProps) {
   const isApplicants = view === "applicants";
 
   return (
@@ -44,8 +61,10 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
               </>
             ) : (
               <>
+                <TableHead className="text-right font-semibold text-muted-foreground">الحملة / المصدر</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">المبلغ</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">حالة التبرع</TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">رقم الهاتف</TableHead>
-                <TableHead className="text-right font-semibold text-muted-foreground">المحافظة</TableHead>
               </>
             )}
             <TableHead className="w-14 text-right font-semibold text-muted-foreground">إجراءات</TableHead>
@@ -58,11 +77,7 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
               <TableCell className="text-right">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-medium text-foreground">{displayOrDash(row.name)}</p>
-                  {row.isAnonymous ? (
-                    <Badge variant="secondary" title="اختار المتبرع عدم إظهار هويته علنًا.">
-                      مجهول علنًا
-                    </Badge>
-                  ) : null}
+                  {row.isAnonymous ? <Badge variant="secondary" title="اختار المتبرع عدم إظهار هويته علنًا.">مجهول علنًا</Badge> : null}
                 </div>
                 <p className="text-xs text-muted-foreground" dir="ltr">
                   {isApplicants ? displayOrDash(row.phone) : displayOrDash(row.email)}
@@ -71,21 +86,37 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
               {isApplicants ? (
                 <>
                   <TableCell className="text-right text-sm">{displayOrDash(row.campaignTitle)}</TableCell>
-                  <TableCell className="text-right text-sm">
-                    <Badge variant="outline">{row.targetType === "post" ? "بوست تطوع" : "حملة"}</Badge>
-                  </TableCell>
+                  <TableCell className="text-right text-sm"><Badge variant="outline">{row.targetType === "post" ? "بوست تطوع" : "حملة"}</Badge></TableCell>
                   <TableCell className="text-right text-sm">{row.applicantStatus ? applicantStatusLabels[row.applicantStatus] ?? row.applicantStatus : "—"}</TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">{formatUtcDateOrDash(row.appliedAt)}</TableCell>
                 </>
               ) : (
                 <>
+                  <TableCell className="text-right text-sm">
+                    <div className="space-y-1">
+                      <p>{displayOrDash(row.campaignTitle)}</p>
+                      <Badge variant="outline">{row.targetType === "campaign" ? "حملة" : "سجل يدوي"}</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium">{amountLabel(row)}</TableCell>
+                  <TableCell className="text-right text-sm">
+                    <Badge variant={row.status === "completed" ? "default" : row.status === "cancelled" ? "destructive" : "outline"}>
+                      {row.status ? donorStatusLabels[row.status] ?? row.status : "—"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right text-sm" dir="ltr">{displayOrDash(row.phone)}</TableCell>
-                  <TableCell className="text-right text-sm">{displayOrDash(row.city)}</TableCell>
                 </>
               )}
               <TableCell className="text-right">
                 <TableRowActions
                   actions={[
+                    {
+                      id: "details",
+                      label: "عرض التفاصيل",
+                      icon: <AppIcons.eye className="size-4" />,
+                      onSelect: () => onViewRow?.(row),
+                      hidden: !onViewRow,
+                    },
                     {
                       id: "edit",
                       label: "تعديل",

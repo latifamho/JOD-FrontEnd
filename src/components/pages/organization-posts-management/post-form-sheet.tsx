@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
-import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
+import { isCampaignRelatedPostType, isCampaignRequiredPostType } from "@/components/pages/organization-posts-management/helpers";
 import {
   organizationPostFormTypeOptions,
   organizationPostStatusLabels,
@@ -36,7 +36,7 @@ const postFormSchema = z
     title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
     summary: z.string().min(1, "محتوى البوست مطلوب").max(10000, "محتوى البوست يجب ألا يتجاوز 10000 حرف").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
     categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
-    type: z.enum(["general", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
+    type: z.enum(["general", "campaign_teaser", "campaign_update", "campaign_summary", "donation_campaign", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
     status: z.enum(["draft", "published"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
@@ -49,7 +49,7 @@ const postFormSchema = z
     requiredCapabilityIds: z.array(z.string()).max(20),
   })
   .superRefine((values, context) => {
-    if (isCampaignRelatedPostType(values.type) && values.campaignTitle.trim().length === 0) {
+    if (isCampaignRequiredPostType(values.type) && values.campaignTitle.trim().length === 0) {
       context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة لهذا النوع من البوستات" });
     }
     if (values.type === "help_request" && values.requiredCapabilityIds.length === 0) {

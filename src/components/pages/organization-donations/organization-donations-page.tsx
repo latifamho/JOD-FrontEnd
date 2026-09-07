@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/tooltip'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constant/pagination'
 import {
+  useAcceptDonation,
   useAgreeDonation,
   useCancelDonation,
   useCompleteDonation,
@@ -58,7 +59,8 @@ import { formatUtcDateTimeOrDash } from '@/lib/date'
 import { useAuth } from '@/providers/AuthProvider'
 
 const statusLabels: Record<OrgDonationStatus, string> = {
-  pending: 'بانتظار التواصل',
+  pending: 'بانتظار موافقة المنظمة',
+  accepted: 'تم قبول الطلب',
   contacting: 'جاري التواصل',
   agreed: 'تم الاتفاق',
   completed: 'مكتمل',
@@ -110,6 +112,7 @@ export function OrganizationDonationsPage() {
   const [campaignId, setCampaignId] = React.useState('')
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [cancelReason, setCancelReason] = React.useState('')
+  const [confirmedAmount, setConfirmedAmount] = React.useState('')
   const [completeDialogOpen, setCompleteDialogOpen] = React.useState(false)
 
   const list = useOrgDonations(
@@ -122,20 +125,29 @@ export function OrganizationDonationsPage() {
     canView,
   )
   const detail = useOrgDonation(selectedId, canView)
+  const accept = useAcceptDonation()
   const contact = useStartDonationContact()
   const agree = useAgreeDonation()
   const complete = useCompleteDonation()
   const cancel = useCancelDonation()
   const donation = detail.data
   const busy =
-    contact.isPending || agree.isPending || complete.isPending || cancel.isPending
+    accept.isPending || contact.isPending || agree.isPending || complete.isPending || cancel.isPending
   const totalPages = Math.max(1, list.data?.meta.lastPage ?? 1)
   const currentPage = Math.min(Math.max(1, list.data?.meta.currentPage ?? page), totalPages)
   const paginationRange = createPaginationRange(currentPage, totalPages)
+  const confirmedAmountNumber = Number(confirmedAmount)
+  const canConfirmAmount = Number.isFinite(confirmedAmountNumber) && confirmedAmountNumber > 0
+
+  React.useEffect(() => {
+    if (!donation) return
+    setConfirmedAmount(String(donation.confirmedAmount ?? donation.requestedAmount ?? donation.amount ?? ''))
+  }, [donation?.id, donation?.confirmedAmount, donation?.requestedAmount, donation?.amount])
 
   const closeDetails = () => {
     setSelectedId(null)
     setCancelReason('')
+    setConfirmedAmount('')
     setCompleteDialogOpen(false)
   }
 
@@ -280,7 +292,8 @@ export function OrganizationDonationsPage() {
                 <Field label="الهاتف" value={donation.phone} />
                 <Field label="البريد" value={donation.email} />
                 <Field label="المدينة" value={donation.city} />
-                <Field label="المبلغ" value={Number(donation.amount).toLocaleString('ar-SY')} />
+                <Field label="المبلغ المطلوب" value={Number(donation.requestedAmount ?? donation.amount).toLocaleString('ar-SY')} />
+                <Field label="المبلغ المستلم فعلياً" value={donation.confirmedAmount == null ? '-' : Number(donation.confirmedAmount).toLocaleString('ar-SY')} />
                 <Field label="طريقة التواصل" value={donation.contactMethod} />
                 <Field label="طريقة الدفع" value={donation.paymentMethod} />
               </div>
@@ -307,6 +320,7 @@ export function OrganizationDonationsPage() {
 
               <div className="space-y-2 text-xs text-muted-foreground">
                 <p>إنشاء: {formatUtcDateTimeOrDash(donation.createdAt)}</p>
+                <p>قبول المنظمة: {formatUtcDateTimeOrDash(donation.acceptedAt)}</p>
                 <p>بدء التواصل: {formatUtcDateTimeOrDash(donation.contactedAt)}</p>
                 <p>الاتفاق: {formatUtcDateTimeOrDash(donation.agreedAt)}</p>
                 <p>الاكتمال: {formatUtcDateTimeOrDash(donation.completedAt)}</p>
@@ -316,6 +330,9 @@ export function OrganizationDonationsPage() {
               {canUpdate ? (
                 <div className="flex flex-wrap gap-2">
                   {donation.status === 'pending' ? (
+                    <Button disabled={busy} onClick={() => accept.mutate(donation.id)}>قبول طلب التبرع</Button>
+                  ) : null}
+                  {donation.status === 'accepted' ? (
                     <Button disabled={busy} onClick={() => contact.mutate(donation.id)}>بدء التواصل</Button>
                   ) : null}
                   {donation.status === 'contacting' ? (
@@ -327,7 +344,7 @@ export function OrganizationDonationsPage() {
                 </div>
               ) : null}
 
-              {canUpdate && ['pending', 'contacting', 'agreed'].includes(donation.status) ? (
+              {canUpdate && ['pending', 'accepted', 'contacting', 'agreed'].includes(donation.status) ? (
                 <div className="space-y-2 border-t pt-4">
                   <Textarea
                     value={cancelReason}
@@ -368,9 +385,13 @@ export function OrganizationDonationsPage() {
           <DialogHeader>
             <DialogTitle>تأكيد استلام التبرع</DialogTitle>
             <DialogDescription>
-              سيتم احتساب المبلغ ضمن إجمالي الحملة بعد نجاح هذا الإجراء فقط. هل تريد المتابعة؟
+              أدخل المبلغ الذي استلمته المنظمة فعلياً. لن يُحتسب ضمن إجمالي الحملة قبل نجاح هذا الإجراء.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="confirmed-donation-amount">المبلغ المستلم فعلياً</label>
+            <Input id="confirmed-donation-amount" dir="ltr" inputMode="decimal" value={confirmedAmount} onChange={(event) => setConfirmedAmount(event.target.value)} placeholder="0" />
+          </div>
           <DialogFooter className="sm:justify-start">
             <Button
               type="button"
@@ -382,10 +403,10 @@ export function OrganizationDonationsPage() {
             </Button>
             <Button
               type="button"
-              disabled={!donation || donation.status !== 'agreed' || complete.isPending}
+              disabled={!donation || donation.status !== 'agreed' || complete.isPending || !canConfirmAmount}
               onClick={() => {
-                if (!donation || donation.status !== 'agreed') return
-                complete.mutate(donation.id, { onSuccess: () => setCompleteDialogOpen(false) })
+                if (!donation || donation.status !== 'agreed' || !canConfirmAmount) return
+                complete.mutate({ id: donation.id, amount: confirmedAmountNumber }, { onSuccess: () => setCompleteDialogOpen(false) })
               }}
             >
               تأكيد الاستلام

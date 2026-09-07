@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
-import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
+import { isCampaignRelatedPostType, isCampaignRequiredPostType } from "@/components/pages/organization-posts-management/helpers";
 import { organizationPostFormTypeOptions, organizationPostTypeLabels, type OrganizationPostItem } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
@@ -33,7 +33,7 @@ const schema = z.object({
   title: z.string().trim().min(1, "عنوان المنشور مطلوب"),
   summary: z.string().trim().min(1, "محتوى المنشور مطلوب"),
   categoryId: z.string().min(1, "تصنيف المنشور مطلوب"),
-  type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
+  type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "donation_campaign", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
   location: z.string().refine((value) => syrianGovernorateOptions.some((option) => option.value === value), "اختر محافظة سورية صحيحة"),
   campaignTitle: z.string(),
   urgency: z.enum(["normal", "important", "urgent"]),
@@ -41,7 +41,7 @@ const schema = z.object({
   expiresAt: z.string(),
   requiredCapabilityIds: z.array(z.string()).max(20),
 }).superRefine((values, context) => {
-  if (isCampaignRelatedPostType(values.type) && !values.campaignTitle.trim()) {
+  if (isCampaignRequiredPostType(values.type) && !values.campaignTitle.trim()) {
     context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة" });
   }
   if (values.type === "help_request" && values.urgency === "urgent" && values.urgencyReason.trim().length < 8) {
