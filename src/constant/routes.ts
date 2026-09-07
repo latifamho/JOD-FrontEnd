@@ -38,7 +38,6 @@ export const routePaths = {
     contentNew: "/dashboard/admin/content/new",
     contentEdit: (id = ":id") => `/dashboard/admin/content/${id}/edit`,
     contentEditTemplate: "/dashboard/admin/content/:id/edit",
-    analytics: "/dashboard/admin/analytics",
     helpMatching: "/dashboard/admin/help-matching",
   },
   organizationOwnerScope: {
@@ -309,12 +308,6 @@ const adminLinks: AppNavLink[] = [
     label: "المحتوى والمدونة",
     href: routePaths.adminScope.content,
     icon: "content",
-    section: "الإدارة",
-  },
-  {
-    label: "التحليلات",
-    href: routePaths.adminScope.analytics,
-    icon: "analytics",
     section: "الإدارة",
   },
   {
@@ -708,7 +701,6 @@ const segmentLabels: Record<string, string> = {
   content: "المحتوى",
   new: "جديد",
   edit: "تعديل",
-  analytics: "الإحصائيات",
   settings: "الإعدادات",
   donors: "المتبرعون",
   donations: "طلبات التبرع",
