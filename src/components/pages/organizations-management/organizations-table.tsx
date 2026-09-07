@@ -107,9 +107,19 @@ export function OrganizationsTable({
                   </TableCell>
 
                   <TableCell>
-                    <p className="font-semibold text-foreground">
-                      {displayOrDash(organization.name)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      {organization.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={organization.image} alt={`شعار ${organization.name}`} className="size-10 shrink-0 rounded-xl border border-border bg-muted object-cover" />
+                      ) : (
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-xs font-semibold text-muted-foreground">
+                          {(organization.name || "ج").trim().charAt(0) || "ج"}
+                        </div>
+                      )}
+                      <p className="font-semibold text-foreground">
+                        {displayOrDash(organization.name)}
+                      </p>
+                    </div>
                   </TableCell>
 
                   <TableCell>

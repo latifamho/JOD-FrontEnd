@@ -66,6 +66,7 @@ export function RegisterForm() {
     else if (!SYRIAN_MOBILE_PATTERN.test(values.companyPhone)) next.companyPhone = "أدخل رقم موبايل سوري صحيحاً بعد +963 بصيغة 9XXXXXXXX.";
     if (!values.location.trim()) next.location = "الموقع مطلوب.";
     if (values.website && !/^https?:\/\//i.test(values.website)) next.website = "ابدأ رابط الموقع بـ http:// أو https://";
+    if (!logoQueue.items[0]?.file) next.logo = "شعار المنظمة مطلوب ويجب رفعه قبل إرسال الطلب.";
     if (!acceptTerms || !confirmAccuracy) next.root = "يجب الموافقة على الشروط والإقرار بصحة البيانات قبل الإرسال.";
     return next;
   }
@@ -89,6 +90,13 @@ export function RegisterForm() {
       return;
     }
 
+    const logoFile = logoQueue.items[0]?.file;
+    if (!logoFile) {
+      setErrors({ logo: "شعار المنظمة مطلوب ويجب رفعه قبل إرسال الطلب." });
+      setPhase("phase-2");
+      return;
+    }
+
     setErrors({});
     registerMutation.mutate(
       {
@@ -105,7 +113,7 @@ export function RegisterForm() {
           password: values.password,
           password_confirmation: values.passwordConfirmation,
         },
-        logoFile: logoQueue.items[0]?.file,
+        logoFile,
       },
       {
         onError: (error) => {
@@ -147,7 +155,8 @@ export function RegisterForm() {
                 acceptTerms={acceptTerms}
                 confirmAccuracy={confirmAccuracy}
                 logoItems={logoQueue.items}
-                onLogoFilesSelected={(files) => { logoQueue.reset(); logoQueue.addFiles(files.slice(0, 1)); }}
+                logoError={errors.logo}
+                onLogoFilesSelected={(files) => { logoQueue.reset(); logoQueue.addFiles(files.slice(0, 1)); setErrors((current) => ({ ...current, logo: undefined, root: undefined })); }}
                 onRemoveLogo={logoQueue.removeItem}
                 onAcceptTermsChange={(checked) => { setAcceptTerms(checked); setErrors((current) => ({ ...current, root: undefined })); }}
                 onConfirmAccuracyChange={(checked) => { setConfirmAccuracy(checked); setErrors((current) => ({ ...current, root: undefined })); }}

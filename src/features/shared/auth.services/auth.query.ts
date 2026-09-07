@@ -14,7 +14,6 @@ import {
   setAuthTokens,
 } from "@/lib/cookies";
 import { toast } from "@/lib/toast";
-import { mediaServices } from "@/features/shared/media/media.services";
 import { useAuth } from "@/providers/AuthProvider";
 import { authServices } from "./auth.service";
 import type {
@@ -92,22 +91,9 @@ export function useRegisterOrganization() {
   const completeSession = useCompleteAuthSession();
 
   return useMutation({
-    mutationFn: async ({ data, logoFile }: { data: CompanyRegisterRequest; logoFile?: File }) => {
-      const response = await authServices.registerOrganization(data);
+    mutationFn: async ({ data, logoFile }: { data: CompanyRegisterRequest; logoFile: File }) => {
+      const response = await authServices.registerOrganization(data, logoFile);
       setAuthTokens(response.data);
-
-      const organizationId = response.data.user.organizationId;
-      if (logoFile && organizationId) {
-        try {
-          await mediaServices.upload(
-            { model: "organization", modelId: organizationId, prop: "logo" },
-            logoFile,
-          );
-        } catch {
-          toast.error(`تم إنشاء حساب المنظمة، لكن تعذر رفع الشعار ${logoFile.name}. يمكنك رفعه لاحقاً من الإعدادات.`);
-        }
-      }
-
       return completeAuthentication(response, "organization", true);
     },
     onSuccess: ({ context }) => {

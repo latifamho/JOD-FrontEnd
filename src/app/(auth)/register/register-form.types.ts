@@ -17,7 +17,7 @@ export type RegisterValues = {
 };
 
 export type RegisterFieldName = keyof RegisterValues;
-export type RegisterFieldErrors = Partial<Record<RegisterFieldName | "root", string>>;
+export type RegisterFieldErrors = Partial<Record<RegisterFieldName | "logo" | "root", string>>;
 
 export type RegisterInputChangeEvent = ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 

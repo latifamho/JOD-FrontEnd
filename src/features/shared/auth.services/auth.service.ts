@@ -22,10 +22,17 @@ export const authServices = {
 
   async registerOrganization(
     data: CompanyRegisterRequest,
+    logoFile: File,
   ): Promise<CompanyRegisterResponse> {
+    const form = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) form.append(key, String(value));
+    });
+    form.append("logo", logoFile, logoFile.name);
+
     const response = await api.post<CompanyRegisterResponse>(
       END_POINTS.COMPANY_AUTH.REGISTER,
-      data,
+      form,
       {
         skipSuccessToast: true,
         skipErrorToast: true,
