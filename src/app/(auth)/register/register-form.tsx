@@ -142,7 +142,7 @@ export function RegisterForm() {
           else { setErrors((current) => ({ ...current, root: undefined })); setPhase("phase-1"); }
         }} className="gap-4 md:flex md:min-h-0 md:flex-1 md:flex-col">
           <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-muted/60 p-2">
-            <TabsTrigger value="phase-1" className="rounded-lg py-2 text-xs font-medium">1. حساب المالك</TabsTrigger>
+            <TabsTrigger value="phase-1" className="rounded-lg py-2 text-xs font-medium">1. حساب المؤسس</TabsTrigger>
             <TabsTrigger value="phase-2" className="rounded-lg py-2 text-xs font-medium">2. بيانات المنظمة</TabsTrigger>
           </TabsList>
           <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:px-1">

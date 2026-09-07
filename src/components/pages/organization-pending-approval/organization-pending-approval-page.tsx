@@ -14,7 +14,7 @@ import { getAuthenticatedLanding, isOrganizationApprovalPending, PENDING_APPROVA
 import { useAuth } from "@/providers/AuthProvider";
 
 const reviewSteps = [
-  { icon: CheckCircle2, title: "تم استلام الطلب", description: "وصلت بيانات المنظمة وحساب المالك إلى منصة جود بنجاح.", done: true },
+  { icon: CheckCircle2, title: "تم استلام الطلب", description: "وصلت بيانات المنظمة وحساب المؤسس إلى منصة جود بنجاح.", done: true },
   { icon: FileSearch, title: "مراجعة البيانات", description: "يقوم فريقنا الآن بمطابقة البيانات الرسمية والتحقق منها.", done: false },
   { icon: Sparkles, title: "تفعيل مساحة العمل", description: "بعد الموافقة ستصبح أدوات إدارة المنظمة متاحة تلقائياً.", done: false },
 ];

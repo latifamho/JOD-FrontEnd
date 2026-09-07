@@ -25,6 +25,7 @@ import { AppIcons } from "@/constant/icons";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constant/pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { useAuth } from "@/providers/AuthProvider";
+import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
 import type { DonorEntryItem } from "@/components/pages/donors-management/static-data";
 import {
   useOrgDonors,
@@ -62,6 +63,12 @@ export function DonorsManagementPage({
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
   const [apiTotal, setApiTotal] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<DonorSortOption>("date_newest");
+  const [campaignFilter, setCampaignFilter] = React.useState("all");
+  const [donorStatusFilter, setDonorStatusFilter] = React.useState("all");
+  const [applicantStatusFilter, setApplicantStatusFilter] = React.useState("all");
+  const [targetTypeFilter, setTargetTypeFilter] = React.useState("all");
+  const campaignsBrief = useOrgCampaignsBrief(canView);
+  const campaignOptions = campaignsBrief.data?.data ?? [];
 
   const [detailsOpen, setDetailsOpen] = useQueryDisclosure("donor-details", {
     permission: `${permissionPrefix}.view`,
@@ -91,18 +98,29 @@ export function DonorsManagementPage({
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, sortBy, view, setCurrentPage]);
+  }, [pageSize, sortBy, view, campaignFilter, donorStatusFilter, applicantStatusFilter, targetTypeFilter, setCurrentPage]);
 
   const donorsQuery = useOrgDonors({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
+    filter: {
+      campaignId: campaignFilter !== "all" ? campaignFilter : undefined,
+      status: donorStatusFilter !== "all"
+        ? donorStatusFilter as "pending" | "contacting" | "agreed" | "completed" | "cancelled"
+        : undefined,
+    },
   }, view === "donors" && canView);
 
   const applicantsQuery = useOrgApplicants({
     page: pagination.currentPage,
     perPage: pageSize,
     sort: sortToApiSort[sortBy],
+    filter: {
+      campaignId: targetTypeFilter !== "post" && campaignFilter !== "all" ? campaignFilter : undefined,
+      targetType: targetTypeFilter !== "all" ? targetTypeFilter as "campaign" | "post" : undefined,
+      applicantStatus: applicantStatusFilter !== "all" ? applicantStatusFilter : undefined,
+    },
   }, view === "applicants" && canView);
 
   const activeQuery = view === "donors" ? donorsQuery : applicantsQuery;
@@ -273,7 +291,65 @@ export function DonorsManagementPage({
         ) : null}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Select dir="rtl" value={campaignFilter} onValueChange={setCampaignFilter}>
+          <SelectTrigger className="w-52 text-right text-xs">
+            <SelectValue placeholder="كل الحملات" />
+          </SelectTrigger>
+          <SelectContent align="start" position="popper" className="text-right">
+            <SelectItem value="all" className="text-right text-xs">كل الحملات</SelectItem>
+            {campaignOptions.map((campaign) => (
+              <SelectItem key={campaign.id} value={campaign.id} className="text-right text-xs">
+                {campaign.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {view === "donors" ? (
+          <Select dir="rtl" value={donorStatusFilter} onValueChange={setDonorStatusFilter}>
+            <SelectTrigger className="w-48 text-right text-xs"><SelectValue placeholder="حالة التبرع" /></SelectTrigger>
+            <SelectContent align="start" position="popper" className="text-right">
+              <SelectItem value="all" className="text-right text-xs">كل الحالات</SelectItem>
+              <SelectItem value="pending" className="text-right text-xs">بانتظار التواصل</SelectItem>
+              <SelectItem value="contacting" className="text-right text-xs">جاري التواصل</SelectItem>
+              <SelectItem value="agreed" className="text-right text-xs">تم الاتفاق</SelectItem>
+              <SelectItem value="completed" className="text-right text-xs">تم التبرع</SelectItem>
+              <SelectItem value="cancelled" className="text-right text-xs">ملغي</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <>
+            <Select
+              dir="rtl"
+              value={targetTypeFilter}
+              onValueChange={(value) => {
+                setTargetTypeFilter(value);
+                if (value === "post") setCampaignFilter("all");
+              }}
+            >
+              <SelectTrigger className="w-48 text-right text-xs"><SelectValue placeholder="مصدر التقديم" /></SelectTrigger>
+              <SelectContent align="start" position="popper" className="text-right">
+                <SelectItem value="all" className="text-right text-xs">كل مصادر التقديم</SelectItem>
+                <SelectItem value="campaign" className="text-right text-xs">تقديم على حملة</SelectItem>
+                <SelectItem value="post" className="text-right text-xs">تقديم على بوست تطوع</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select dir="rtl" value={applicantStatusFilter} onValueChange={setApplicantStatusFilter}>
+              <SelectTrigger className="w-48 text-right text-xs"><SelectValue placeholder="حالة المتقدم" /></SelectTrigger>
+              <SelectContent align="start" position="popper" className="text-right">
+                <SelectItem value="all" className="text-right text-xs">كل الحالات</SelectItem>
+                <SelectItem value="pending" className="text-right text-xs">قيد الانتظار</SelectItem>
+                <SelectItem value="under_review" className="text-right text-xs">قيد المراجعة</SelectItem>
+                <SelectItem value="accepted" className="text-right text-xs">مقبول</SelectItem>
+                <SelectItem value="approved" className="text-right text-xs">مقبول</SelectItem>
+                <SelectItem value="rejected" className="text-right text-xs">مرفوض</SelectItem>
+                <SelectItem value="withdrawn" className="text-right text-xs">مسحوب</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
+
         <Select
           dir="rtl"
           value={sortBy}

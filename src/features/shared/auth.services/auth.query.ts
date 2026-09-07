@@ -50,7 +50,7 @@ async function completeAuthentication(
     }
 
     if (ownerOnly && role !== "org_owner") {
-      throw new AuthFlowError("تعذّر تهيئة حساب مالك المنظمة بعد التسجيل.");
+      throw new AuthFlowError("تعذّر تهيئة حساب مؤسس المنظمة بعد التسجيل.");
     }
 
     return { context, role };

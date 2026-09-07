@@ -4,8 +4,15 @@ export type DonorEntryItem = {
   email?: string | null;
   phone: string;
   city?: string | null;
+  campaignId?: string | null;
+  postId?: string | null;
+  targetType?: "campaign" | "post" | "manual" | null;
+  targetId?: string | null;
+  source?: string | null;
   campaignTitle?: string | null;
+  status?: string | null;
   applicantStatus?: string | null;
+  requestType?: string | null;
   appliedAt?: string | null;
   /** Donors only. Publicly anonymous — staff keep the contact details but must not publish the identity. */
   isAnonymous?: boolean;

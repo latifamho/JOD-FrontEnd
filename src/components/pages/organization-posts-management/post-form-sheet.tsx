@@ -34,7 +34,7 @@ import { normalizeApiError } from "@/lib/api-errors";
 const postFormSchema = z
   .object({
     title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
-    summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
+    summary: z.string().min(1, "محتوى البوست مطلوب").max(10000, "محتوى البوست يجب ألا يتجاوز 10000 حرف").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
     categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
     type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
     status: z.enum(["draft", "published"]),
@@ -51,6 +51,9 @@ const postFormSchema = z
   .superRefine((values, context) => {
     if (isCampaignRelatedPostType(values.type) && values.campaignTitle.trim().length === 0) {
       context.addIssue({ code: "custom", path: ["campaignTitle"], message: "الحملة المرتبطة مطلوبة لهذا النوع من البوستات" });
+    }
+    if (values.type === "help_request" && values.requiredCapabilityIds.length === 0) {
+      context.addIssue({ code: "custom", path: ["requiredCapabilityIds"], message: "نوع المساعدة المطلوبة مطلوب" });
     }
     if (values.type === "help_request" && values.urgency === "urgent" && values.urgencyReason.trim().length < 8) {
       context.addIssue({ code: "custom", path: ["urgencyReason"], message: "سبب الاستعجال مطلوب للحالة العاجلة وبحد أدنى 8 أحرف" });
@@ -328,6 +331,7 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                         })}
                       </div>
                     )} />
+                    {errors.requiredCapabilityIds ? <p className="text-xs text-destructive">{errors.requiredCapabilityIds.message}</p> : null}
                     {capabilitiesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل أنواع المساعدة.</p> : null}
                   </div>
                 </div>

@@ -26,7 +26,7 @@ export const dashboardSettingsDefaultsByScope: Record<
     iban: "SA03 8000 0000 6080 1016 7519",
   },
   "org-owner": {
-    accountName: "مالك المنظمة",
+    accountName: "مؤسس المنظمة",
     accountEmail: "owner@org.jod.sa",
     accountPhone: "+966500000010",
     recoveryEmail: "owner.recovery@org.jod.sa",

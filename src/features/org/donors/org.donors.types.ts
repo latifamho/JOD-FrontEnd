@@ -2,7 +2,10 @@ import type { ApiListResponse, ApiMutationResponse, ApiSingleResponse } from '@/
 import type { DonorEntryItem } from '@/components/pages/donors-management/static-data'
 
 export interface OrgDonorsFilter {
+  campaignId?: string
   city?: string
+  status?: 'pending' | 'contacting' | 'agreed' | 'completed' | 'cancelled'
+  sourceType?: 'campaign' | 'manual'
   search?: string
 }
 
@@ -15,6 +18,8 @@ export interface OrgDonorsParams {
 
 export interface OrgApplicantsFilter {
   campaignId?: string
+  postId?: string
+  targetType?: 'campaign' | 'post'
   applicantStatus?: string
   search?: string
 }

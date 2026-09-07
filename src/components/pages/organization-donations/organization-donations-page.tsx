@@ -145,7 +145,7 @@ export function OrganizationDonationsPage() {
         <EmptyState
           icon="ShieldOff"
           title="لا تملك صلاحية عرض طلبات التبرع"
-          description="اطلب من مالك المنظمة منحك صلاحية عرض المتبرعين وطلبات التبرع."
+          description="اطلب من مؤسس المنظمة منحك صلاحية عرض المتبرعين وطلبات التبرع."
         />
       </section>
     )

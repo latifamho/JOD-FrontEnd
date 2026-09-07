@@ -31,6 +31,7 @@ import { organizationCampaignStatusLabels } from "@/components/pages/organizatio
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgDonations } from "@/features/org/donations/org.donations.query";
+import { useOrgApplicants } from "@/features/org/donors/org.donors.query";
 import { useAuth } from "@/providers/AuthProvider";
 
 type OrganizationCampaignDetailsPageProps = {
@@ -47,22 +48,45 @@ export function OrganizationCampaignDetailsPage({
   const campaign = campaignQuery.data?.data;
   const categoriesBrief = useOrgCategoriesBrief();
   const canViewDonors = can("org.donors.view");
+  const canViewApplicants = can("org.applicants.view");
   const [donationsPage, setDonationsPage] = React.useState(1);
+  const [applicantsPage, setApplicantsPage] = React.useState(1);
   const donationsQuery = useOrgDonations(
     {
       page: donationsPage,
       perPage: 10,
-      status: "completed",
       campaignId,
     },
     Boolean(campaign) && canViewDonors,
   );
-  const completedDonations = donationsQuery.data?.data ?? [];
+  const applicantsQuery = useOrgApplicants(
+    {
+      page: applicantsPage,
+      perPage: 10,
+      sort: "-donatedAt",
+      filter: { campaignId },
+    },
+    Boolean(campaign) && canViewApplicants,
+  );
+  const campaignDonations = donationsQuery.data?.data ?? [];
+  const campaignApplicants = applicantsQuery.data?.data ?? [];
   const donationsLastPage = Math.max(1, donationsQuery.data?.meta.lastPage ?? 1);
   const donationsCurrentPage = Math.min(
     Math.max(1, donationsQuery.data?.meta.currentPage ?? donationsPage),
     donationsLastPage,
   );
+  const applicantsLastPage = Math.max(1, applicantsQuery.data?.meta.lastPage ?? 1);
+  const applicantsCurrentPage = Math.min(
+    Math.max(1, applicantsQuery.data?.meta.currentPage ?? applicantsPage),
+    applicantsLastPage,
+  );
+  const donationStatusLabels: Record<string, string> = {
+    pending: "بانتظار التواصل",
+    contacting: "جاري التواصل",
+    agreed: "تم الاتفاق",
+    completed: "تم التبرع",
+    cancelled: "ملغي",
+  };
 
   if (campaignQuery.isLoading) {
     return <DetailsLoadingSkeleton className="rounded-xl border border-border bg-card" />;
@@ -230,9 +254,9 @@ export function OrganizationCampaignDetailsPage({
         <div className="rounded-md border border-border bg-background p-4 shadow-xs">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">المتبرعون بالحملة</h3>
+              <h3 className="text-sm font-semibold text-foreground">طلبات التبرع بالحملة</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                تظهر هنا التبرعات المكتملة والمحتسبة ضمن المبلغ المحصّل للحملة.
+                تظهر هنا طلبات التبرع منذ إرسالها وحتى التواصل والاتفاق وتأكيد الاستلام.
               </p>
             </div>
             <Badge variant="outline">
@@ -251,7 +275,7 @@ export function OrganizationCampaignDetailsPage({
             <div className="mt-4">
               <ListLoadingSkeleton />
             </div>
-          ) : completedDonations.length > 0 ? (
+          ) : campaignDonations.length > 0 ? (
             <>
               <div className="mt-4 overflow-auto rounded-md border border-border">
                 <Table className="min-w-[640px] bg-background">
@@ -260,11 +284,12 @@ export function OrganizationCampaignDetailsPage({
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>المتبرع</TableHead>
                       <TableHead>مبلغ التبرع</TableHead>
-                      <TableHead>تاريخ التبرع</TableHead>
+                      <TableHead>الحالة</TableHead>
+                      <TableHead>تاريخ الطلب</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {completedDonations.map((donation, index) => (
+                    {campaignDonations.map((donation, index) => (
                       <TableRow key={donation.id}>
                         <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
                         <TableCell>
@@ -279,7 +304,10 @@ export function OrganizationCampaignDetailsPage({
                           {formatAmount(Number(donation.amount))} ر.س
                         </TableCell>
                         <TableCell>
-                          {formatUtcDateTimeOrDash(donation.completedAt ?? donation.createdAt)}
+                          <Badge variant="outline">{donationStatusLabels[donation.status] ?? donation.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {formatUtcDateTimeOrDash(donation.createdAt)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -317,10 +345,77 @@ export function OrganizationCampaignDetailsPage({
             </>
           ) : (
             <div className="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center">
-              <p className="text-sm font-medium text-foreground">لا توجد تبرعات مكتملة بعد</p>
+              <p className="text-sm font-medium text-foreground">لا توجد طلبات تبرع بعد</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                ستظهر بيانات المتبرعين هنا بعد تأكيد استلام التبرعات.
+                ستظهر الطلبات هنا مباشرة عند تقديم المستخدم طلب تبرع لهذه الحملة.
               </p>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {canViewApplicants ? (
+        <div className="rounded-md border border-border bg-background p-4 shadow-xs">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">المتقدمون على الحملة</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                طلبات التطوع المرتبطة بهذه الحملة فقط. التقديمات على بوستات تطوع مستقلة تظهر في صفحة المتقدمين.
+              </p>
+            </div>
+            <Badge variant="outline">{campaign.applicantsCount} متقدم</Badge>
+          </div>
+
+          {applicantsQuery.isError ? (
+            <div className="mt-4 flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <p className="flex-1 text-sm text-destructive">تعذّر تحميل المتقدمين على الحملة.</p>
+              <Button type="button" size="sm" variant="outline" onClick={() => applicantsQuery.refetch()}>
+                إعادة المحاولة
+              </Button>
+            </div>
+          ) : applicantsQuery.isLoading ? (
+            <div className="mt-4"><ListLoadingSkeleton /></div>
+          ) : campaignApplicants.length > 0 ? (
+            <>
+              <div className="mt-4 overflow-auto rounded-md border border-border">
+                <Table className="min-w-[640px] bg-background">
+                  <TableHeader className="bg-muted/35">
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>المتقدم</TableHead>
+                      <TableHead>الحالة</TableHead>
+                      <TableHead>تاريخ التقديم</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {campaignApplicants.map((applicant, index) => (
+                      <TableRow key={applicant.id}>
+                        <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell>
+                          <p className="font-medium text-foreground">{applicant.name}</p>
+                          <p className="text-xs text-muted-foreground" dir="ltr">{displayOrDash(applicant.phone)}</p>
+                        </TableCell>
+                        <TableCell><Badge variant="outline">{displayOrDash(applicant.applicantStatus)}</Badge></TableCell>
+                        <TableCell>{formatUtcDateTimeOrDash(applicant.appliedAt)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {applicantsLastPage > 1 ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">الصفحة {applicantsCurrentPage} من {applicantsLastPage}</p>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" size="sm" variant="outline" disabled={applicantsCurrentPage <= 1 || applicantsQuery.isFetching} onClick={() => setApplicantsPage((page) => Math.max(1, page - 1))}>السابق</Button>
+                    <Button type="button" size="sm" variant="outline" disabled={applicantsCurrentPage >= applicantsLastPage || applicantsQuery.isFetching} onClick={() => setApplicantsPage((page) => Math.min(applicantsLastPage, page + 1))}>التالي</Button>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm font-medium text-foreground">لا يوجد متقدمون على هذه الحملة بعد</p>
             </div>
           )}
         </div>

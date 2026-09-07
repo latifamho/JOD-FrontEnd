@@ -22,7 +22,7 @@ const FEATURES = [
   {
     icon: LayoutDashboard,
     title: "لوحات تحكم مخصصة",
-    description: "لوحة لكل دور: الإدارة، مالك المنظمة، وفريق العمل — بصلاحيات دقيقة.",
+    description: "لوحة لكل دور: الإدارة، مؤسس المنظمة، وفريق العمل — بصلاحيات دقيقة.",
     span: "lg:col-span-1",
     featured: false,
   },

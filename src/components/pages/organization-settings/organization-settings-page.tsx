@@ -122,7 +122,7 @@ export function OrganizationSettingsPage() {
         <h3 className="text-sm font-semibold">بيانات المنظمة</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="اسم المنظمة"><Input value={profileValues.companyName} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('companyName', e.target.value)} /></Field>
-          <Field label="اسم المالك"><Input value={profileValues.ownerName} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('ownerName', e.target.value)} /></Field>
+          <Field label="اسم المؤسس"><Input value={profileValues.ownerName} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('ownerName', e.target.value)} /></Field>
           <Field label="رقم المنظمة"><Input value={profileValues.organizationNumber} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('organizationNumber', e.target.value)} /></Field>
           <Field label="رقم السجل"><Input value={profileValues.registrationNumber} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('registrationNumber', e.target.value)} /></Field>
           <Field label="رقم الحساب البنكي"><Input dir="ltr" value={profileValues.bankAccountNumber} disabled={!canUpdate || formBusy} onChange={(e) => changeProfile('bankAccountNumber', e.target.value)} /></Field>

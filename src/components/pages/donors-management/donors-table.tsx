@@ -37,7 +37,8 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
             <TableHead className="text-right font-semibold text-muted-foreground">{isApplicants ? "المتقدم" : "المتبرع"}</TableHead>
             {isApplicants ? (
               <>
-                <TableHead className="text-right font-semibold text-muted-foreground">اسم الحملة</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">الجهة / المحتوى</TableHead>
+                <TableHead className="text-right font-semibold text-muted-foreground">نوع التقديم</TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">الحالة</TableHead>
                 <TableHead className="text-right font-semibold text-muted-foreground">تاريخ التقديم</TableHead>
               </>
@@ -70,6 +71,9 @@ export function DonorsTable({ rows, view = "donors", onEditRow, onDeleteRow }: D
               {isApplicants ? (
                 <>
                   <TableCell className="text-right text-sm">{displayOrDash(row.campaignTitle)}</TableCell>
+                  <TableCell className="text-right text-sm">
+                    <Badge variant="outline">{row.targetType === "post" ? "بوست تطوع" : "حملة"}</Badge>
+                  </TableCell>
                   <TableCell className="text-right text-sm">{row.applicantStatus ? applicantStatusLabels[row.applicantStatus] ?? row.applicantStatus : "—"}</TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">{formatUtcDateOrDash(row.appliedAt)}</TableCell>
                 </>

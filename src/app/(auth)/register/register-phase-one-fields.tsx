@@ -14,8 +14,8 @@ export function RegisterPhaseOneFields({ values, errors, disabled, onInputChange
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-foreground">بيانات مالك المنظمة</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">سيُنشأ هذا الحساب كمالك للمنظمة بعد قبول الطلب.</p>
+        <h3 className="text-sm font-semibold text-foreground">بيانات مؤسس المنظمة</h3>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">سيُنشأ هذا الحساب كمؤسس للمنظمة بعد قبول الطلب.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Field className="md:col-span-2" label="الاسم الكامل" error={errors.ownerName}>

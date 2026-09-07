@@ -48,7 +48,7 @@ const accountOptions: Array<{
   {
     value: "organization",
     title: "حساب منظمة",
-    description: "لمالك المنظمة أو أحد موظفيها المعتمدين.",
+    description: "لمؤسس المنظمة أو أحد موظفيها المعتمدين.",
   },
 ];
 

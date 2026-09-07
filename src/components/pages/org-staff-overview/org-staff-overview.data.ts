@@ -53,7 +53,7 @@ export const orgStaffOverviewActivityData: OrgStaffActivityItem[] = [
   {
     id: "s3",
     title: "تحديث هدف حملة",
-    detail: "CMP-104 — تم تعديل الهدف من قبل المالك",
+    detail: "CMP-104 — تم تعديل الهدف من قبل المؤسس",
     category: "campaigns",
     priority: "medium",
     at: "2026-03-23T11:00:00",

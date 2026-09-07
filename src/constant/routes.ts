@@ -166,7 +166,7 @@ export type DashboardRole =
 
 export const dashboardRoleLabels: Record<DashboardRole, string> = {
   admin: "لوحة الأدمن",
-  organization_owner: "لوحة مالك المنظمة",
+  organization_owner: "لوحة مؤسس المنظمة",
   organization_staff: "لوحة موظف المنظمة",
 };
 
@@ -682,7 +682,7 @@ export function getRoleSettingsRoute(role: DashboardRole): string | null {
 const segmentLabels: Record<string, string> = {
   dashboard: "لوحة التحكم",
   admin: "الأدمن",
-  "org-owner": "مالك المنظمة",
+  "org-owner": "مؤسس المنظمة",
   "org-staff": "موظف المنظمة",
   posts: "المنشورات",
   post: "منشور",
