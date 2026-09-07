@@ -7,6 +7,12 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 
 import { FormLoadingSkeleton } from "@/components/shared";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -19,9 +25,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type { OrgPermissionCatalogItem } from "@/features/org/staff/org.staff.types";
+import { cn } from "@/lib/utils";
 
 const staffRoleFormSchema = z.object({
   name: z
@@ -42,6 +48,58 @@ export const EMPTY_STAFF_ROLE_FORM_VALUES: StaffRoleFormValues = {
   permissions: [],
   isActive: true,
 };
+
+type PermissionGroup = {
+  group: string;
+  permissions: OrgPermissionCatalogItem[];
+};
+
+function getPermissionDisplayName(option: OrgPermissionCatalogItem) {
+  return option.name?.trim() || option.label?.trim() || option.id;
+}
+
+function groupPermissionsByGroup(options: OrgPermissionCatalogItem[]): PermissionGroup[] {
+  const groups = new Map<string, OrgPermissionCatalogItem[]>();
+
+  for (const option of options) {
+    const groupName = option.group?.trim() || "أخرى";
+    const existing = groups.get(groupName);
+    if (existing) {
+      existing.push(option);
+    } else {
+      groups.set(groupName, [option]);
+    }
+  }
+
+  return Array.from(groups.entries()).map(([group, permissions]) => ({
+    group,
+    permissions,
+  }));
+}
+
+function togglePermissionSelection(
+  current: string[],
+  option: OrgPermissionCatalogItem,
+  checked: boolean,
+  catalog: OrgPermissionCatalogItem[],
+) {
+  if (checked) {
+    const next = new Set(current);
+    next.add(option.id);
+    for (const requiredId of option.requires ?? []) {
+      next.add(requiredId);
+    }
+    return Array.from(next);
+  }
+
+  const dependentIds = new Set(
+    catalog
+      .filter((item) => (item.requires ?? []).includes(option.id))
+      .map((item) => item.id),
+  );
+
+  return current.filter((permissionId) => permissionId !== option.id && !dependentIds.has(permissionId));
+}
 
 type Props = {
   open: boolean;
@@ -80,6 +138,11 @@ export function StaffRoleFormSheet({
       reset(initialValues);
     }
   }, [initialValues, isLoadingDetails, open, reset]);
+
+  const permissionGroups = React.useMemo(
+    () => groupPermissionsByGroup(permissionOptions),
+    [permissionOptions],
+  );
 
   const isFormLocked = isLoadingDetails || isSubmitting;
 
@@ -170,47 +233,118 @@ export function StaffRoleFormSheet({
                   <Controller
                     control={control}
                     name="permissions"
-                    render={({ field }) => (
-                      <div className="rounded-md border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-10 text-right">#</TableHead>
-                              <TableHead className="w-16 text-right">اختيار</TableHead>
-                              <TableHead className="text-right">الصلاحية</TableHead>
-                              <TableHead className="text-right">الوصف</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {permissionOptions.map((option, index) => {
-                              const checked = field.value.includes(option.id);
-                              return (
-                                <TableRow key={option.id}>
-                                  <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
-                                  <TableCell>
+                    render={({ field }) =>
+                      permissionGroups.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+                          لا توجد صلاحيات متاحة حاليًا.
+                        </div>
+                      ) : (
+                        <Accordion
+                          type="multiple"
+                          defaultValue={[]}
+                          className="rounded-md border border-border px-3"
+                        >
+                          {permissionGroups.map(({ group, permissions }) => {
+                            const selectedCount = permissions.filter((option) =>
+                              field.value.includes(option.id),
+                            ).length;
+                            const allSelected =
+                              selectedCount === permissions.length && permissions.length > 0;
+                            const someSelected = selectedCount > 0 && !allSelected;
+
+                            return (
+                              <AccordionItem key={group} value={group}>
+                                <AccordionTrigger className="py-3 hover:no-underline">
+                                  <div className="flex min-w-0 flex-1 items-center gap-3 text-right">
                                     <Checkbox
                                       disabled={isFormLocked}
-                                      checked={checked}
+                                      checked={
+                                        allSelected ? true : someSelected ? "indeterminate" : false
+                                      }
+                                      onClick={(event) => event.stopPropagation()}
                                       onCheckedChange={(nextChecked) => {
+                                        const groupIds = permissions.map((option) => option.id);
                                         if (nextChecked === true) {
-                                          field.onChange(Array.from(new Set([...field.value, option.id])));
-                                        } else {
-                                          field.onChange(field.value.filter((permission) => permission !== option.id));
+                                          const next = new Set(field.value);
+                                          for (const option of permissions) {
+                                            next.add(option.id);
+                                            for (const requiredId of option.requires ?? []) {
+                                              next.add(requiredId);
+                                            }
+                                          }
+                                          field.onChange(Array.from(next));
+                                          return;
                                         }
+
+                                        const groupIdSet = new Set(groupIds);
+                                        field.onChange(
+                                          field.value.filter(
+                                            (permissionId) => !groupIdSet.has(permissionId),
+                                          ),
+                                        );
                                       }}
+                                      aria-label={`تحديد كل صلاحيات ${group}`}
                                     />
-                                  </TableCell>
-                                  <TableCell>{option.label}</TableCell>
-                                  <TableCell className="text-xs text-muted-foreground">
-                                    {option.description}
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-sm font-medium">{group}</p>
+                                      <p className="text-xs font-normal text-muted-foreground">
+                                        {selectedCount} من {permissions.length} محددة
+                                      </p>
+                                    </div>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pb-3">
+                                  <ul className="divide-y divide-border rounded-md border border-border">
+                                    {permissions.map((option) => {
+                                      const checked = field.value.includes(option.id);
+                                      const displayName = getPermissionDisplayName(option);
+
+                                      return (
+                                        <li key={option.id}>
+                                          <label
+                                            className={cn(
+                                              "flex cursor-pointer items-start gap-3 px-3 py-2.5 transition-colors",
+                                              checked ? "bg-primary/5" : "hover:bg-muted/30",
+                                              isFormLocked && "cursor-not-allowed opacity-70",
+                                            )}
+                                          >
+                                            <Checkbox
+                                              disabled={isFormLocked}
+                                              checked={checked}
+                                              className="mt-0.5"
+                                              onCheckedChange={(nextChecked) => {
+                                                field.onChange(
+                                                  togglePermissionSelection(
+                                                    field.value,
+                                                    option,
+                                                    nextChecked === true,
+                                                    permissionOptions,
+                                                  ),
+                                                );
+                                              }}
+                                            />
+                                            <span className="min-w-0 flex-1 space-y-0.5">
+                                              <span className="block text-sm font-medium leading-5">
+                                                {displayName}
+                                              </span>
+                                              {option.description ? (
+                                                <span className="block text-xs leading-5 text-muted-foreground">
+                                                  {option.description}
+                                                </span>
+                                              ) : null}
+                                            </span>
+                                          </label>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </AccordionContent>
+                              </AccordionItem>
+                            );
+                          })}
+                        </Accordion>
+                      )
+                    }
                   />
                   {errors.permissions ? (
                     <p className="text-xs text-destructive">{errors.permissions.message}</p>

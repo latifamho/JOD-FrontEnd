@@ -84,7 +84,7 @@ export function StaffTable({
                     actions={[
                       {
                         id: "edit",
-                        label: "تعديل دور الموظف",
+                        label: "تعديل الموظف",
                         icon: <AppIcons.PencilLine className="size-4" />,
                         onSelect: () => onEdit?.(row.id),
                         hidden: !onEdit,
