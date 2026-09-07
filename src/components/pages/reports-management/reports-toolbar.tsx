@@ -49,11 +49,7 @@ export function ReportsToolbar({
             كل مستويات الخطورة
           </SelectItem>
           {Object.entries(reportSeverityLabels).map(([severity, label]) => (
-            <SelectItem
-              key={severity}
-              value={severity}
-              className="text-right text-xs"
-            >
+            <SelectItem key={severity} value={severity} className="text-right text-xs">
               {label}
             </SelectItem>
           ))}
@@ -89,7 +85,7 @@ export function ReportsToolbar({
         className="ms-auto h-8 shrink-0 px-3 text-xs"
         onClick={onResetFilters}
       >
-        إعادة تعيين
+        إعادة ضبط الفلاتر
       </Button>
     </div>
   );

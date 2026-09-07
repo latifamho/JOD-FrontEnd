@@ -7,6 +7,8 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/base/logo";
 import { ThemeToggle } from "@/components/pages/landing/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { getAuthenticatedLanding } from "@/features/shared/auth.services/auth.utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 const NAV_LINKS = [
   { href: "#hero", label: "الرئيسية" },
@@ -18,6 +20,16 @@ const NAV_LINKS = [
 
 export function LandingHeader() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { user, dashboardContext, isAuthenticated, isLoading } = useAuth();
+  const showAuthenticatedActions = isAuthenticated && dashboardContext !== null;
+  const dashboardHref = dashboardContext ? getAuthenticatedLanding(dashboardContext) : "/dashboard";
+  const organizationName = dashboardContext?.organization?.name ?? user?.organizationName;
+  const dashboardLabel = dashboardContext?.profile.dashboardRole === "admin"
+    ? "الذهاب للوحة التحكم"
+    : organizationName
+      ? `الذهاب للوحة ${organizationName}`
+      : "الذهاب للوحة المنظمة";
+  const avatarLetter = user?.name?.trim().charAt(0) || "ج";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -42,12 +54,29 @@ export function LandingHeader() {
         <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
           <div className="mx-1 h-6 w-px bg-border" />
-          <Button variant="ghost" asChild>
-            <Link href="/login">تسجيل الدخول</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/register">سجّل منظمتك</Link>
-          </Button>
+          {showAuthenticatedActions ? (
+            <>
+              <div
+                className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/70 to-primary text-sm font-semibold text-primary-foreground shadow-sm"
+                title={user?.name ?? "الملف الشخصي"}
+                aria-label={user?.name ?? "الملف الشخصي"}
+              >
+                {avatarLetter}
+              </div>
+              <Button asChild>
+                <Link href={dashboardHref}>{dashboardLabel}</Link>
+              </Button>
+            </>
+          ) : !isLoading ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link href="/login">تسجيل الدخول</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/register">سجّل منظمتك</Link>
+              </Button>
+            </>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
@@ -79,12 +108,31 @@ export function LandingHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
-            <Button variant="outline" asChild onClick={() => setIsMenuOpen(false)}>
-              <Link href="/login">تسجيل الدخول</Link>
-            </Button>
-            <Button asChild onClick={() => setIsMenuOpen(false)}>
-              <Link href="/register">سجّل منظمتك</Link>
-            </Button>
+            {showAuthenticatedActions ? (
+              <>
+                <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/70 to-primary text-sm font-semibold text-primary-foreground shadow-sm">
+                    {avatarLetter}
+                  </div>
+                  <div className="min-w-0 text-right">
+                    <p className="truncate text-sm font-semibold text-foreground">{user?.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                </div>
+                <Button asChild onClick={() => setIsMenuOpen(false)}>
+                  <Link href={dashboardHref}>{dashboardLabel}</Link>
+                </Button>
+              </>
+            ) : !isLoading ? (
+              <>
+                <Button variant="outline" asChild onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/login">تسجيل الدخول</Link>
+                </Button>
+                <Button asChild onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/register">سجّل منظمتك</Link>
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       )}

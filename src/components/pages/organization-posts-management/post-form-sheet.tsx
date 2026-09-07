@@ -21,7 +21,7 @@ import {
   organizationPostFormTypeOptions,
   organizationPostStatusLabels,
   type OrganizationPostStatus,
-  type OrganizationPostType,
+  type OrganizationPostFormType,
 } from "@/components/pages/organization-posts-management/static-data";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
@@ -69,7 +69,7 @@ export type PostFormValues = {
   title: string;
   summary: string;
   categoryId: string;
-  type: OrganizationPostType;
+  type: OrganizationPostFormType;
   status: OrganizationPostStatus;
   location: string;
   campaignTitle: string;
@@ -130,8 +130,12 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
       reset(toPostFormFields(initialValues));
       mediaQueue.reset();
       videoQueue.reset();
+      // Reset the post-created state when a fresh sheet session opens.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCreatedPostId(null);
     }
+  // The upload queue reset functions are intentionally session actions; adding their container objects would retrigger this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues, open, reset]);
 
   const isBusy = isSubmitting || mediaQueue.isUploading || videoQueue.isUploading;
