@@ -330,7 +330,7 @@ export function StaffManagementPage({ view = "employees" }: { view?: "employees"
       />
 
       <StaffMemberFormSheet
-        key={`${memberMode}-${memberId ?? "new"}`}
+        key={`member-${memberMode}-${memberId ?? "new"}`}
         open={memberOpen}
         mode={memberMode}
         initialValues={memberValues}
@@ -361,7 +361,7 @@ export function StaffManagementPage({ view = "employees" }: { view?: "employees"
       />
 
       <StaffRoleFormSheet
-        key={`${roleMode}-${roleId ?? "new"}`}
+        key={`role-${roleMode}-${roleId ?? "new"}`}
         open={roleOpen}
         mode={roleMode}
         initialValues={roleValues}
