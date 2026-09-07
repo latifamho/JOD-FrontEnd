@@ -61,6 +61,11 @@ export const organizationPostTypeLabels: Record<OrganizationPostType, string> = 
   help_request: "طلب مساعدة",
 };
 
+/** Types available when creating/editing a post (job_opportunity is legacy-only). */
+export const organizationPostFormTypeOptions = (
+  Object.entries(organizationPostTypeLabels) as [OrganizationPostType, string][]
+).filter(([type]) => type !== "job_opportunity");
+
 export const organizationPostsStaticData: OrganizationPostItem[] = [
   {
     id: "ORG-POST-2001",

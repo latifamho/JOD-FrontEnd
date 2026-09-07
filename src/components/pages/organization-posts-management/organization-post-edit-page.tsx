@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
-import { organizationPostTypeLabels, type OrganizationPostItem } from "@/components/pages/organization-posts-management/static-data";
+import { organizationPostFormTypeOptions, organizationPostTypeLabels, type OrganizationPostItem } from "@/components/pages/organization-posts-management/static-data";
 import { routePaths } from "@/constant/routes";
 import { useOrgCampaignsBrief } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
@@ -168,7 +168,7 @@ function PostEditForm({ post, detailsRoute, refetch }: { post: OrganizationPostI
           {categoriesBrief.isError ? <p className="text-xs text-destructive">تعذر تحميل التصنيفات المتاحة.</p> : null}
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="نوع المنشور"><Controller control={control} name="type" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(organizationPostTypeLabels).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
+          <Field label="نوع المنشور"><Controller control={control} name="type" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{(field.value === "job_opportunity" ? [["job_opportunity", organizationPostTypeLabels.job_opportunity] as const, ...organizationPostFormTypeOptions] : organizationPostFormTypeOptions).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>} /></Field>
           <Field label="المحافظة" error={errors.location?.message}><Controller control={control} name="location" render={({ field }) => <Select value={field.value} onValueChange={field.onChange} disabled={isBusy}><SelectTrigger aria-invalid={Boolean(errors.location)}><SelectValue placeholder="اختر المحافظة" /></SelectTrigger><SelectContent>{syrianGovernorateOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>} /></Field>
         </div>
         {campaignRelated ? (
