@@ -1,3 +1,5 @@
+import type { MediaItem } from "@/features/shared/media/media.types";
+
 export type OrganizationStatus = "active" | "inactive" | "pending" | "rejected";
 export type OrganizationVerificationStatus =
   | "verified"
@@ -24,6 +26,8 @@ export type AdminOrganizationItem = {
   email: string;
   phone: string;
   location: string;
+  image?: string | null;
+  logo?: MediaItem | null;
   verificationStatus: OrganizationVerificationStatus;
   status: OrganizationStatus;
   campaignsCount: number;

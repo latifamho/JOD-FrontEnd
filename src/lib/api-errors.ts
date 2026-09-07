@@ -22,7 +22,7 @@ const labels: Record<string, string> = {
   target: "النوع", category: "التصنيف", categoryId: "التصنيف", recipientScope: "نوع المستلم",
   recipientLabel: "اسم المستلم", criteria: "المعايير", iconName: "الأيقونة",
   isActive: "الحالة", siteName: "اسم المنصة", location: "الموقع",
-  verificationStatus: "حالة التوثيق", role: "الدور",
+  verificationStatus: "حالة التوثيق", role: "الدور", logo: "شعار المنظمة",
 };
 
 const aliases: Record<string, string> = {

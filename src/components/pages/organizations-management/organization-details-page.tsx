@@ -132,12 +132,24 @@ export function OrganizationDetailsPage({
               </Badge>
             </div>
 
-            <h2 className="text-xl font-semibold text-foreground">
-              {displayOrDash(organization.name)}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {displayOrDash(organization.description)}
-            </p>
+            <div className="flex items-center gap-3">
+              {organization.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={organization.image} alt={`شعار ${organization.name}`} className="size-16 shrink-0 rounded-2xl border border-border bg-muted object-cover" />
+              ) : (
+                <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted text-lg font-semibold text-muted-foreground">
+                  {(organization.name || "ج").trim().charAt(0) || "ج"}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {displayOrDash(organization.name)}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {displayOrDash(organization.description)}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

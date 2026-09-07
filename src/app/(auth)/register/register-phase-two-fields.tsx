@@ -12,6 +12,7 @@ type RegisterPhaseTwoFieldsProps = {
   acceptTerms: boolean;
   confirmAccuracy: boolean;
   logoItems: MediaUploadQueueItem[];
+  logoError?: string;
   onLogoFilesSelected: (files: File[]) => void;
   onRemoveLogo: (id: string) => void;
   onAcceptTermsChange: (checked: boolean) => void;
@@ -20,7 +21,7 @@ type RegisterPhaseTwoFieldsProps = {
   onCompanyPhoneChange: (value: string) => void;
 };
 
-export function RegisterPhaseTwoFields({ values, errors, disabled, acceptTerms, confirmAccuracy, logoItems, onLogoFilesSelected, onRemoveLogo, onAcceptTermsChange, onConfirmAccuracyChange, onInputChange, onCompanyPhoneChange }: RegisterPhaseTwoFieldsProps) {
+export function RegisterPhaseTwoFields({ values, errors, disabled, acceptTerms, confirmAccuracy, logoItems, logoError, onLogoFilesSelected, onRemoveLogo, onAcceptTermsChange, onConfirmAccuracyChange, onInputChange, onCompanyPhoneChange }: RegisterPhaseTwoFieldsProps) {
   return (
     <section className="space-y-5">
       <div><h3 className="text-sm font-semibold text-foreground">بيانات المنظمة</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">أدخل البيانات الرسمية المطابقة لسجلات المنظمة.</p></div>
@@ -38,7 +39,7 @@ export function RegisterPhaseTwoFields({ values, errors, disabled, acceptTerms, 
         </Field>
         <Field className="md:col-span-2" label="الموقع / العنوان" error={errors.location}><Input id="location" name="location" value={values.location} onChange={onInputChange} disabled={disabled} aria-invalid={Boolean(errors.location)} className="h-11 rounded-xl bg-background/85" /></Field>
         <Field className="md:col-span-2" label="الموقع الإلكتروني - اختياري" error={errors.website}><Input id="website" name="website" type="url" dir="ltr" value={values.website} onChange={onInputChange} disabled={disabled} aria-invalid={Boolean(errors.website)} placeholder="https://example.org" className="h-11 rounded-xl bg-background/85 text-left" /></Field>
-        <div className="md:col-span-2"><MediaUploadField label="شعار المنظمة - اختياري" items={logoItems} maxItems={1} multiple={false} disabled={disabled} onFilesSelected={onLogoFilesSelected} onRemoveQueued={onRemoveLogo} /></div>
+        <div className="md:col-span-2 space-y-2"><MediaUploadField label="شعار المنظمة *" items={logoItems} maxItems={1} multiple={false} disabled={disabled} onFilesSelected={onLogoFilesSelected} onRemoveQueued={onRemoveLogo} />{logoError ? <p className="text-xs text-destructive">{logoError}</p> : null}</div>
       </div>
       <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/40 p-4">
         <CheckRow id="acceptTerms" checked={acceptTerms} disabled={disabled} onChange={onAcceptTermsChange} label="أوافق على الشروط والأحكام وسياسة الخصوصية." />
