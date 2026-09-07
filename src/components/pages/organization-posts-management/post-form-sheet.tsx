@@ -18,8 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { syrianGovernorateOptions } from "@/components/pages/organization-campaigns/static-data";
 import { isCampaignRelatedPostType } from "@/components/pages/organization-posts-management/helpers";
 import {
+  organizationPostFormTypeOptions,
   organizationPostStatusLabels,
-  organizationPostTypeLabels,
   type OrganizationPostStatus,
   type OrganizationPostType,
 } from "@/components/pages/organization-posts-management/static-data";
@@ -36,7 +36,7 @@ const postFormSchema = z
     title: z.string().min(1, "عنوان البوست مطلوب").max(255, "عنوان البوست يجب ألا يتجاوز 255 حرفًا").refine((value) => value.trim().length > 0, "عنوان البوست مطلوب"),
     summary: z.string().min(1, "محتوى البوست مطلوب").refine((value) => value.trim().length > 0, "محتوى البوست مطلوب"),
     categoryId: z.string().min(1, "تصنيف البوست مطلوب"),
-    type: z.enum(["general", "job_opportunity", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
+    type: z.enum(["general", "campaign_teaser", "campaign_update", "campaign_summary", "service_offer", "volunteer_opportunity", "awareness", "help_request"]),
     status: z.enum(["draft", "published"]),
     location: z.string().min(1, "المحافظة مطلوبة").refine(
       (value) => syrianGovernorateOptions.some((option) => option.value === value),
@@ -240,7 +240,7 @@ export function PostFormSheet({ open, mode, initialValues, isSubmitting = false,
                     <Select dir="rtl" disabled={formLocked} value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full text-right" aria-invalid={Boolean(errors.type)}><SelectValue /></SelectTrigger>
                       <SelectContent align="start" position="popper" className="text-right">
-                        {Object.entries(organizationPostTypeLabels).map(([type, label]) => <SelectItem key={type} value={type} className="text-right text-xs">{label}</SelectItem>)}
+                        {organizationPostFormTypeOptions.map(([type, label]) => <SelectItem key={type} value={type} className="text-right text-xs">{label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )} />
