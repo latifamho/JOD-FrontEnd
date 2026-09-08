@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  organizationPostTypeLabels,
+  organizationPostFormTypeOptions,
   type OrganizationPostType,
 } from "@/components/pages/organization-posts-management/static-data";
 
@@ -47,7 +47,7 @@ export function PostsFilters({
           <SelectItem value="all" className="text-right text-xs">
             كل الأنواع
           </SelectItem>
-          {Object.entries(organizationPostTypeLabels).map(([type, label]) => (
+          {organizationPostFormTypeOptions.map(([type, label]) => (
             <SelectItem key={type} value={type} className="text-right text-xs">
               {label}
             </SelectItem>
