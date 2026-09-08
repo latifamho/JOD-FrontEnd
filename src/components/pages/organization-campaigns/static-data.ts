@@ -32,6 +32,13 @@ export const syrianGovernorateOptions = [
   { label: "القنيطرة", value: "Quneitra" },
 ] as const;
 
+export function syrianGovernorateLabel(value: string | null | undefined): string {
+  if (!value) return "";
+  return syrianGovernorateOptions.find(
+    (option) => option.value === value || option.label === value,
+  )?.label ?? value;
+}
+
 export type OrganizationCampaignItem = {
   id: string;
   title: string;

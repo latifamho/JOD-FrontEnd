@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { orgDonorsServices } from './org.donors.services'
 import { orgDonorsKeys, orgApplicantsKeys } from './org.donors.query-keys'
+import { orgDonationsKeys } from '@/features/org/donations/org.donations.query-keys'
+import { orgCampaignsKeys } from '@/features/org/campaigns/org.campaigns.query-keys'
 import type {
   OrgDonorsParams,
   DonorCreateRequest,
@@ -68,6 +70,8 @@ export function useOrgDonationWorkflowAction() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: orgDonorsKeys.lists() })
       queryClient.invalidateQueries({ queryKey: orgDonorsKeys.detail(variables.donorId) })
+      queryClient.invalidateQueries({ queryKey: orgDonationsKeys.all })
+      queryClient.invalidateQueries({ queryKey: orgCampaignsKeys.all })
     },
   })
 }

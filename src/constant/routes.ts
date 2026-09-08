@@ -47,6 +47,7 @@ export const routePaths = {
     campaignsDraft: "/dashboard/org-owner/campaigns/draft",
     campaignsActive: "/dashboard/org-owner/campaigns/active",
     campaignsClosed: "/dashboard/org-owner/campaigns/closed",
+    campaignNew: "/dashboard/org-owner/campaigns/new",
     campaignDetails: (id = ":id") => `/dashboard/org-owner/campaigns/${id}`,
     campaignDetailsTemplate: "/dashboard/org-owner/campaigns/:id",
     campaignEdit: (id = ":id") => `/dashboard/org-owner/campaigns/${id}/edit`,
@@ -78,6 +79,7 @@ export const routePaths = {
     campaigns: "/dashboard/org-staff/campaigns",
     campaignsActive: "/dashboard/org-staff/campaigns/active",
     campaignsClosed: "/dashboard/org-staff/campaigns/closed",
+    campaignNew: "/dashboard/org-staff/campaigns/new",
     campaignDetails: (id = ":id") => `/dashboard/org-staff/campaigns/${id}`,
     campaignDetailsTemplate: "/dashboard/org-staff/campaigns/:id",
     campaignEdit: (id = ":id") => `/dashboard/org-staff/campaigns/${id}/edit`,
@@ -751,6 +753,8 @@ routeTitleMap.set(
   normalizePathname(routePaths.organizationStaffScope.campaignEditTemplate),
   "تعديل الحملة",
 );
+routeTitleMap.set(normalizePathname(routePaths.organizationOwnerScope.campaignNew), "إضافة حملة جديدة");
+routeTitleMap.set(normalizePathname(routePaths.organizationStaffScope.campaignNew), "إضافة حملة جديدة");
 routeTitleMap.set(
   normalizePathname(routePaths.organizationOwnerScope.postEditTemplate),
   "تعديل المنشور",

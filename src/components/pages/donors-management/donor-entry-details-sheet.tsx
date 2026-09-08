@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatUtcDateTimeOrDash } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
+import { syrianGovernorateLabel } from "@/components/pages/organization-campaigns/static-data";
 import { toast } from "@/lib/toast";
 import {
   applicantStatusLabels,
@@ -33,6 +34,7 @@ type DonorEntryDetailsSheetProps = {
   onOpenChange: (open: boolean) => void;
   entry: DonorEntryItem | null;
   view: "donors" | "applicants";
+  canManage?: boolean;
 };
 
 function Field({ label, value, dir }: { label: string; value: React.ReactNode; dir?: "ltr" | "rtl" }) {
@@ -56,10 +58,10 @@ function Step({ label, date, active }: { label: string; date?: string | null; ac
 function formatAmount(value: number | string | null | undefined) {
   if (value === null || value === undefined || value === "") return "—";
   const number = Number(value);
-  return Number.isFinite(number) ? `${number.toLocaleString("ar-SY")} ل.س` : String(value);
+  return Number.isFinite(number) ? `${number.toLocaleString("en-US")} ل.س` : String(value);
 }
 
-export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view }: DonorEntryDetailsSheetProps) {
+export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canManage = false }: DonorEntryDetailsSheetProps) {
   const isApplicants = view === "applicants";
   const donorDetailQuery = useOrgDonor(!isApplicants && open ? entry?.id ?? null : null);
   const applicantDetailQuery = useOrgApplicant(isApplicants && open ? entry?.id ?? null : null);
@@ -141,7 +143,7 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view }: Dono
               <Field label="المبلغ المؤكد استلامه" value={formatAmount(donor.confirmedAmount)} />
               <Field label="طريقة التواصل" value={displayOrDash(donor.contactMethod)} />
               <Field label="طريقة الدفع" value={displayOrDash(donor.paymentMethod)} />
-              <Field label="المحافظة" value={displayOrDash(donor.city)} />
+              <Field label="المحافظة" value={displayOrDash(syrianGovernorateLabel(donor.city))} />
             </>
           )}
         </div>
@@ -160,11 +162,11 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view }: Dono
 
             <div className="mt-4 space-y-2 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">إجراءات المنظمة</h3>
-              {donor.can?.accept ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("accept")}>قبول طلب التطوع</Button> : null}
-              {donor.can?.contact ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("contact")}>بدء التواصل مع المتطوع</Button> : null}
-              {donor.can?.complete ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("complete")}>تأكيد اكتمال التطوع</Button> : null}
-              {donor.can?.reject ? <Button className="w-full" variant="destructive" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("reject")}>رفض الطلب</Button> : null}
-              {!donor.can?.accept && !donor.can?.contact && !donor.can?.complete && !donor.can?.reject ? <p className="text-xs text-muted-foreground">لا توجد إجراءات مطلوبة لهذه الحالة.</p> : null}
+              {canManage && donor.can?.accept ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("accept")}>قبول طلب التطوع</Button> : null}
+              {canManage && donor.can?.contact ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("contact")}>بدء التواصل مع المتطوع</Button> : null}
+              {canManage && donor.can?.complete ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("complete")}>تأكيد اكتمال التطوع</Button> : null}
+              {canManage && donor.can?.reject ? <Button className="w-full" variant="destructive" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("reject")}>رفض الطلب</Button> : null}
+              {!canManage ? <p className="text-xs text-muted-foreground">يمكنك عرض التفاصيل فقط حسب صلاحياتك الحالية.</p> : !donor.can?.accept && !donor.can?.contact && !donor.can?.complete && !donor.can?.reject ? <p className="text-xs text-muted-foreground">لا توجد إجراءات مطلوبة لهذه الحالة.</p> : null}
             </div>
           </>
         ) : null}
@@ -183,23 +185,25 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view }: Dono
 
             <div className="mt-4 space-y-3 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">الإجراءات</h3>
-              {donor.can?.accept ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("accept")}>قبول طلب التبرع</Button> : null}
-              {donor.can?.contact ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("contact")}>تم بدء التواصل</Button> : null}
-              {donor.can?.agree ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("agree")}>تم التوصل لاتفاق</Button> : null}
-              {donor.can?.complete ? (
+              {canManage && donor.can?.accept ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("accept")}>قبول طلب التبرع</Button> : null}
+              {canManage && donor.can?.contact ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("contact")}>تم بدء التواصل</Button> : null}
+              {canManage && donor.can?.agree ? <Button className="w-full" disabled={workflow.isPending} onClick={() => void run("agree")}>تم التوصل لاتفاق</Button> : null}
+              {canManage && donor.can?.complete ? (
                 <div className="space-y-2 rounded-md bg-muted/30 p-3">
                   <label className="text-xs font-medium">المبلغ الذي استلمته المنظمة فعلياً</label>
                   <Input dir="ltr" inputMode="decimal" value={confirmedAmount} onChange={(event) => setConfirmedAmount(event.target.value)} placeholder="0" />
                   <Button className="w-full" disabled={workflow.isPending || !canCompleteAmount} onClick={() => void run("complete", { amount: amountNumber })}>تأكيد استلام التبرع</Button>
                 </div>
               ) : null}
-              {donor.can?.cancel ? (
+              {canManage && donor.can?.cancel ? (
                 <div className="space-y-2 border-t border-border pt-3">
                   <Input value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder="سبب الإلغاء" />
                   <Button className="w-full" variant="destructive" disabled={workflow.isPending || cancelReason.trim().length === 0} onClick={() => void run("cancel", { reason: cancelReason.trim() })}>إلغاء طلب التبرع</Button>
                 </div>
               ) : null}
-              {!donor.can?.accept && !donor.can?.contact && !donor.can?.agree && !donor.can?.complete && !donor.can?.cancel ? (
+              {!canManage ? (
+                <p className="text-xs text-muted-foreground">يمكنك عرض التفاصيل فقط حسب صلاحياتك الحالية.</p>
+              ) : !donor.can?.accept && !donor.can?.contact && !donor.can?.agree && !donor.can?.complete && !donor.can?.cancel ? (
                 <p className="text-xs text-muted-foreground">لا توجد إجراءات مطلوبة لهذه الحالة.</p>
               ) : null}
             </div>

@@ -428,6 +428,7 @@ export function DonorsManagementPage({
         onOpenChange={handleDetailsOpenChange}
         entry={detailsEntry}
         view={view}
+        canManage={canEdit}
       />
 
       <DonorEntryFormSheet

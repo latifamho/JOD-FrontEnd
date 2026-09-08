@@ -27,11 +27,23 @@ import {
   getCampaignStatusBadgeClass,
   getProgress,
 } from "@/components/pages/organization-campaigns/helpers";
-import { organizationCampaignStatusLabels } from "@/components/pages/organization-campaigns/static-data";
+import {
+  organizationCampaignStatusLabels,
+  syrianGovernorateLabel,
+} from "@/components/pages/organization-campaigns/static-data";
+import { DonorEntryDetailsSheet } from "@/components/pages/donors-management/donor-entry-details-sheet";
+import {
+  applicantStatusLabels,
+  type DonorEntryItem,
+} from "@/components/pages/donors-management/static-data";
 import { useOrgCategoriesBrief } from "@/features/org/categories/org.categories.query";
 import { useOrgCampaign } from "@/features/org/campaigns/org.campaigns.query";
 import { useOrgDonations } from "@/features/org/donations/org.donations.query";
-import { useOrgApplicants } from "@/features/org/donors/org.donors.query";
+import {
+  useOrgApplicants,
+  useOrgApplicantWorkflowAction,
+} from "@/features/org/donors/org.donors.query";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/providers/AuthProvider";
 
 type OrganizationCampaignDetailsPageProps = {
@@ -48,9 +60,16 @@ export function OrganizationCampaignDetailsPage({
   const campaign = campaignQuery.data?.data;
   const categoriesBrief = useOrgCategoriesBrief();
   const canViewDonors = can("org.donors.view");
+  const canManageDonors = can("org.donors.update");
   const canViewApplicants = can("org.applicants.view");
+  const canManageApplicants = can("org.applicants.update");
   const [donationsPage, setDonationsPage] = React.useState(1);
   const [applicantsPage, setApplicantsPage] = React.useState(1);
+  const [donorDetailsOpen, setDonorDetailsOpen] = React.useState(false);
+  const [selectedDonor, setSelectedDonor] = React.useState<DonorEntryItem | null>(null);
+  const [applicantDetailsOpen, setApplicantDetailsOpen] = React.useState(false);
+  const [selectedApplicant, setSelectedApplicant] = React.useState<DonorEntryItem | null>(null);
+  const applicantWorkflow = useOrgApplicantWorkflowAction();
   const donationsQuery = useOrgDonations(
     {
       page: donationsPage,
@@ -81,11 +100,31 @@ export function OrganizationCampaignDetailsPage({
     applicantsLastPage,
   );
   const donationStatusLabels: Record<string, string> = {
-    pending: "بانتظار التواصل",
+    pending: "بانتظار الموافقة",
+    accepted: "تم قبول الطلب",
     contacting: "جاري التواصل",
     agreed: "تم الاتفاق",
     completed: "تم التبرع",
     cancelled: "ملغي",
+  };
+
+  const handleDonorDetailsOpenChange = (open: boolean) => {
+    setDonorDetailsOpen(open);
+    if (!open) setSelectedDonor(null);
+  };
+
+  const handleApplicantDetailsOpenChange = (open: boolean) => {
+    setApplicantDetailsOpen(open);
+    if (!open) setSelectedApplicant(null);
+  };
+
+  const acceptApplicant = async (applicant: DonorEntryItem) => {
+    try {
+      await applicantWorkflow.mutateAsync({ applicantId: applicant.id, action: "accept" });
+      toast.success("تم قبول طلب التطوع.");
+    } catch {
+      toast.error("تعذر قبول طلب التطوع. حدّث البيانات وحاول مرة أخرى.");
+    }
   };
 
   if (campaignQuery.isLoading) {
@@ -193,7 +232,7 @@ export function OrganizationCampaignDetailsPage({
             <p className="text-muted-foreground">
               المدينة:{" "}
               <span className="font-semibold text-foreground">
-                {displayOrDash(campaign.location)}
+                {displayOrDash(syrianGovernorateLabel(campaign.location))}
               </span>
             </p>
             <p className="text-muted-foreground">
@@ -278,7 +317,7 @@ export function OrganizationCampaignDetailsPage({
           ) : campaignDonations.length > 0 ? (
             <>
               <div className="mt-4 overflow-auto rounded-md border border-border">
-                <Table className="min-w-[640px] bg-background">
+                <Table className="min-w-[760px] bg-background">
                   <TableHeader className="bg-muted/35">
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
@@ -286,6 +325,7 @@ export function OrganizationCampaignDetailsPage({
                       <TableHead>مبلغ التبرع</TableHead>
                       <TableHead>الحالة</TableHead>
                       <TableHead>تاريخ الطلب</TableHead>
+                      <TableHead>إجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -308,6 +348,43 @@ export function OrganizationCampaignDetailsPage({
                         </TableCell>
                         <TableCell>
                           {formatUtcDateTimeOrDash(donation.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDonor({
+                                id: donation.id,
+                                name: donation.name,
+                                email: donation.email,
+                                phone: donation.phone ?? "",
+                                city: donation.city,
+                                campaignId: donation.campaignId,
+                                campaignTitle: donation.campaignTitle,
+                                targetType: "campaign",
+                                status: donation.status,
+                                amount: donation.amount,
+                                requestedAmount: donation.requestedAmount,
+                                confirmedAmount: donation.confirmedAmount,
+                                contactMethod: donation.contactMethod,
+                                paymentMethod: donation.paymentMethod,
+                                notes: donation.notes,
+                                createdAt: donation.createdAt,
+                                acceptedAt: donation.acceptedAt,
+                                contactedAt: donation.contactedAt,
+                                agreedAt: donation.agreedAt,
+                                completedAt: donation.completedAt,
+                                cancelledAt: donation.cancelledAt,
+                                cancelReason: donation.cancelReason,
+                                isAnonymous: donation.isAnonymous,
+                              });
+                              setDonorDetailsOpen(true);
+                            }}
+                          >
+                            {canManageDonors ? "إدارة الطلب" : "عرض التفاصيل"}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -378,13 +455,14 @@ export function OrganizationCampaignDetailsPage({
           ) : campaignApplicants.length > 0 ? (
             <>
               <div className="mt-4 overflow-auto rounded-md border border-border">
-                <Table className="min-w-[640px] bg-background">
+                <Table className="min-w-[760px] bg-background">
                   <TableHeader className="bg-muted/35">
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>المتقدم</TableHead>
                       <TableHead>الحالة</TableHead>
                       <TableHead>تاريخ التقديم</TableHead>
+                      <TableHead>إجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -395,8 +473,39 @@ export function OrganizationCampaignDetailsPage({
                           <p className="font-medium text-foreground">{applicant.name}</p>
                           <p className="text-xs text-muted-foreground" dir="ltr">{displayOrDash(applicant.phone)}</p>
                         </TableCell>
-                        <TableCell><Badge variant="outline">{displayOrDash(applicant.applicantStatus)}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {applicant.applicantStatus
+                              ? applicantStatusLabels[applicant.applicantStatus] ?? applicant.applicantStatus
+                              : "—"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{formatUtcDateTimeOrDash(applicant.appliedAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {canManageApplicants && applicant.can?.accept ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={applicantWorkflow.isPending}
+                                onClick={() => void acceptApplicant(applicant)}
+                              >
+                                قبول الطلب
+                              </Button>
+                            ) : null}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedApplicant(applicant);
+                                setApplicantDetailsOpen(true);
+                              }}
+                            >
+                              {canManageApplicants ? "إدارة الطلب" : "عرض التفاصيل"}
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -420,6 +529,22 @@ export function OrganizationCampaignDetailsPage({
           )}
         </div>
       ) : null}
+
+      <DonorEntryDetailsSheet
+        open={donorDetailsOpen}
+        onOpenChange={handleDonorDetailsOpenChange}
+        entry={selectedDonor}
+        view="donors"
+        canManage={canManageDonors}
+      />
+
+      <DonorEntryDetailsSheet
+        open={applicantDetailsOpen}
+        onOpenChange={handleApplicantDetailsOpenChange}
+        entry={selectedApplicant}
+        view="applicants"
+        canManage={canManageApplicants}
+      />
 
       {campaign.closedReason && (
         <div className="rounded-md border border-slate-200/70 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-500/40 dark:bg-slate-500/10 dark:text-slate-100">

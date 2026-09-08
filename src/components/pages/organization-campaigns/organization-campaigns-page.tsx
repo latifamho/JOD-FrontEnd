@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState, ListLoadingSkeleton, PaginationControls } from "@/components/shared";
@@ -10,14 +12,9 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useQueryModal } from "@/hooks/use-query-modal";
 import { displayOrDash } from "@/lib/text";
 import { useAuth } from "@/providers/AuthProvider";
-import {
-  CampaignFormSheet,
-  EMPTY_CAMPAIGN_FORM_VALUES,
-  type CampaignFormValues,
-} from "@/components/pages/organization-campaigns/campaign-form-sheet";
 import { CloseCampaignDialog } from "@/components/pages/organization-campaigns/close-campaign-dialog";
 import { DeleteCampaignDialog } from "@/components/pages/organization-campaigns/delete-campaign-dialog";
-import { toDateTimeFromInput } from "@/components/pages/organization-campaigns/helpers";
+import { routePaths } from "@/constant/routes";
 import {
   type CampaignSortOption,
   OrganizationCampaignsFilters,
@@ -30,7 +27,6 @@ import {
 } from "@/components/pages/organization-campaigns/static-data";
 import {
   useOrgCampaigns,
-  useCreateOrgCampaign,
   useCloseOrgCampaign,
   useDeleteOrgCampaign,
 } from "@/features/org/campaigns/org.campaigns.query";
@@ -51,7 +47,11 @@ export function OrganizationCampaignsPage({
   status,
 }: OrganizationCampaignsPageProps) {
   const { can } = useAuth();
+  const pathname = usePathname();
   const canCreate = can("org.campaigns.create");
+  const createRoute = pathname.startsWith(routePaths.dashboardScope.orgStaffRoot)
+    ? routePaths.organizationStaffScope.campaignNew
+    : routePaths.organizationOwnerScope.campaignNew;
   const canClose = can("org.campaigns.close");
   const canDelete = can("org.campaigns.delete");
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
@@ -61,9 +61,6 @@ export function OrganizationCampaignsPage({
   const [locationFilter, setLocationFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState<CampaignSortOption>("updated_newest");
 
-  const formModal = useQueryModal("campaign-create", {
-    permission: "org.campaigns.create",
-  });
   const closeModal = useQueryModal("campaign-close", {
     permission: "org.campaigns.close",
   });
@@ -107,33 +104,8 @@ export function OrganizationCampaignsPage({
     campaigns.find((campaign) => campaign.id === deleteTargetCampaignId)?.title,
   );
 
-  const createMutation = useCreateOrgCampaign();
   const closeMutation = useCloseOrgCampaign();
   const deleteMutation = useDeleteOrgCampaign();
-
-  const openCreateSheet = React.useCallback(() => {
-    formModal.open();
-  }, [formModal]);
-
-
-  const handleSaveForm = React.useCallback(
-    async (values: CampaignFormValues) => {
-      const response = await createMutation.mutateAsync({
-        title: values.title,
-        summary: values.summary,
-        categoryId: values.categoryId,
-        audience: values.audience,
-        status: values.status,
-        location: values.location,
-        goalAmount: values.goalAmount,
-        beneficiariesCount: values.beneficiariesCount,
-        startDate: toDateTimeFromInput(values.startDate),
-        endDate: toDateTimeFromInput(values.endDate),
-      });
-      return response.data?.id ?? null;
-    },
-    [createMutation],
-  );
 
   const openCloseDialog = React.useCallback(
     (campaignId: string) => closeModal.open({ id: campaignId }),
@@ -183,9 +155,11 @@ export function OrganizationCampaignsPage({
         </div>
         {canCreate ? (
           <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={openCreateSheet}>
-              إضافة حملة جديدة
-              <AppIcons.campaigns className="size-4" />
+            <Button asChild>
+              <Link href={createRoute}>
+                إضافة حملة جديدة
+                <AppIcons.campaigns className="size-4" />
+              </Link>
             </Button>
           </div>
         ) : null}
@@ -246,14 +220,6 @@ export function OrganizationCampaignsPage({
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
 
-      <CampaignFormSheet
-        open={formModal.isOpen}
-        mode="create"
-        initialValues={EMPTY_CAMPAIGN_FORM_VALUES}
-        isSubmitting={createMutation.isPending}
-        onOpenChange={formModal.onOpenChange}
-        onSubmit={handleSaveForm}
-      />
 
       <CloseCampaignDialog
         key={closeTargetCampaignId ?? "campaign-close"}
