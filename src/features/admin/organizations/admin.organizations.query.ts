@@ -61,6 +61,18 @@ export function useAcceptOrganization() {
   })
 }
 
+export function useRejectOrganization() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ organizationId, rejectionReason }: { organizationId: string; rejectionReason: string }) =>
+      adminOrganizationsServices.rejectOrganization(organizationId, rejectionReason),
+    onSuccess: (_data, { organizationId }) => {
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: adminOrganizationsKeys.detail(organizationId) })
+    },
+  })
+}
+
 export function useDeleteOrganization() {
   const queryClient = useQueryClient()
   return useMutation({

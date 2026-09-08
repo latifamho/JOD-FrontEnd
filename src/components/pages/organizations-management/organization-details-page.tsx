@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/shared";
 import { routePaths } from "@/constant/routes";
 import {
@@ -25,6 +28,7 @@ import { AppIcons } from "@/constant/icons";
 import {
   useAdminOrganizationDetail,
   useAcceptOrganization,
+  useRejectOrganization,
 } from "@/features/admin/organizations/admin.organizations.query";
 
 type OrganizationDetailsPageProps = {
@@ -43,6 +47,9 @@ export function OrganizationDetailsPage({
   const { data, isLoading, isError, refetch, isFetching } =
     useAdminOrganizationDetail(organizationId);
   const acceptMutation = useAcceptOrganization();
+  const rejectMutation = useRejectOrganization();
+  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [rejectionReason, setRejectionReason] = React.useState("");
 
   const organization = data?.data;
 
@@ -101,6 +108,7 @@ export function OrganizationDetailsPage({
 
   const displayStatus = getDisplayOrganizationStatus(organization);
   const isAccepted = displayStatus === "active";
+  const canReject = displayStatus === "pending" || displayStatus === "rejected";
   const socialMediaEntries = organization.socialMedia
     ? (
         Object.entries(organization.socialMedia) as [
@@ -158,6 +166,7 @@ export function OrganizationDetailsPage({
                 الرجوع إلى إدارة المنظمات
               </Link>
             </Button>
+            {canReject ? <Button type="button" variant="destructive" onClick={() => { setRejectionReason(organization.rejectionReason ?? ""); setRejectDialogOpen(true); }} disabled={rejectMutation.isPending}>رفض المنظمة</Button> : null}
             <Button
               type="button"
               onClick={() => acceptMutation.mutate(organization.id)}
@@ -172,6 +181,8 @@ export function OrganizationDetailsPage({
           </div>
         </div>
       </div>
+
+      {organization.rejectionReason ? <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm font-semibold text-destructive">سبب رفض المنظمة</p><p className="mt-2 text-sm leading-7 text-foreground">{organization.rejectionReason}</p>{organization.rejectedAt ? <p className="mt-2 text-xs text-muted-foreground">تاريخ الرفض: {formatUtcDateTimeOrDash(organization.rejectedAt)}</p> : null}</div> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-md border border-border bg-background p-4 shadow-xs">
@@ -290,6 +301,14 @@ export function OrganizationDetailsPage({
         </div>
       </div>
 
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>رفض تسجيل المنظمة</DialogTitle><DialogDescription>اكتب سبب الرفض بوضوح. سيظهر السبب للمنظمة ويُحفظ ضمن سجل المراجعة.</DialogDescription></DialogHeader>
+          <Textarea value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} placeholder="سبب رفض المنظمة" maxLength={1000} rows={5} />
+          <DialogFooter className="gap-2 sm:gap-0"><Button variant="outline" onClick={() => setRejectDialogOpen(false)} disabled={rejectMutation.isPending}>إلغاء</Button><Button variant="destructive" disabled={rejectMutation.isPending || rejectionReason.trim().length < 3} onClick={async () => { await rejectMutation.mutateAsync({ organizationId: organization.id, rejectionReason: rejectionReason.trim() }); setRejectDialogOpen(false); }}>تأكيد الرفض</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-md border border-border bg-background p-4 shadow-xs">
         <h3 className="text-sm font-semibold text-foreground">مرفقات التسجيل</h3>

@@ -32,4 +32,5 @@ export type AdminOrganizationDetailResponse = ApiSingleResponse<AdminOrganizatio
 export type ToggleOrganizationStatusResponse = ApiMutationResponse
 export type ToggleOrganizationVerificationResponse = ApiMutationResponse
 export type AcceptOrganizationResponse = ApiMutationResponse
+export type RejectOrganizationResponse = ApiMutationResponse
 export type DeleteOrganizationResponse = ApiMutationResponse

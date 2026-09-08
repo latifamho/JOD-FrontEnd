@@ -83,8 +83,8 @@ export const orgDonorsServices = {
     return response.data
   },
 
-  async runApplicantAction(applicantId: string, action: 'accept' | 'contact' | 'complete' | 'reject'): Promise<OrgApplicantDetailResponse> {
-    const response = await api.patch<OrgApplicantDetailResponse>(ENDPOINTS.APPLICANT_ACTION(applicantId, action))
+  async runApplicantAction(applicantId: string, action: 'accept' | 'contact' | 'complete' | 'reject', body?: { reason?: string }): Promise<OrgApplicantDetailResponse> {
+    const response = await api.patch<OrgApplicantDetailResponse>(ENDPOINTS.APPLICANT_ACTION(applicantId, action), body ?? {})
     return response.data
   },
 

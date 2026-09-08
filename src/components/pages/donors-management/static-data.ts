@@ -24,6 +24,8 @@ export type DonorEntryItem = {
   completedAt?: string | null;
   cancelledAt?: string | null;
   cancelReason?: string | null;
+  withdrawalReason?: string | null;
+  rejectionReason?: string | null;
   can?: { accept?: boolean; contact?: boolean; agree?: boolean; complete?: boolean; cancel?: boolean; reject?: boolean };
   applicantStatus?: string | null;
   requestType?: string | null;

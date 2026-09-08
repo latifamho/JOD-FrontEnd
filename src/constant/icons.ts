@@ -1,6 +1,5 @@
 import {
   Archive,
-  Award,
   BadgeCheck,
   Bell,
   BookOpenText,
@@ -73,7 +72,6 @@ export const AppIcons = {
   mail: Mail,
   mailOpen: MailOpen,
   rotateCw: RotateCw,
-  rewards: Award,
   categories: Tags,
   content: BookOpenText,
   settings: Settings,

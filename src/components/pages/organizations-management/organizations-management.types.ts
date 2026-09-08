@@ -49,6 +49,8 @@ export type AdminOrganizationItem = {
   website?: string;
   socialMedia?: OrganizationSocialMedia;
   acceptedAt?: string;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
 };
 
 export const organizationStatusLabels: Record<OrganizationStatus, string> = {

@@ -26,6 +26,7 @@ export interface OrgHelpOfferItem {
   contactMethod?: string | null
   contactValue?: string | null
   phone?: string | null
+  cancelReason?: string | null
   rejectionReason?: string | null
   createdAt?: string | null
   acceptedAt?: string | null

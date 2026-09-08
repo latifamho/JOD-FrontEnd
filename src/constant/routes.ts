@@ -31,7 +31,6 @@ export const routePaths = {
     organizationDetails: (id = ":id") => `/dashboard/admin/organizations/${id}`,
     organizationDetailsTemplate: "/dashboard/admin/organizations/:id",
     verification: "/dashboard/admin/organizations/verification",
-    rewards: "/dashboard/admin/rewards",
     notifications: "/dashboard/admin/notifications",
     notificationsInbox: "/dashboard/admin/notifications/inbox",
     notificationsSent: "/dashboard/admin/notifications/sent",
@@ -304,12 +303,6 @@ const adminLinks: AppNavLink[] = [
     label: "إدارة المنظمات",
     href: routePaths.adminScope.organizations,
     icon: "organizations",
-    section: "الإدارة",
-  },
-  {
-    label: "الشارات والمكافآت",
-    href: routePaths.adminScope.rewards,
-    icon: "rewards",
     section: "الإدارة",
   },
   {
@@ -705,7 +698,6 @@ const segmentLabels: Record<string, string> = {
   notifications: "الإشعارات",
   inbox: "الوارد",
   sent: "المرسل",
-  rewards: "الشارات",
   content: "المحتوى",
   new: "جديد",
   edit: "تعديل",

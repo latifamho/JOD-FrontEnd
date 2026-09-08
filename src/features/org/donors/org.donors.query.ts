@@ -116,8 +116,8 @@ export function useUpdateOrgApplicant() {
 export function useOrgApplicantWorkflowAction() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ applicantId, action }: { applicantId: string; action: 'accept' | 'contact' | 'complete' | 'reject' }) =>
-      orgDonorsServices.runApplicantAction(applicantId, action),
+    mutationFn: ({ applicantId, action, reason }: { applicantId: string; action: 'accept' | 'contact' | 'complete' | 'reject'; reason?: string }) =>
+      orgDonorsServices.runApplicantAction(applicantId, action, { reason }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: orgApplicantsKeys.lists() })
       queryClient.invalidateQueries({ queryKey: orgApplicantsKeys.detail(variables.applicantId) })

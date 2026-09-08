@@ -108,6 +108,8 @@ export function OrganizationHelpOffersPage() {
                       <p>النوع: {offer.type ?? '-'}</p>
                       {offer.amount != null ? <p>المبلغ: {offer.amount.toLocaleString('ar-SY')} ل.س</p> : null}
                       {offer.contactValue ? <p dir="ltr" className="text-muted-foreground">{offer.contactMethod ?? '-'} • {offer.contactValue}</p> : <p className="text-muted-foreground">بيانات التواصل تظهر بعد قبول العرض</p>}
+                      {offer.cancelReason ? <p className="rounded-md bg-destructive/5 px-2 py-1 text-destructive">سبب الإلغاء: {offer.cancelReason}</p> : null}
+                      {offer.rejectionReason ? <p className="rounded-md bg-destructive/5 px-2 py-1 text-destructive">سبب الرفض: {offer.rejectionReason}</p> : null}
                     </div>
                   </TableCell>
                   <TableCell><Badge variant={offer.status === 'completed' ? 'default' : offer.status === 'rejected' || offer.status === 'cancelled' ? 'destructive' : 'outline'}>{labels[offer.status] ?? offer.status}</Badge></TableCell>

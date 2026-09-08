@@ -42,7 +42,7 @@ export type DashboardRole = "admin" | "org_owner" | "org_staff";
 export interface MeProfile { id: string; name: string; email: string; phone: string; userType: UserType; organizationId: string | null; organizationName: string | null; status: string; createdAt: string; lastActiveAt: string; }
 export interface MeResponse { data: MeProfile; message: string; }
 export interface DashboardContextProfile extends MeProfile { dashboardRole: DashboardRole | null; }
-export interface DashboardOrganization { id: string; name: string; status: string; verificationStatus: string; image: string | null; }
+export interface DashboardOrganization { id: string; name: string; status: string; verificationStatus: string; rejectionReason: string | null; rejectedAt: string | null; image: string | null; }
 export interface DashboardStaffRole { id: string; name: string; description: string | null; isActive: boolean; isSystem: boolean; membershipStatus: string; }
 export interface DashboardCounters { pendingReviews: number; openReports: number; }
 export interface DashboardContextData { profile: DashboardContextProfile; organization: DashboardOrganization | null; staffRole: DashboardStaffRole | null; permissions: UserPermissions; counters: DashboardCounters; }

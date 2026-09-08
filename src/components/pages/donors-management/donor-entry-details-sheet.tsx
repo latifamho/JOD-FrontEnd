@@ -83,11 +83,13 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
   const donor = (isApplicants ? applicantDetailQuery.data?.data : donorDetailQuery.data?.data) ?? entry;
   const [confirmedAmount, setConfirmedAmount] = React.useState("");
   const [cancelReason, setCancelReason] = React.useState("");
+  const [applicantRejectReason, setApplicantRejectReason] = React.useState("");
 
   React.useEffect(() => {
     if (open && donor) {
       setConfirmedAmount(String(donor.confirmedAmount ?? donor.requestedAmount ?? donor.amount ?? ""));
       setCancelReason("");
+      setApplicantRejectReason("");
     }
   }, [open, donor?.id, donor?.confirmedAmount, donor?.requestedAmount, donor?.amount]);
 
@@ -111,9 +113,9 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
     }
   };
 
-  const runApplicant = async (action: "accept" | "contact" | "complete" | "reject") => {
+  const runApplicant = async (action: "accept" | "contact" | "complete" | "reject", reason?: string) => {
     try {
-      await applicantWorkflow.mutateAsync({ applicantId: donor.id, action });
+      await applicantWorkflow.mutateAsync({ applicantId: donor.id, action, reason });
       toast.success(
         action === "accept" ? "تم قبول طلب التطوع." :
         action === "contact" ? "تم تسجيل بدء التواصل مع المتطوع." :
@@ -170,8 +172,8 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
               <Step label="تم قبول الطلب من المنظمة" active={applicantRank >= 2 && !["rejected", "withdrawn"].includes(applicantStatus)} />
               <Step label="تم بدء التواصل" active={applicantRank >= 4 && !["rejected", "withdrawn"].includes(applicantStatus)} />
               <Step label="اكتملت المشاركة التطوعية" active={applicantStatus === "completed"} />
-              {applicantStatus === "rejected" ? <p className="text-xs text-destructive">تم رفض طلب التطوع.</p> : null}
-              {applicantStatus === "withdrawn" ? <p className="text-xs text-muted-foreground">انسحب المستخدم من طلب التطوع.</p> : null}
+              {applicantStatus === "rejected" ? <p className="text-xs text-destructive">تم رفض طلب التطوع{donor.rejectionReason ? `: ${donor.rejectionReason}` : "."}</p> : null}
+              {applicantStatus === "withdrawn" ? <p className="text-xs text-muted-foreground">انسحب المستخدم من طلب التطوع{donor.withdrawalReason ? `: ${donor.withdrawalReason}` : "."}</p> : null}
             </div>
 
             <div className="mt-4 space-y-2 rounded-lg border border-border p-4">
@@ -179,7 +181,7 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
               {canManage && donor.can?.accept ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("accept")}>قبول طلب التطوع</Button> : null}
               {canManage && donor.can?.contact ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("contact")}>بدء التواصل مع المتطوع</Button> : null}
               {canManage && donor.can?.complete ? <Button className="w-full" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("complete")}>تأكيد اكتمال التطوع</Button> : null}
-              {canManage && donor.can?.reject ? <Button className="w-full" variant="destructive" disabled={applicantWorkflow.isPending} onClick={() => void runApplicant("reject")}>رفض الطلب</Button> : null}
+              {canManage && donor.can?.reject ? <div className="space-y-2 border-t border-border pt-3"><Input value={applicantRejectReason} onChange={(event) => setApplicantRejectReason(event.target.value)} placeholder="سبب رفض طلب التطوع" maxLength={1000} /><Button className="w-full" variant="destructive" disabled={applicantWorkflow.isPending || applicantRejectReason.trim().length < 3} onClick={() => void runApplicant("reject", applicantRejectReason.trim())}>رفض الطلب</Button></div> : null}
               {!canManage ? <p className="text-xs text-muted-foreground">يمكنك عرض التفاصيل فقط حسب صلاحياتك الحالية.</p> : !donor.can?.accept && !donor.can?.contact && !donor.can?.complete && !donor.can?.reject ? <p className="text-xs text-muted-foreground">لا توجد إجراءات مطلوبة لهذه الحالة.</p> : null}
             </div>
           </>

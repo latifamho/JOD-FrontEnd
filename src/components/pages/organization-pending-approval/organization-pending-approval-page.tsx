@@ -64,6 +64,7 @@ export function OrganizationPendingApprovalPage() {
 
   const organization = dashboardContext.organization;
   const ownerName = dashboardContext.profile.name;
+  const isRejected = organization?.status === "rejected" || organization?.verificationStatus === "rejected";
 
   return (
     <main dir="rtl" className="relative min-h-screen overflow-hidden bg-background px-4 py-6 sm:px-6 lg:px-8">
@@ -71,16 +72,17 @@ export function OrganizationPendingApprovalPage() {
       <div className="relative mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
         <section className="flex flex-col justify-center p-6 text-right sm:p-10 lg:p-14">
           <div className="max-w-2xl">
-            <Badge className="gap-2 rounded-full px-4 py-2" variant="secondary"><Clock3 className="size-4" />طلب الانضمام قيد المراجعة</Badge>
+            <Badge className="gap-2 rounded-full px-4 py-2" variant={isRejected ? "destructive" : "secondary"}><Clock3 className="size-4" />{isRejected ? "تم رفض طلب تسجيل المنظمة" : "طلب الانضمام قيد المراجعة"}</Badge>
             <p className="mt-6 text-sm font-medium text-primary">أهلاً {ownerName || "بك"} في جود</p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">طلب منظمتك وصل بأمان، والباقي علينا</h1>
-            <p className="mt-4 text-sm leading-8 text-muted-foreground sm:text-base">نراجع الآن بيانات {organization?.name ? `منظمة ${organization.name}` : "منظمتك"} بعناية. خلال هذه الفترة ستبقى مساحة العمل محمية، وعند اعتماد الطلب ستتمكن من الدخول إلى لوحة المنظمة مباشرة بنفس الحساب.</p>
-            <div className="mt-8 space-y-3">
+            <h1 className="mt-2 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">{isRejected ? "تعذر اعتماد طلب منظمتك" : "طلب منظمتك وصل بأمان، والباقي علينا"}</h1>
+            <p className="mt-4 text-sm leading-8 text-muted-foreground sm:text-base">{isRejected ? `راجع سبب الرفض أدناه لمنظمة ${organization?.name ?? "منظمتك"}.` : `نراجع الآن بيانات ${organization?.name ? `منظمة ${organization.name}` : "منظمتك"} بعناية. خلال هذه الفترة ستبقى مساحة العمل محمية، وعند اعتماد الطلب ستتمكن من الدخول إلى لوحة المنظمة مباشرة بنفس الحساب.`}</p>
+            {isRejected ? <div className="mt-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm font-semibold text-destructive">سبب الرفض</p><p className="mt-2 text-sm leading-7 text-foreground">{organization?.rejectionReason || "لم يتم إدخال سبب واضح للرفض."}</p>{organization?.rejectedAt ? <p className="mt-2 text-xs text-muted-foreground">تاريخ الرفض: {new Date(organization.rejectedAt).toLocaleString("ar-SY")}</p> : null}</div> : null}
+            {!isRejected ? <div className="mt-8 space-y-3">
               {reviewSteps.map((step, index) => {
                 const Icon = step.icon;
                 return <div key={step.title} className="flex flex-row-reverse gap-4 rounded-2xl border border-border/70 bg-background/70 p-4"><div className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${step.done ? "bg-emerald-500/12 text-emerald-600" : index === 1 ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground"}`}><Icon className="size-5" /></div><div className="flex-1 text-right"><p className="text-sm font-semibold text-foreground">{step.title}</p><p className="mt-1 text-xs leading-6 text-muted-foreground">{step.description}</p></div></div>;
               })}
-            </div>
+            </div> : null}
             {checkMessage ? <p className="mt-5 rounded-xl border border-border bg-muted/50 px-4 py-3 text-xs leading-6 text-muted-foreground">{checkMessage}</p> : null}
             <div className="mt-7 flex flex-wrap gap-3"><Button type="button" disabled={isChecking} onClick={checkStatus}><RefreshCw className={`size-4 ${isChecking ? "animate-spin" : ""}`} />{isChecking ? "جارٍ تحديث الحالة..." : "تحديث حالة الطلب"}</Button><Button type="button" variant="outline" disabled={logoutMutation.isPending} onClick={() => logoutMutation.mutate()}><LogOut className="size-4" />تسجيل الخروج</Button></div>
           </div>

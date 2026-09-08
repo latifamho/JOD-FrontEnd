@@ -9,6 +9,7 @@ import type {
   OrganizationVerificationToggleRequest,
   ToggleOrganizationVerificationResponse,
   AcceptOrganizationResponse,
+  RejectOrganizationResponse,
   DeleteOrganizationResponse,
 } from './admin.organizations.types'
 
@@ -18,6 +19,7 @@ const ENDPOINTS = {
   ORGANIZATION_STATUS: (id: string) => `/admin/organizations/${id}/status`,
   ORGANIZATION_VERIFICATION: (id: string) => `/admin/organizations/${id}/verification`,
   ORGANIZATION_ACCEPT: (id: string) => `/admin/organizations/${id}/accept`,
+  ORGANIZATION_REJECT: (id: string) => `/admin/organizations/${id}/reject`,
 } as const
 
 export const adminOrganizationsServices = {
@@ -45,6 +47,11 @@ export const adminOrganizationsServices = {
 
   async acceptOrganization(organizationId: string): Promise<AcceptOrganizationResponse> {
     const response = await api.post<AcceptOrganizationResponse>(ENDPOINTS.ORGANIZATION_ACCEPT(organizationId), undefined, { successMessageKey: 'accepted' })
+    return response.data
+  },
+
+  async rejectOrganization(organizationId: string, rejectionReason: string): Promise<RejectOrganizationResponse> {
+    const response = await api.post<RejectOrganizationResponse>(ENDPOINTS.ORGANIZATION_REJECT(organizationId), { rejectionReason }, { successMessageKey: 'statusUpdated' })
     return response.data
   },
 
