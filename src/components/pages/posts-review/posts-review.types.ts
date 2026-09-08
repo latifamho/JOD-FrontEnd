@@ -1,6 +1,6 @@
 import type { ModerationStatus } from "@/components/shared";
 
-export type ReviewPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer" | "campaign_update" | "awareness" | "general";
+export type ReviewPostType = "volunteer_opportunity" | "donation_campaign" | "help_request" | "service_offer" | "campaign_update" | "awareness" | "poll" | "general";
 
 export type ReviewPostItem = {
   id: string;
@@ -15,6 +15,8 @@ export type ReviewPostItem = {
   status: ModerationStatus;
   type: ReviewPostType;
   campaignTitle?: string | null;
+  campaignStatus?: "pending" | "active" | "rejected" | "suspended" | "closed" | null;
+  campaignOwnerType?: "organization" | "group" | "personal" | null;
   reviewedBy?: string | null;
   blockReason?: string | null;
   audience?: "general" | "student";
@@ -24,7 +26,7 @@ export type ReviewPostItem = {
 };
 
 export const postTypeLabels: Record<ReviewPostType, string> = {
-  volunteer_opportunity: "فرصة تطوع", donation_campaign: "حملة تبرع", help_request: "طلب مساعدة", service_offer: "تقديم مساعدة", campaign_update: "تحديث حملة", awareness: "منشور توعوي", general: "عام",
+  volunteer_opportunity: "فرصة تطوع", donation_campaign: "حملة تبرع", help_request: "طلب مساعدة", service_offer: "تقديم مساعدة", campaign_update: "تحديث حملة", awareness: "منشور توعوي", poll: "استطلاع", general: "عام",
 };
 export const postAudienceLabels = { general: "عام", student: "طلاب" } as const;
 export const publisherTypeLabels = { user: "مستخدم", organization: "منظمة", admin: "إدارة" } as const;

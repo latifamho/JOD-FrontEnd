@@ -37,6 +37,7 @@ export interface OrgHelpOfferItem {
   receiverConfirmedAt?: string | null
   completedAt?: string | null
   cancelledAt?: string | null
+  isSelectedFinalOffer?: boolean
   can: {
     accept: boolean
     reject: boolean

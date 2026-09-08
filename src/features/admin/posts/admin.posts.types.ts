@@ -50,6 +50,8 @@ export interface ReviewPostDetail extends ReviewPostItem {
   urgencyReason?: string | null
   expiresAt?: string | null
   fulfillmentStatus?: 'open'|'in_progress'|'fulfilled'|'partially_fulfilled'|'not_fulfilled'|'expired'|null
+  campaignStatus?: 'pending'|'active'|'rejected'|'suspended'|'closed'|null
+  campaignOwnerType?: 'organization'|'group'|'personal'|null
 }
 
 export type AdminReviewPostDetailResponse = ApiSingleResponse<ReviewPostDetail>
