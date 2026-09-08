@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils"
 
 const countryCodeOptions = [
+  { label: "سوريا (+963)", value: "+963" },
   { label: "السعودية (+966)", value: "+966" },
   { label: "الإمارات (+971)", value: "+971" },
   { label: "الكويت (+965)", value: "+965" },
@@ -30,6 +31,7 @@ type PhoneNumberInputProps = Omit<
   defaultCountryCode?: string
   onCountryCodeChange?: (countryCode: string) => void
   containerClassName?: string
+  fixedCountryCode?: boolean
 }
 
 function normalizePhoneNumber(value: string) {
@@ -45,6 +47,7 @@ function PhoneNumberInput({
   onCountryCodeChange,
   className,
   containerClassName,
+  fixedCountryCode = false,
   ...props
 }: PhoneNumberInputProps) {
   const [internalNumber, setInternalNumber] = React.useState(defaultValue ?? "")
@@ -83,19 +86,25 @@ function PhoneNumberInput({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", containerClassName)}>
-      <Select value={selectedCountryCode} onValueChange={handleCountryCodeChange}>
-        <SelectTrigger className="w-[160px] bg-light-50">
-          <SelectValue placeholder="مفتاح الدولة" />
-        </SelectTrigger>
-        <SelectContent>
-          {countryCodeOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div dir="ltr" className={cn("flex items-center gap-2", containerClassName)}>
+      {fixedCountryCode ? (
+        <div className="flex h-9 w-[150px] shrink-0 items-center justify-center rounded-md border border-input bg-light-50 px-3 text-sm font-medium text-foreground" dir="ltr">
+          🇸🇾 سوريا (+963)
+        </div>
+      ) : (
+        <Select value={selectedCountryCode} onValueChange={handleCountryCodeChange}>
+          <SelectTrigger className="w-[160px] bg-light-50">
+            <SelectValue placeholder="مفتاح الدولة" />
+          </SelectTrigger>
+          <SelectContent>
+            {countryCodeOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <Input
         {...props}
         type="tel"

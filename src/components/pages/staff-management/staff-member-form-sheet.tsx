@@ -10,6 +10,7 @@ import { FormLoadingSkeleton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneNumberInput } from "@/components/ui/phone-number-input";
 import {
   Select,
   SelectContent,
@@ -153,15 +154,25 @@ export function StaffMemberFormSheet({
 
                 <div className="space-y-2">
                   <Label htmlFor="staff-phone">رقم الهاتف</Label>
-                  <Input
-                    id="staff-phone"
-                    inputMode="numeric"
-                    maxLength={10}
-                    disabled={isFormLocked}
-                    aria-invalid={Boolean(errors.phone)}
-                    placeholder="09XXXXXXXX"
-                    dir="ltr"
-                    {...register("phone")}
+                  <Controller
+                    control={control}
+                    name="phone"
+                    render={({ field }) => (
+                      <PhoneNumberInput
+                        fixedCountryCode
+                        countryCode="+963"
+                        value={field.value.replace(/^0/, "")}
+                        onValueChange={(fullPhone) => {
+                          const subscriber = fullPhone.replace(/^\+963/, "").replace(/\D/g, "").slice(0, 9);
+                          field.onChange(subscriber ? `0${subscriber}` : "");
+                        }}
+                        onBlur={field.onBlur}
+                        placeholder="9XXXXXXXX"
+                        maxLength={9}
+                        disabled={isFormLocked}
+                        aria-invalid={Boolean(errors.phone)}
+                      />
+                    )}
                   />
                   {errors.phone ? <p className="text-xs text-destructive">{errors.phone.message}</p> : null}
                 </div>
