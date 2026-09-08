@@ -29,6 +29,19 @@ const donorStatusLabels: Record<string, string> = {
   cancelled: "ملغي",
 };
 
+const contactMethodLabels: Record<string, string> = {
+  phone: "اتصال هاتفي",
+  whatsapp: "واتساب",
+  email: "بريد إلكتروني",
+  other: "طريقة أخرى",
+};
+
+const paymentMethodLabels: Record<string, string> = {
+  bank_transfer: "تحويل بنكي",
+  cash: "نقداً",
+  other: "طريقة أخرى",
+};
+
 type DonorEntryDetailsSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -120,12 +133,13 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" dir="rtl" className="w-[95vw] overflow-y-auto border-border sm:max-w-xl">
-        <SheetHeader className="text-right">
-          <SheetTitle className="text-right">{isApplicants ? "بيانات المتقدم" : "تفاصيل طلب التبرع"}</SheetTitle>
+      <SheetContent side="right" dir="rtl" className="w-[95vw] border-border p-0 sm:max-w-xl">
+        <SheetHeader className="border-b border-border pe-12 text-right">
+          <SheetTitle className="text-right text-xl">{isApplicants ? "بيانات المتقدم" : "تفاصيل طلب التبرع"}</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 grid gap-5 rounded-lg border border-border p-4 sm:grid-cols-2">
+        <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-6 pt-4 sm:px-5">
+        <div className="grid gap-5 rounded-lg border border-border p-4 sm:grid-cols-2">
           <Field label="الاسم الكامل" value={displayOrDash(donor.name)} />
           <Field label="رقم الهاتف" value={displayOrDash(donor.phone)} dir="ltr" />
           {isApplicants ? (
@@ -141,8 +155,8 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
               <Field label="الحالة" value={<Badge variant={donor.status === "completed" ? "default" : donor.status === "cancelled" ? "destructive" : "outline"}>{donor.status ? donorStatusLabels[donor.status] ?? donor.status : "—"}</Badge>} />
               <Field label="المبلغ الذي طلب المستخدم التبرع به" value={formatAmount(donor.requestedAmount ?? donor.amount)} />
               <Field label="المبلغ المؤكد استلامه" value={formatAmount(donor.confirmedAmount)} />
-              <Field label="طريقة التواصل" value={displayOrDash(donor.contactMethod)} />
-              <Field label="طريقة الدفع" value={displayOrDash(donor.paymentMethod)} />
+              <Field label="طريقة التواصل" value={donor.contactMethod ? contactMethodLabels[donor.contactMethod] ?? donor.contactMethod : "—"} />
+              <Field label="طريقة الدفع" value={donor.paymentMethod ? paymentMethodLabels[donor.paymentMethod] ?? donor.paymentMethod : "—"} />
               <Field label="المحافظة" value={displayOrDash(syrianGovernorateLabel(donor.city))} />
             </>
           )}
@@ -219,6 +233,7 @@ export function DonorEntryDetailsSheet({ open, onOpenChange, entry, view, canMan
             <p className="text-xs text-muted-foreground">بيانات المتبرع متاحة لكم للتواصل وإدارة الطلب، لكن لا يجب إظهار هويته في أي محتوى عام.</p>
           </div>
         ) : null}
+        </div>
       </SheetContent>
     </Sheet>
   );
