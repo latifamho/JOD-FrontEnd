@@ -1,26 +1,37 @@
-/** Volunteer-group creation review states. */
-export type AdminGroupStatus = "pending" | "active" | "rejected";
+/** Volunteer-group creation and administrative states. */
+export type AdminGroupStatus = "pending" | "active" | "rejected" | "suspended" | "archived";
 export type GroupMemberRole = "owner" | "admin" | "moderator" | "member";
 
 export type AdminGroupPerson = {
   id: string;
   name: string;
   username: string;
+  email?: string | null;
   role?: GroupMemberRole;
+};
+
+export type AdminGroupInvitation = {
+  id: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  user: AdminGroupPerson | null;
+  createdAt: string | null;
 };
 
 export type AdminGroupItem = {
   id: string;
   name: string;
   category: string;
+  categories: string[];
   location: string | null;
   membersCount: number;
   postsThisWeek: number;
   imageUrl: string | null;
+  coverImageUrl: string | null;
   organizationName: string | null;
   isVerifiedOrganization: boolean;
   ownerName: string | null;
   status: AdminGroupStatus;
+  requiresPostApproval: boolean;
   rejectionReason: string | null;
   suspensionReason: string | null;
   submittedAt: string | null;
@@ -32,6 +43,8 @@ export const groupStatusLabels: Record<AdminGroupStatus, string> = {
   pending: "قيد المراجعة",
   active: "مقبولة",
   rejected: "مرفوضة",
+  suspended: "موقوفة",
+  archived: "مؤرشفة",
 };
 
 export const groupRoleLabels: Record<GroupMemberRole, string> = {

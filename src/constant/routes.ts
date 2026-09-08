@@ -20,6 +20,7 @@ export const routePaths = {
     reportsClosed: "/dashboard/admin/reports/closed",
     groupsReview: "/dashboard/admin/groups/review",
     groupsActive: "/dashboard/admin/groups/active",
+    groupsSuspended: "/dashboard/admin/groups/suspended",
     groupsRejected: "/dashboard/admin/groups/rejected",
     users: "/dashboard/admin/users",
     userDetails: (id = ":id") => `/dashboard/admin/users/${id}`,
@@ -266,6 +267,11 @@ const adminLinks: AppNavLink[] = [
         label: "مقبولة",
         href: routePaths.adminScope.groupsActive,
         icon: "groups",
+      },
+      {
+        label: "موقوفة",
+        href: routePaths.adminScope.groupsSuspended,
+        icon: "ShieldOff",
       },
       {
         label: "مرفوضة",

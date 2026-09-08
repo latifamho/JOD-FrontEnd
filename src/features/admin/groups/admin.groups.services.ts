@@ -11,6 +11,7 @@ const ENDPOINTS = {
   GROUP: (id: string) => `/admin/groups/${id}`,
   APPROVE: (id: string) => `/admin/groups/${id}/approve`,
   REJECT: (id: string) => `/admin/groups/${id}/reject`,
+  SUSPEND: (id: string) => `/admin/groups/${id}/suspend`,
 } as const
 
 export const adminGroupsServices = {
@@ -38,6 +39,15 @@ export const adminGroupsServices = {
       ENDPOINTS.REJECT(groupId),
       { rejectionReason },
       { successMessageKey: 'rejected' },
+    )
+    return response.data
+  },
+
+  async suspendGroup(groupId: string, reason: string): Promise<AdminGroupDetailResponse> {
+    const response = await api.post<AdminGroupDetailResponse>(
+      ENDPOINTS.SUSPEND(groupId),
+      { reason },
+      { successMessageKey: 'updated' },
     )
     return response.data
   },

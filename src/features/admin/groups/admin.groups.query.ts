@@ -22,7 +22,6 @@ export function useAdminGroupDetail(groupId: string | null) {
 
 function useInvalidateAdminGroups() {
   const queryClient = useQueryClient()
-
   return (groupId: string) => {
     queryClient.invalidateQueries({ queryKey: adminGroupsKeys.lists() })
     queryClient.invalidateQueries({ queryKey: adminGroupsKeys.detail(groupId) })
@@ -31,7 +30,6 @@ function useInvalidateAdminGroups() {
 
 export function useApproveGroup() {
   const invalidate = useInvalidateAdminGroups()
-
   return useMutation({
     mutationFn: ({ groupId }: { groupId: string }) => adminGroupsServices.approveGroup(groupId),
     onSuccess: (_data, { groupId }) => invalidate(groupId),
@@ -40,17 +38,22 @@ export function useApproveGroup() {
 
 export function useRejectGroup() {
   const invalidate = useInvalidateAdminGroups()
-
   return useMutation({
-    mutationFn: ({ groupId, rejectionReason }: { groupId: string; rejectionReason: string }) =>
-      adminGroupsServices.rejectGroup(groupId, rejectionReason),
+    mutationFn: ({ groupId, rejectionReason }: { groupId: string; rejectionReason: string }) => adminGroupsServices.rejectGroup(groupId, rejectionReason),
+    onSuccess: (_data, { groupId }) => invalidate(groupId),
+  })
+}
+
+export function useSuspendGroup() {
+  const invalidate = useInvalidateAdminGroups()
+  return useMutation({
+    mutationFn: ({ groupId, reason }: { groupId: string; reason: string }) => adminGroupsServices.suspendGroup(groupId, reason),
     onSuccess: (_data, { groupId }) => invalidate(groupId),
   })
 }
 
 export function useDeleteGroup() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: ({ groupId }: { groupId: string }) => adminGroupsServices.deleteGroup(groupId),
     onSuccess: (_data, { groupId }) => {

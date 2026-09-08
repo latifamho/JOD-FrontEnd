@@ -1,5 +1,6 @@
 import type { ApiListResponse, ApiSingleResponse } from '@/types/api.types'
 import type {
+  AdminGroupInvitation,
   AdminGroupItem,
   AdminGroupPerson,
   AdminGroupStatus,
@@ -28,6 +29,8 @@ export interface AdminGroupDetail extends AdminGroupItem {
   rules: string[]
   purpose: string
   owner: AdminGroupPerson
+  members: AdminGroupPerson[]
+  invitations: AdminGroupInvitation[]
   proposedAdmins: AdminGroupPerson[]
   postsCount: number
   createdAt: string | null
