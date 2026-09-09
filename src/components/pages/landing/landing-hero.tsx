@@ -9,7 +9,9 @@ const HERO_STATS = [
   { value: 25000, suffix: "+", label: "متبرع في المنصة" },
 ] as const;
 
-const APP_DOWNLOAD_URL = process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL?.trim() || "#download-app";
+const APP_DOWNLOAD_URL =
+  process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL?.trim() ||
+  "https://jod.mustafafares.com/api/v1/app/download";
 
 export function LandingHero() {
   return (
