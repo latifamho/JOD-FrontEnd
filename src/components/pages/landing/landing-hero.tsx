@@ -10,7 +10,7 @@ const HERO_STATS = [
 ] as const;
 
 const APP_DOWNLOAD_URL =
-  process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL?.trim() ||
+  process.env.NEXT_APP_DOWNLOAD_URL?.trim() ||
   "https://jod.mustafafares.com/api/v1/app/download";
 
 export function LandingHero() {
