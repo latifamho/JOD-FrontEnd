@@ -49,4 +49,6 @@ export const authServices = {
   async logout(): Promise<void> { await api.post(END_POINTS.AUTH.LOGOUT, undefined, { skipSuccessToast: true }); },
   async getMe(): Promise<MeResponse> { return (await api.get<MeResponse>(END_POINTS.ME.PROFILE)).data; },
   async getDashboardContext(): Promise<DashboardContextResponse> { return (await api.get<DashboardContextResponse>(END_POINTS.ME.DASHBOARD_CONTEXT)).data; },
+  async registerPushDevice(data: import('./auth.type').DashboardPushDeviceRequest): Promise<void> { await api.post(END_POINTS.ME.PUSH_DEVICE, data, { skipSuccessToast: true, skipErrorToast: true }); },
+  async unregisterPushDevice(fcmToken: string): Promise<void> { await api.delete(END_POINTS.ME.PUSH_DEVICE, { data: { fcmToken }, skipSuccessToast: true, skipErrorToast: true }); },
 };

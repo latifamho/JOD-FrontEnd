@@ -56,7 +56,7 @@ const editUserSchema = z.object({
   phone: z
     .string()
     .min(1, "رقم الهاتف مطلوب")
-    .regex(/^09\d{8}$/, "رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 09"),
+    .regex(/^\+9639\d{8}$/, "رقم الهاتف يجب أن يكون +963 متبوعاً بـ 9 أرقام ويبدأ الرقم بعد +963 بالرقم 9"),
   role: z.enum(userRoleValues),
   status: z.enum(userStatusValues),
   password: z.string().optional(),
@@ -267,11 +267,8 @@ export function UserFormSheet({
                       <PhoneNumberInput
                         fixedCountryCode
                         countryCode="+963"
-                        value={field.value.replace(/^0/, "")}
-                        onValueChange={(fullPhone) => {
-                          const subscriber = fullPhone.replace(/^\+963/, "").replace(/\D/g, "").slice(0, 9);
-                          field.onChange(subscriber ? `0${subscriber}` : "");
-                        }}
+                        value={field.value.replace(/^\+963/, "").replace(/^0/, "")}
+                        onValueChange={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="9XXXXXXXX"
                         maxLength={9}

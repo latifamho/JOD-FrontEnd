@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneNumberInput } from "@/components/ui/phone-number-input";
 import {
   Select,
   SelectContent,
@@ -58,7 +59,7 @@ type DonorEntryFormSheetProps = {
   onSubmit: (values: DonorEntryFormValues) => void;
 };
 
-const phonePattern = /^09\d{8}$/;
+const phonePattern = /^\+9639\d{8}$/;
 
 function createSchema(view: "donors" | "applicants") {
   return z
@@ -80,7 +81,7 @@ function createSchema(view: "donors" | "applicants") {
         context.addIssue({
           code: "custom",
           path: ["phone"],
-          message: "رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 09",
+          message: "رقم الهاتف يجب أن يكون +963 متبوعاً بـ 9 أرقام ويبدأ الرقم بعد +963 بالرقم 9",
         });
       }
 
@@ -202,15 +203,23 @@ export function DonorEntryFormSheet({
 
             <div className="space-y-2">
               <Label htmlFor="entry-phone">رقم الهاتف</Label>
-              <Input
-                id="entry-phone"
-                inputMode="numeric"
-                maxLength={10}
-                dir="ltr"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.phone)}
-                placeholder="09XXXXXXXX"
-                {...register("phone")}
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneNumberInput
+                    id="entry-phone"
+                    fixedCountryCode
+                    countryCode="+963"
+                    value={field.value.replace(/^\+963/, "").replace(/^0/, "")}
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    maxLength={9}
+                    disabled={isSubmitting}
+                    aria-invalid={Boolean(errors.phone)}
+                    placeholder="9XXXXXXXX"
+                  />
+                )}
               />
               {errors.phone ? <p className="text-xs text-destructive">{errors.phone.message}</p> : null}
             </div>

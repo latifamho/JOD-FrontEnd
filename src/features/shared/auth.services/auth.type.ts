@@ -1,7 +1,7 @@
 export type LoginAccountType = "admin" | "organization";
 export type DashboardLoginUserType = "admin" | "companies";
 
-export interface LoginRequest { email: string; password: string; userType: DashboardLoginUserType; }
+export interface LoginRequest { email: string; password: string; userType: DashboardLoginUserType; fcmToken?: string; deviceId?: string; appVersion?: string; }
 export interface LoginMutationInput { accountType: LoginAccountType; email: string; password: string; }
 export interface PermissionItem { key: string; name: string; label: string; allowed: boolean; }
 export interface PermissionGroup { key: string; label: string; sectionKey: string | null; sectionLabel: string | null; description: string; order: number; depth: number; permissions: PermissionItem[]; }
@@ -14,6 +14,7 @@ export interface LoginData extends AuthTokenData { user: LoginUser; permissions:
 export interface LoginResponse { data: LoginData; message: string; }
 export interface RefreshTokenRequest { refreshToken: string; }
 export interface RefreshTokenResponse { data: TokenPair; message: string; }
+export interface DashboardPushDeviceRequest { fcmToken: string; deviceId?: string; appVersion?: string; }
 
 export interface CompanyRegisterFounder {
   name: string;

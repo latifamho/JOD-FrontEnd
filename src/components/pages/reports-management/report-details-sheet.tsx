@@ -5,6 +5,7 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { DetailsLoadingSkeleton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -177,10 +178,7 @@ export function ReportDetailsSheet(props: Props) {
 
               <div className="flex-1 space-y-4 p-4">
                 {query.isLoading ? (
-                  <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-                    <Loader2 className="me-2 size-4 animate-spin" />
-                    جارٍ تحميل تفاصيل البلاغ...
-                  </div>
+                  <DetailsLoadingSkeleton className="p-0" />
                 ) : query.isError ? (
                   <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
                     <p className="flex-1 text-sm text-destructive">تعذّر تحميل التفاصيل الكاملة للبلاغ.</p>

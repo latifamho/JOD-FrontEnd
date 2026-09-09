@@ -14,6 +14,11 @@ import {
   setAuthTokens,
 } from "@/lib/cookies";
 import { toast } from "@/lib/toast";
+import {
+  deleteDashboardPushToken,
+  getDashboardPushRegistration,
+  getStoredDashboardPushToken,
+} from "@/lib/web-push";
 import { useAuth } from "@/providers/AuthProvider";
 import { authServices } from "./auth.service";
 import type {
@@ -78,8 +83,11 @@ export function useLogin() {
   return useMutation({
     mutationFn: async ({ accountType, email, password }: LoginMutationInput) => {
       const userType = accountType === "admin" ? "admin" : "companies";
-      const response = await authServices.login({ email, password, userType });
-      return completeAuthentication(response, accountType);
+      const push = await getDashboardPushRegistration({ requestPermission: true }).catch(() => null);
+      const response = await authServices.login({ email, password, userType, ...(push ?? {}) });
+      const completed = await completeAuthentication(response, accountType);
+      if (push) await authServices.registerPushDevice(push).catch(() => undefined);
+      return completed;
     },
     onSuccess: ({ context }) => {
       completeSession(context, API_SUCCESS_MESSAGES.loginSuccess);
@@ -106,7 +114,12 @@ export function useLogout() {
   const { logout } = useAuth();
 
   return useMutation({
-    mutationFn: () => authServices.logout(),
+    mutationFn: async () => {
+      const fcmToken = getStoredDashboardPushToken();
+      if (fcmToken) await authServices.unregisterPushDevice(fcmToken).catch(() => undefined);
+      await authServices.logout();
+      await deleteDashboardPushToken().catch(() => undefined);
+    },
     onSettled: () => {
       logout();
     },

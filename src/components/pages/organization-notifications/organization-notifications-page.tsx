@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { ListLoadingSkeleton, PaginationControls, TableRowActions } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useQueryModal } from "@/hooks/use-query-modal";
 import { formatUtcDateTime } from "@/lib/date";
 import { displayOrDash } from "@/lib/text";
+import { useAuth } from "@/providers/AuthProvider";
 
 type Filter = "all" | "unread" | "read";
 type Mailbox = "inbox" | "sent";
@@ -41,7 +43,20 @@ const filterLabels: Record<Filter, string> = {
   read: "مقروء",
 };
 
+function resolveOrganizationNotificationPath(referencePath: string, role: "admin" | "org_owner" | "org_staff" | null): string {
+  if (referencePath.startsWith("/dashboard/")) return referencePath;
+  if (role !== "org_owner" && role !== "org_staff") return "/dashboard";
+
+  const root = role === "org_staff" ? "/dashboard/org-staff" : "/dashboard/org-owner";
+  if (referencePath.startsWith("/org/applicants/")) return `${root}/donors/applicants`;
+  if (referencePath.startsWith("/org/donations/")) return `${root}/donations`;
+  if (referencePath.startsWith("/org/")) return `${root}${referencePath.slice(4)}`;
+  return "/dashboard";
+}
+
 export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?: Mailbox }) {
+  const router = useRouter();
+  const { dashboardRole } = useAuth();
   const [filter, setFilter] = React.useState<Filter>("all");
   const detailsModal = useQueryModal("notification-details", {
     permission: "org.notifications.view",
@@ -77,7 +92,7 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
   const updateReadState = useUpdateOrgNotificationReadState();
   const rows = query.data?.data ?? [];
   const selected = rows.find((row) => row.id === detailsModal.id) ?? null;
-  const unreadCount = mailbox === "inbox" ? rows.filter((row) => !row.read).length : 0;
+  const unreadCount = mailbox === "inbox" ? rows.filter((row) => row.status === "unread").length : 0;
 
   const toggleRead = (id: string, currentlyRead: boolean) => {
     updateReadState.mutate({
@@ -146,10 +161,10 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
             </TableHeader>
             <TableBody>
               {rows.map((row, index) => (
-                <TableRow key={row.id} className={row.read ? "" : "bg-sky-500/5"}>
+                <TableRow key={row.id} className={row.status === "read" ? "" : "bg-sky-500/5"}>
                   <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>
-                    <span className={row.read ? "inline-block size-2 rounded-full bg-muted-foreground/25" : "inline-block size-2 rounded-full bg-sky-500"} />
+                    <span className={row.status === "read" ? "inline-block size-2 rounded-full bg-muted-foreground/25" : "inline-block size-2 rounded-full bg-sky-500"} />
                   </TableCell>
                   <TableCell>
                     <p className="font-semibold text-foreground">{displayOrDash(row.title)}</p>
@@ -169,13 +184,13 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                         },
                         {
                           id: "toggle-read",
-                          label: row.read ? "تعيين غير مقروء" : "تعيين مقروء",
-                          icon: row.read ? (
+                          label: row.status === "read" ? "تعيين غير مقروء" : "تعيين مقروء",
+                          icon: row.status === "read" ? (
                             <AppIcons.mail className="size-4" />
                           ) : (
                             <AppIcons.mailOpen className="size-4" />
                           ),
-                          onSelect: () => toggleRead(row.id, row.read),
+                          onSelect: () => toggleRead(row.id, row.status === "read"),
                           hidden: mailbox !== "inbox",
                         },
                       ]}
@@ -213,13 +228,20 @@ export function OrganizationNotificationsPage({ mailbox = "inbox" }: { mailbox?:
                     <p className="text-sm text-foreground">{displayOrDash(selected.body)}</p>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline">{orgNotificationCategoryLabels[selected.category]}</Badge>
-                      <Badge variant="secondary">{selected.read ? "مقروء" : "غير مقروء"}</Badge>
+                      <Badge variant="secondary">{selected.status === "read" ? "مقروء" : "غير مقروء"}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{formatUtcDateTime(selected.createdAt)}</p>
                     {mailbox === "inbox" ? (
-                      <Button type="button" disabled={updateReadState.isPending} onClick={() => { toggleRead(selected.id, selected.read); detailsModal.close(); }}>
-                        {selected.read ? "إعادة كغير مقروء" : "تعيين كمقروء وإغلاق"}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        {selected.referencePath ? (
+                          <Button type="button" variant="outline" onClick={() => { router.push(resolveOrganizationNotificationPath(selected.referencePath!, dashboardRole)); detailsModal.close(); }}>
+                            عرض العنصر المرتبط
+                          </Button>
+                        ) : null}
+                        <Button type="button" disabled={updateReadState.isPending} onClick={() => { toggleRead(selected.id, selected.status === "read"); detailsModal.close(); }}>
+                          {selected.status === "read" ? "إعادة كغير مقروء" : "تعيين كمقروء وإغلاق"}
+                        </Button>
+                      </div>
                     ) : null}
                   </>
                 ) : null}
