@@ -22,7 +22,7 @@ export default function NotFound() {
   const { dashboardRole, isAuthenticated, isLoading } = useAuth();
   const homeHref = dashboardRole
     ? getDashboardHomeByRole(toRouteRole(dashboardRole))
-    : "/login";
+    : "/org/login";
 
   return (
     <main

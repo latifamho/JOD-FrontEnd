@@ -35,7 +35,10 @@ export function DashboardGuard({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     if (!isAuthenticated || !dashboardRole) {
-      router.replace("/login");
+      const loginPath = pathname.startsWith("/dashboard/admin")
+        ? "/admin/login"
+        : "/org/login";
+      router.replace(loginPath);
       return;
     }
 

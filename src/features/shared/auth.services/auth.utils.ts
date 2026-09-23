@@ -50,7 +50,7 @@ export function getDashboardHome(role: DashboardRole): string {
 
 export function getAuthenticatedLanding(context: DashboardContextData): string {
   const role = context.profile.dashboardRole;
-  if (!role) return "/login";
+  if (!role) return "/org/login";
   if (isOrganizationApprovalPending(context)) return PENDING_APPROVAL_ROUTE;
   return getDashboardHome(role);
 }

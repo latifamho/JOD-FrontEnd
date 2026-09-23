@@ -70,7 +70,7 @@ export function LandingHeader() {
           ) : !isLoading ? (
             <>
               <Button variant="ghost" asChild>
-                <Link href="/login">تسجيل الدخول</Link>
+                <Link href="/org/login">تسجيل الدخول</Link>
               </Button>
               <Button asChild>
                 <Link href="/register">سجّل منظمتك</Link>
@@ -126,7 +126,7 @@ export function LandingHeader() {
             ) : !isLoading ? (
               <>
                 <Button variant="outline" asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link href="/login">تسجيل الدخول</Link>
+                  <Link href="/org/login">تسجيل الدخول</Link>
                 </Button>
                 <Button asChild onClick={() => setIsMenuOpen(false)}>
                   <Link href="/register">سجّل منظمتك</Link>

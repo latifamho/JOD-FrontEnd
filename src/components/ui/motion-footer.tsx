@@ -16,7 +16,7 @@ const FOOTER_LINKS = [
   {
     title: "الحساب",
     links: [
-      { label: "تسجيل الدخول", href: "/login" },
+      { label: "تسجيل الدخول", href: "/org/login" },
       { label: "تسجيل منظمة جديدة", href: "/register" },
     ],
   },

@@ -49,8 +49,8 @@ async function completeAuthentication(
     if (!isAccountTypeCompatible(accountType, role)) {
       throw new AuthFlowError(
         accountType === "admin"
-          ? "هذا الحساب ليس حساب إدارة منصة. اختر حساب منظمة وحاول مرة أخرى."
-          : "هذا الحساب ليس مرتبطاً بمنظمة. اختر حساب إدارة المنصة وحاول مرة أخرى.",
+          ? "هذا الحساب ليس حساب إدارة منصة. استخدم صفحة دخول المنظمة."
+          : "هذا الحساب ليس مرتبطاً بمنظمة.",
       );
     }
 

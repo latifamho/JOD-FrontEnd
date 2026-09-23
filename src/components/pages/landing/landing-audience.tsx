@@ -16,13 +16,13 @@ const AUDIENCES = [
     icon: HeartHandshake,
     title: "المتبرعون",
     description: "اكتشف حملات موثقة، وتابع أثر تبرعك من لحظة الدعم حتى التنفيذ.",
-    cta: { label: "تصفح الحملات", href: "/login" },
+    cta: { label: "تصفح الحملات", href: "/org/login" },
   },
   {
     icon: ShieldCheck,
     title: "فريق المراجعة والإدارة",
     description: "راجع بيانات المنظمات والحملات، واعتمدها وفق معايير جود.",
-    cta: { label: "تسجيل الدخول", href: "/login" },
+    cta: { label: "تسجيل الدخول", href: "/org/login" },
   },
 ] as const;
 

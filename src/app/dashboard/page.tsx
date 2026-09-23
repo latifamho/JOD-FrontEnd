@@ -14,7 +14,7 @@ export default function DashboardPage() {
     if (isLoading) return;
 
     if (!isAuthenticated || !dashboardContext) {
-      router.replace("/login");
+      router.replace("/org/login");
       return;
     }
 

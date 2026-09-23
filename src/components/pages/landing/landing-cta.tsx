@@ -43,7 +43,7 @@ export function LandingCta() {
                   className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
                   asChild
                 >
-                  <Link href="/login">تسجيل الدخول</Link>
+                  <Link href="/org/login">تسجيل الدخول</Link>
                 </Button>
               </div>
             </div>

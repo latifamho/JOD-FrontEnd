@@ -20,6 +20,14 @@ function getDashboardHome(role: DashboardRoleCookie): string {
   return '/dashboard/org-staff'
 }
 
+function getLoginPathForDashboard(pathname: string): string {
+  return pathname.startsWith('/dashboard/admin') ? '/admin/login' : '/org/login'
+}
+
+function isAuthRoute(pathname: string): boolean {
+  return pathname === '/org/login' || pathname === '/admin/login' || pathname === '/register'
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
@@ -31,15 +39,14 @@ export function middleware(request: NextRequest) {
   // Access may expire while refresh is still valid — allow the client to rotate.
   const isAuthenticated = Boolean(accessToken || refreshToken)
   const isProtectedRoute = pathname.startsWith('/dashboard')
-  const isAuthRoute = pathname === '/login' || pathname === '/register'
 
   if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL('/login', request.url)
+    const loginUrl = new URL(getLoginPathForDashboard(pathname), request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (isAuthRoute && isAuthenticated) {
+  if (isAuthRoute(pathname) && isAuthenticated) {
     const destination = dashboardRole ? getDashboardHome(dashboardRole) : '/dashboard/admin'
     return NextResponse.redirect(new URL(destination, request.url))
   }
@@ -55,5 +62,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/org/login', '/admin/login', '/register'],
 }

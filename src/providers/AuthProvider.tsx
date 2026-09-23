@@ -82,7 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setDashboardContextState(null)
         setIsAuthenticated(false)
         if (window.location.pathname.startsWith('/dashboard')) {
-          router.replace('/login')
+          const loginPath = window.location.pathname.startsWith('/dashboard/admin')
+            ? '/admin/login'
+            : '/org/login'
+          router.replace(loginPath)
         }
       } finally {
         if (active) setIsLoading(false)
