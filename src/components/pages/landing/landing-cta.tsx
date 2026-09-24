@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { Reveal } from "@/components/pages/landing/reveal";
 import { Button } from "@/components/ui/button";
+import { routePaths } from "@/constant/routes";
 
 export function LandingCta() {
   return (
@@ -32,7 +33,7 @@ export function LandingCta() {
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button size="lg" variant="secondary" asChild>
-                  <Link href="/register">
+                  <Link href={routePaths.auth.register}>
                     سجّل منظمتك الآن
                     <ArrowLeft className="size-4" />
                   </Link>
@@ -43,7 +44,7 @@ export function LandingCta() {
                   className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
                   asChild
                 >
-                  <Link href="/org/login">تسجيل الدخول</Link>
+                  <Link href={routePaths.auth.orgLogin}>تسجيل الدخول</Link>
                 </Button>
               </div>
             </div>

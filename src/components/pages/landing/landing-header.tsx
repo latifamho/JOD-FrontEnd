@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/base/logo";
 import { ThemeToggle } from "@/components/pages/landing/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { routePaths } from "@/constant/routes";
 import { getAuthenticatedLanding } from "@/features/shared/auth.services/auth.utils";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -70,10 +71,10 @@ export function LandingHeader() {
           ) : !isLoading ? (
             <>
               <Button variant="ghost" asChild>
-                <Link href="/org/login">تسجيل الدخول</Link>
+                <Link href={routePaths.auth.orgLogin}>تسجيل الدخول</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">سجّل منظمتك</Link>
+                <Link href={routePaths.auth.register}>سجّل منظمتك</Link>
               </Button>
             </>
           ) : null}
@@ -126,10 +127,10 @@ export function LandingHeader() {
             ) : !isLoading ? (
               <>
                 <Button variant="outline" asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link href="/org/login">تسجيل الدخول</Link>
+                  <Link href={routePaths.auth.orgLogin}>تسجيل الدخول</Link>
                 </Button>
                 <Button asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link href="/register">سجّل منظمتك</Link>
+                  <Link href={routePaths.auth.register}>سجّل منظمتك</Link>
                 </Button>
               </>
             ) : null}

@@ -4,25 +4,26 @@ import { ArrowLeft, Building2, HeartHandshake, ShieldCheck } from "lucide-react"
 import { Reveal } from "@/components/pages/landing/reveal";
 import { RevealMask } from "@/components/pages/landing/reveal-mask";
 import { Button } from "@/components/ui/button";
+import { routePaths } from "@/constant/routes";
 
 const AUDIENCES = [
   {
     icon: Building2,
     title: "الجمعيات والمؤسسات",
     description: "سجّل منظمتك، أدر حملاتك، وتابع تبرعاتك بشفافية أمام داعميك.",
-    cta: { label: "سجّل منظمتك", href: "/register" },
+    cta: { label: "سجّل منظمتك", href: routePaths.auth.register },
   },
   {
     icon: HeartHandshake,
     title: "المتبرعون",
     description: "اكتشف حملات موثقة، وتابع أثر تبرعك من لحظة الدعم حتى التنفيذ.",
-    cta: { label: "تصفح الحملات", href: "/org/login" },
+    cta: { label: "تصفح الحملات", href: routePaths.auth.orgLogin },
   },
   {
     icon: ShieldCheck,
     title: "فريق المراجعة والإدارة",
     description: "راجع بيانات المنظمات والحملات، واعتمدها وفق معايير جود.",
-    cta: { label: "تسجيل الدخول", href: "/org/login" },
+    cta: { label: "دخول الإدارة", href: routePaths.auth.adminLogin },
   },
 ] as const;
 

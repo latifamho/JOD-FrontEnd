@@ -3,6 +3,13 @@ import type { AppIconName } from "@/constant/icons";
 type RouteBuilder = (id?: string | number) => string;
 
 export const routePaths = {
+  auth: {
+    orgLogin: "/org/login",
+    adminLogin: "/admin/login",
+    /** Legacy path — always redirect to organization login. */
+    login: "/login",
+    register: "/register",
+  },
   dashboardScope: {
     root: "/dashboard",
     adminRoot: "/dashboard/admin",

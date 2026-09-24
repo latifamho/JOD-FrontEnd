@@ -3,6 +3,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 
 import { Logo } from "@/components/base/logo";
 import { RevealMask } from "@/components/pages/landing/reveal-mask";
+import { routePaths } from "@/constant/routes";
 
 const FOOTER_LINKS = [
   {
@@ -16,8 +17,8 @@ const FOOTER_LINKS = [
   {
     title: "الحساب",
     links: [
-      { label: "تسجيل الدخول", href: "/org/login" },
-      { label: "تسجيل منظمة جديدة", href: "/register" },
+      { label: "تسجيل الدخول", href: routePaths.auth.orgLogin },
+      { label: "تسجيل منظمة جديدة", href: routePaths.auth.register },
     ],
   },
 ] as const;

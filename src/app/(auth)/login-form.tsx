@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { routePaths } from "@/constant/routes";
 import { useLogin } from "@/features/shared/auth.services/auth.query";
 import { AuthFlowError } from "@/features/shared/auth.services/auth.utils";
 import type { LoginAccountType } from "@/features/shared/auth.services/auth.type";
@@ -32,7 +33,7 @@ const copyByAccountType: Record<
   { title: string; subtitle: string; showRegisterLink: boolean }
 > = {
   organization: {
-    title: "تسجيل الدخول",
+    title: "تسجيل دخول المنظمة",
     subtitle: "ادخل بحساب منظمتك لإدارة الحملات والمنشورات والموظفين.",
     showRegisterLink: true,
   },
@@ -148,7 +149,7 @@ export function LoginForm({ accountType }: LoginFormProps) {
         {copy.showRegisterLink ? (
           <p className="text-center text-xs text-muted-foreground">
             لا تملك حساب منظمة؟{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
+            <Link href={routePaths.auth.register} className="font-semibold text-primary hover:underline">
               إنشاء حساب جديد
             </Link>
           </p>

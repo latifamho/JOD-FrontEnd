@@ -1,66 +1,79 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const ACCESS_TOKEN_COOKIE = 'access_token'
-const REFRESH_TOKEN_COOKIE = 'refresh_token'
-const DASHBOARD_ROLE_COOKIE = 'dashboard_role'
+const ACCESS_TOKEN_COOKIE = "access_token";
+const REFRESH_TOKEN_COOKIE = "refresh_token";
+const DASHBOARD_ROLE_COOKIE = "dashboard_role";
 
-type DashboardRoleCookie = 'admin' | 'org_owner' | 'org_staff'
+type DashboardRoleCookie = "admin" | "org_owner" | "org_staff";
 
 function getDashboardScope(pathname: string): DashboardRoleCookie | null {
-  if (pathname.startsWith('/dashboard/admin')) return 'admin'
-  if (pathname.startsWith('/dashboard/org-owner')) return 'org_owner'
-  if (pathname.startsWith('/dashboard/org-staff')) return 'org_staff'
-  return null
+  if (pathname.startsWith("/dashboard/admin")) return "admin";
+  if (pathname.startsWith("/dashboard/org-owner")) return "org_owner";
+  if (pathname.startsWith("/dashboard/org-staff")) return "org_staff";
+  return null;
 }
 
 function getDashboardHome(role: DashboardRoleCookie): string {
-  if (role === 'admin') return '/dashboard/admin'
-  if (role === 'org_owner') return '/dashboard/org-owner'
-  return '/dashboard/org-staff'
+  if (role === "admin") return "/dashboard/admin";
+  if (role === "org_owner") return "/dashboard/org-owner";
+  return "/dashboard/org-staff";
 }
 
 function getLoginPathForDashboard(pathname: string): string {
-  return pathname.startsWith('/dashboard/admin') ? '/admin/login' : '/org/login'
+  return pathname.startsWith("/dashboard/admin") ? "/admin/login" : "/org/login";
 }
 
 function isAuthRoute(pathname: string): boolean {
-  return pathname === '/org/login' || pathname === '/admin/login' || pathname === '/register'
+  return (
+    pathname === "/org/login" ||
+    pathname === "/admin/login" ||
+    pathname === "/login" ||
+    pathname === "/register"
+  );
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
-  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value
+  const { pathname } = request.nextUrl;
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   const dashboardRole = request.cookies.get(DASHBOARD_ROLE_COOKIE)?.value as
     | DashboardRoleCookie
-    | undefined
+    | undefined;
 
   // Access may expire while refresh is still valid — allow the client to rotate.
-  const isAuthenticated = Boolean(accessToken || refreshToken)
-  const isProtectedRoute = pathname.startsWith('/dashboard')
+  const isAuthenticated = Boolean(accessToken || refreshToken);
+  const isProtectedRoute = pathname.startsWith("/dashboard");
+
+  // Legacy landing/bookmarks used `/login` — always send organizations there.
+  if (pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/org/login";
+    return NextResponse.redirect(url);
+  }
 
   if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL(getLoginPathForDashboard(pathname), request.url)
-    loginUrl.searchParams.set('from', pathname)
-    return NextResponse.redirect(loginUrl)
+    const loginUrl = new URL(getLoginPathForDashboard(pathname), request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthRoute(pathname) && isAuthenticated) {
-    const destination = dashboardRole ? getDashboardHome(dashboardRole) : '/dashboard/admin'
-    return NextResponse.redirect(new URL(destination, request.url))
+    // Do not default missing role cookies to admin.
+    const destination = dashboardRole ? getDashboardHome(dashboardRole) : "/dashboard";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   if (isProtectedRoute && isAuthenticated && dashboardRole) {
-    const scope = getDashboardScope(pathname)
+    const scope = getDashboardScope(pathname);
     if (scope && scope !== dashboardRole) {
-      return NextResponse.redirect(new URL(getDashboardHome(dashboardRole), request.url))
+      return NextResponse.redirect(new URL(getDashboardHome(dashboardRole), request.url));
     }
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/org/login', '/admin/login', '/register'],
-}
+  matcher: ["/dashboard/:path*", "/org/login", "/admin/login", "/login", "/register"],
+};
